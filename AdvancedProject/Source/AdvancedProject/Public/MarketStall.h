@@ -3,24 +3,28 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InteractableInterface.h"
 #include "GameFramework/Actor.h"
 #include "MarketStall.generated.h"
 
 UCLASS()
-class ADVANCEDPROJECT_API AMarketStall : public AActor
+class ADVANCEDPROJECT_API AMarketStall : public AActor, public IInteractableInterface
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	AMarketStall();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess))
+		UStaticMeshComponent* actorMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess))
+		UBillboardComponent* editorVisual;
 };

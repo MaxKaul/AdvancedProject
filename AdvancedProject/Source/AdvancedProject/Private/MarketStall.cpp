@@ -3,22 +3,24 @@
 
 #include "MarketStall.h"
 
-// Sets default values
+#include "Components/BillboardComponent.h"
+
 AMarketStall::AMarketStall()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	actorMesh = CreateDefaultSubobject<UStaticMeshComponent>("Actor Mesh");
+	RootComponent = actorMesh;
+	editorVisual = CreateDefaultSubobject<UBillboardComponent>("Editor Visual");
+	editorVisual->SetupAttachment(GetRootComponent());
 }
 
-// Called when the game starts or when spawned
 void AMarketStall::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-// Called every frame
 void AMarketStall::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
