@@ -27,3 +27,7 @@ void AMarketStall::Tick(float DeltaTime)
 
 }
 
+void AMarketStall::SetMesh(UStaticMesh* _newMesh)
+{
+	actorMesh->SetStaticMesh(_newMesh);
+}

@@ -6,21 +6,42 @@
 #include "GameFramework/Actor.h"
 #include "MarketManager.generated.h"
 
+struct FMarketManageSaveData
+{
+	
+};
+
 UCLASS()
 class ADVANCEDPROJECT_API AMarketManager : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	AMarketManager();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+private:
+	UFUNCTION()
+		bool NullcheckDependencies();
+	UFUNCTION()
+		void InitMarketStalls();
+
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ComponentInfos, meta = (AllowPrivateAccess))
+		TArray<FVector> stallPositions;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ComponentInfos, meta = (AllowPrivateAccess))
+		TArray<UStaticMesh*> stallMeshes;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess))
+		TArray<class AMarketStall*> spawnedStalls;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess))
+		TSubclassOf<AMarketStall> marketStall;
+
+	UPROPERTY()
+		UWorld* world;
 };

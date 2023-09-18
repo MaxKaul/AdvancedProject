@@ -1,27 +1,73 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 
 #include "MarketManager.h"
+#include "MarketStall.h"
 
-// Sets default values
+
 AMarketManager::AMarketManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 }
 
-// Called when the game starts or when spawned
+
 void AMarketManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	world = GetWorld();
+
+	if (!NullcheckDependencies())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AMarketManager, !NullcheckDependencies"))
+		return;
+	}
+
+	InitMarketStalls();
 }
 
-// Called every frame
+
 void AMarketManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
+void AMarketManager::InitMarketStalls()
+{
+	for (size_t i = 0; i < stallPositions.Num(); i++)
+	{
+		AMarketStall* tospawn;
+		FVector spawnpos =  stallPositions[i];
+		tospawn = Cast<AMarketStall>(world->SpawnActor(marketStall, &spawnpos));
+
+		if (tospawn)
+		{
+			tospawn->SetMesh(stallMeshes[i]);
+			spawnedStalls.Add(tospawn);
+		}
+		else
+			UE_LOG(LogTemp, Warning, TEXT("AMarketManager, !tospawn"))
+	}
+}
+
+bool AMarketManager::NullcheckDependencies()
+{
+	bool status = false;
+
+	if (stallPositions.Num() > 0)
+		status = true;
+	else
+		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !stallPositions"));
+
+	if (world)
+		status = true;
+	else
+		UE_LOG(LogTemp, Warning, TEXT("world !stallPositions"));
+
+	if (marketStall)
+		status = true;
+	else
+		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !marketStall"));
+
+	return status;
+}
