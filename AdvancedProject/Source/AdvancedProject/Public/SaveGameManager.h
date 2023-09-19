@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MarketManager.h"
 #include "GameFramework/Actor.h"
 #include "SaveGameManager.generated.h"
 
@@ -12,15 +13,29 @@ class ADVANCEDPROJECT_API ASaveGameManager : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ASaveGameManager();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+private:
+	bool InitAllManager();
+
+	UFUNCTION()
+		bool NullcheckDependencies();
+
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
+		TSubclassOf<class AMarketManager> marketManagerClass;
+
+	UPROPERTY()
+		UWorld* world;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
+		AMarketManager* spawnedMarketManager;
+
+	TOptional<FMarketManagerSaveData> marketManagerSaveData;
 };

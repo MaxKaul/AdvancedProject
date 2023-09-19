@@ -2,26 +2,69 @@
 
 
 #include "SaveGameManager.h"
+#include "MarketManager.h"
 
-// Sets default values
 ASaveGameManager::ASaveGameManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 }
 
-// Called when the game starts or when spawned
 void ASaveGameManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	world = GetWorld();
+
+	if (!NullcheckDependencies())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !NullcheckDependencies"))
+			return;;
+	}
+
+	if(!InitAllManager())
+		UE_LOG(LogTemp, Error,TEXT("SAVEGAME MANAGER, ERROR LOADING DATA"))
 }
 
-// Called every frame
 void ASaveGameManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
+bool ASaveGameManager::InitAllManager()
+{
+	bool status = false;
+
+	FVector pos = FVector(0.f);
+
+	spawnedMarketManager = Cast<AMarketManager>(world->SpawnActor(marketManagerClass, &pos));
+
+	if (!spawnedMarketManager)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !spawnedMarketManager"))
+			return false;
+	}
+	else
+		status = true;
+
+	if (marketManagerSaveData.IsSet())
+		spawnedMarketManager->InitMarketManager(marketManagerSaveData.GetValue());
+	else
+		spawnedMarketManager->InitMarketManager(false);
+
+	return status;
+}
+
+
+bool ASaveGameManager::NullcheckDependencies()
+{
+	bool status = false;
+
+	if (marketManagerClass)
+		status = true;
+	else
+		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !marketStall"));
+
+	return status;
+}
