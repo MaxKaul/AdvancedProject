@@ -1,6 +1,8 @@
 
 #include "MarketManager.h"
 #include "MarketStall.h"
+#include "ResourceTableBase.h"
+#include "Engine/DataTable.h"
 
 
 AMarketManager::AMarketManager()
@@ -36,9 +38,16 @@ bool AMarketManager::InitMarketManager(bool _noSaveData)
 {
 	bool status = false;
 
-	for (size_t i = 0; i < (int)EResourceIdent::ERI_ENTRY_AMOUNT - 1; i++)
+	TArray<FResourceTableBase*> resourcebasevalues;
+
+	for(TTuple<FName, unsigned char*> rowitem : resourceDefaultTable->GetRowMap())
 	{
-		InitIndividualResource(0, 0, 0);
+		resourcebasevalues.Add(reinterpret_cast<FResourceTableBase*>(rowitem.Value));
+	}
+
+	for (size_t i = 0; i < resourcebasevalues.Num(); i++)
+	{
+		InitIndividualResource(resourcebasevalues[i]->Resource.lastResourcePrice, resourcebasevalues[i]->Resource.priceEvaluationTime, resourcebasevalues[i]->Resource.resourceAmount, resourcebasevalues[i]->Resource.resourceIdent);
 	}
 
 	return status;
@@ -49,6 +58,51 @@ void AMarketManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResourceTransactionTicket> _resourcesToBuy)
+{
+	TArray<FResourceTransactionTicket> returntickets;
+
+	for(FResourceTransactionTicket ticket : _resourcesToBuy)
+	{
+		FResourceTransactionTicket newticketentry;
+
+		EResourceIdent currident = ticket.resourceIdent;
+		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
+
+		if(ticket.exchangedCapital <= ticket.resourceAmount * resourcelistinfo.lastResourcePrice)
+		{
+			FIndividualResourceInfo todetuct = resourceList.FindRef(ticket.resourceIdent);
+			todetuct.resourceAmount -= ticket.resourceAmount;
+
+			newticketentry.resourceIdent = ticket.resourceIdent;
+			newticketentry.resourceAmount = ticket.resourceAmount;
+
+			// Wir geben die differenz wieder zurück da jeder käufer immer all sein geld reinwirft
+			newticketentry.exchangedCapital = ticket.exchangedCapital - ticket.resourceAmount * resourcelistinfo.lastResourcePrice;
+
+			returntickets.Add(newticketentry);
+		}
+		else
+		{
+			newticketentry.resourceIdent = ticket.resourceIdent;
+			newticketentry.resourceAmount = 0;
+			newticketentry.exchangedCapital = ticket.resourceAmount;
+
+			returntickets.Add(newticketentry);
+			UE_LOG(LogTemp, Warning, TEXT("AMarketManager, Resource could not be bought because the prize is to high"));
+		}
+	}
+
+	return returntickets;
+}
+
+TArray<FResourceTransactionTicket> AMarketManager::SellResources(TArray<FResourceTransactionTicket> _resourcesToSell)
+{
+	TArray<FResourceTransactionTicket> returntickets;
+
+	return returntickets;
 }
 
 void AMarketManager::InitMarketStalls()
@@ -79,55 +133,64 @@ void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
 		case EResourceIdent::ERI_Gold:
 			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
 								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount);
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
 			break;
 
 		case EResourceIdent::ERI_Iron:
 			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount);
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
 			break;
 
 		case EResourceIdent::ERI_Wheat:
 			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount);
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
 			break;
 
 		case EResourceIdent::ERI_Meat:
 			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount);
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
 			break;
 
 		case EResourceIdent::ERI_Fruit:
 			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount);
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
 			break;
 
 		case EResourceIdent::ERI_Resin:
 			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount);
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
 			break;
 
 		case EResourceIdent::ERI_Jewelry:
 			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount);
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
 			break;
 
 		case EResourceIdent::ERI_Furniture:
 			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount);
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
 			break;
 
 		case EResourceIdent::ERI_Ambrosia:
 			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-				_saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount);
+						      	   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
+						      	   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
+								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
 			break;
 
 
@@ -142,15 +205,16 @@ void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
 	}
 }
 
-void AMarketManager::InitIndividualResource(float _lastResourcePrice, float _priceEvaluationTime, int _resourceAmount)
+void AMarketManager::InitIndividualResource(float _lastResourcePrice, float _priceEvaluationTime, int _resourceAmount, EResourceIdent _resourceIdent)
 {
 	FIndividualResourceInfo currentresource;
 
 	currentresource.lastResourcePrice = _lastResourcePrice;
 	currentresource.priceEvaluationTime = _priceEvaluationTime;
 	currentresource.resourceAmount = _resourceAmount;
+	currentresource.resourceIdent = _resourceIdent;
 
-	resourceList.Add(currentresource);
+	resourceList.Add(_resourceIdent, currentresource);
 }
 
 bool AMarketManager::NullcheckDependencies()
@@ -171,6 +235,12 @@ bool AMarketManager::NullcheckDependencies()
 		status = true;
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !marketStall"));
+
+	if(resourceDefaultTable)
+		status = true;
+	else
+		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !marketStall"));
+
 
 	return status;
 }

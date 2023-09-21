@@ -11,7 +11,7 @@ struct FResourceTableBase : public FTableRowBase
 	GENERATED_BODY()
 
 		UPROPERTY(EditAnywhere)
-		EResourceIdent ItemIdent;
+		FIndividualResourceInfo Resource;
 
 	FResourceTableBase()
 	{

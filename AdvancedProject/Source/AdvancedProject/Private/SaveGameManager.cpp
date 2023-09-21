@@ -18,12 +18,25 @@ void ASaveGameManager::BeginPlay()
 
 	if (!NullcheckDependencies())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !NullcheckDependencies"))
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !NullcheckDependencies"));
 			return;;
 	}
 
-	if(!InitAllManager())
-		UE_LOG(LogTemp, Error,TEXT("SAVEGAME MANAGER, ERROR LOADING DATA"))
+	if (!InitAllManager())
+		UE_LOG(LogTemp, Error, TEXT("SAVEGAME MANAGER, ERROR LOADING DATA"));
+
+
+	TArray<FResourceTransactionTicket> transactioncall;
+	// transactionreturn sollte 0 geld u. 10 ERI_Iron zurück bekommen
+	transactioncall.Add( FResourceTransactionTicket(10, 20, EResourceIdent::ERI_Iron));
+	// transactionreturn sollte 10 geld u. 1 ERI_Gold zurück bekommen
+	transactioncall.Add( FResourceTransactionTicket(1, 10, EResourceIdent::ERI_Gold));
+	// transactionreturn sollte 20 geld u. 0 ERI_Wheat zurück bekommen
+	transactioncall.Add( FResourceTransactionTicket(100, 20, EResourceIdent::ERI_Wheat));
+
+
+	TArray<FResourceTransactionTicket> transactionreturn = spawnedMarketManager->BuyResources(transactioncall);
+
 }
 
 void ASaveGameManager::Tick(float DeltaTime)
@@ -64,7 +77,23 @@ bool ASaveGameManager::NullcheckDependencies()
 	if (marketManagerClass)
 		status = true;
 	else
-		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !marketStall"));
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !marketStall"));
+
+	return status;
+}
+
+// Nur schonmal angelegt
+bool ASaveGameManager::SaveGameData()
+{
+	bool status = false;
+
+	if (!NullcheckDependencies())
+	{
+		UE_LOG(LogTemp, Error, TEXT("SAVEGAME MANAGER, ERROR SAVING DATA"))
+		return false;
+	}
+
+	spawnedMarketManager->GetManagerSaveData();
 
 	return status;
 }

@@ -37,19 +37,59 @@ struct FMarketManagerSaveData
 	TMap<EResourceIdent, FIndividualResourceInfo> resourceIdentInfoPair;
 };
 
+
+// Muss unter umständen woanders hin
+USTRUCT(BlueprintType)
+struct FResourceTransactionTicket
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		int resourceAmount;
+	// exchangedCapital ist der wert für ALLE EINHEITEN dieser resource (resourceAmount * (P0) = exchangedCapital)
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		float exchangedCapital;
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		EResourceIdent resourceIdent;
+
+	FResourceTransactionTicket(int _resourceAmount, float _exchangedCapital, EResourceIdent _resourceIdent)
+	{
+		resourceAmount = _resourceAmount;
+		exchangedCapital = _exchangedCapital;
+		resourceIdent = _resourceIdent;
+	}
+
+	FResourceTransactionTicket() {}
+};
+
 UCLASS()
 class ADVANCEDPROJECT_API AMarketManager : public AActor
 {
 	GENERATED_BODY()
-	
+
+		UPROPERTY()
+		FMarketManagerSaveData SAVE_DATA;
+
 public:	
 	AMarketManager();
 
 	bool InitMarketManager(FMarketManagerSaveData _saveData);
 	bool InitMarketManager(bool _noSaveData);
 
+	FORCEINLINE
+		FMarketManagerSaveData GetManagerSaveData() { return SAVE_DATA; }
+
 public:	
 	virtual void Tick(float DeltaTime) override;
+
+	// Wir geben transactiontickets zurück um dem käufer sowohl resourcen als auch überschuss geld zurück zu geben
+	UFUNCTION()
+		TArray<FResourceTransactionTicket> BuyResources(TArray<FResourceTransactionTicket> _resourcesToBuy);
+	UFUNCTION()
+		TArray<FResourceTransactionTicket> SellResources(TArray<FResourceTransactionTicket> _resourcesToSell);
+
+	FORCEINLINE
+		TMap<EResourceIdent,FIndividualResourceInfo> GetPoolInfo() { return resourceList; }
 
 private:
 	UFUNCTION()
@@ -58,8 +98,8 @@ private:
 		void InitMarketStalls();
 	UFUNCTION()
 		void InitResources(FMarketManagerSaveData _saveData);
-	UFUNCTION()
-		void InitIndividualResource(float _lastResourcePrice, float _priceEvaluationTime,int _resourceAmount);
+
+	void InitIndividualResource(float _lastResourcePrice, float _priceEvaluationTime,int _resourceAmount, EResourceIdent _resourceIdent);
 
 
 private:
@@ -75,7 +115,10 @@ private:
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Resources, meta = (AllowPrivateAccess))
-		TArray<FIndividualResourceInfo> resourceList;
+		TMap<EResourceIdent ,FIndividualResourceInfo> resourceList;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Resources, meta = (AllowPrivateAccess))
+		class UDataTable* resourceDefaultTable;
 
 	UPROPERTY()
 		UWorld* world;

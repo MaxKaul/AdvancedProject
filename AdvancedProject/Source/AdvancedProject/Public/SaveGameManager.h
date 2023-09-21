@@ -27,6 +27,9 @@ private:
 	UFUNCTION()
 		bool NullcheckDependencies();
 
+	UFUNCTION()
+		bool SaveGameData();
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
 		TSubclassOf<class AMarketManager> marketManagerClass;
