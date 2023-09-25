@@ -44,19 +44,22 @@ struct FResourceTransactionTicket
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		int resourceAmount;
+	int resourceAmount;
 	// exchangedCapital ist der wert für ALLE EINHEITEN dieser resource (resourceAmount * (P0) = exchangedCapital)
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		float exchangedCapital;
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		EResourceIdent resourceIdent;
+	float exchangedCapital;
+	EResourceIdent resourceIdent;
 
-	FResourceTransactionTicket(int _resourceAmount, float _exchangedCapital, EResourceIdent _resourceIdent)
+	TOptional<float> maxBuyPricePerResource;
+	TOptional<float> minSellPricePricePerResource;
+
+	FResourceTransactionTicket(int _resourceAmount, float _exchangedCapital, EResourceIdent _resourceIdent, TOptional<float> _maxBuyPricePricePerResource, TOptional<float> _minSellPricePricePerResource)
 	{
 		resourceAmount = _resourceAmount;
 		exchangedCapital = _exchangedCapital;
 		resourceIdent = _resourceIdent;
+
+		maxBuyPricePerResource = _maxBuyPricePricePerResource;
+		minSellPricePricePerResource = _minSellPricePricePerResource;
 	}
 
 	FResourceTransactionTicket() {}

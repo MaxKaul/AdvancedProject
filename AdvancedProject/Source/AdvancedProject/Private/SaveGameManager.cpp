@@ -26,17 +26,36 @@ void ASaveGameManager::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("SAVEGAME MANAGER, ERROR LOADING DATA"));
 
 
-	TArray<FResourceTransactionTicket> transactioncall;
-	// transactionreturn sollte 0 geld u. 10 ERI_Iron zurück bekommen
-	transactioncall.Add( FResourceTransactionTicket(10, 20, EResourceIdent::ERI_Iron));
-	// transactionreturn sollte 10 geld u. 1 ERI_Gold zurück bekommen
-	transactioncall.Add( FResourceTransactionTicket(1, 10, EResourceIdent::ERI_Gold));
-	// transactionreturn sollte 20 geld u. 0 ERI_Wheat zurück bekommen
-	transactioncall.Add( FResourceTransactionTicket(100, 20, EResourceIdent::ERI_Wheat));
+/* MUSTER: Zum Resourcen kaufen/verkaufen/
+	//// Beim Kaufen steht unser exchange capital für das geld welches wir mitgeben, dies ist der MaxBuyPricePerResource * BuyAmount
+	//// Erstmal als flicken, da kann noch was besseres ran
+	//TOptional<float> nomaxsellprice;
+	//TArray<FResourceTransactionTicket> transactioncall =
+	//{
+	//	FResourceTransactionTicket(10, 100, EResourceIdent::ERI_Iron, 1,nomaxsellprice),
+	//	FResourceTransactionTicket(1, 10, EResourceIdent::ERI_Gold, 10,nomaxsellprice),
+	//	FResourceTransactionTicket(100, 1000, EResourceIdent::ERI_Wheat, 10,nomaxsellprice),
+	//};
+	//TArray<FResourceTransactionTicket> transactionreturn = spawnedMarketManager->BuyResources(transactioncall);
 
+	// //Beim kaufen steht der _exchnagedCapital wert für das geld welches wir für die totale individuelle resource haben möchet
+	// //-> Dies kann man sich merken wie; Wir kaufen mit total wert und der markt checkt individuelle resourcen und wir verkauffen für individualwert und der markt checkt für total
+	//TOptional<float> nomaxbuyprice;
+	//TArray<FResourceTransactionTicket> transactioncall =
+	//{
+	//	FResourceTransactionTicket(100, 0, EResourceIdent::ERI_Iron, nomaxbuyprice,3),
+	//	FResourceTransactionTicket(10, 0, EResourceIdent::ERI_Gold, nomaxbuyprice,0),
+	//	FResourceTransactionTicket(10, 0, EResourceIdent::ERI_Wheat, nomaxbuyprice,0),
+	//};
 
-	TArray<FResourceTransactionTicket> transactionreturn = spawnedMarketManager->BuyResources(transactioncall);
+	//TArray<FResourceTransactionTicket> transactionreturn = spawnedMarketManager->SellResources(transactioncall);
 
+	//for (FResourceTransactionTicket ticket : transactionreturn)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("exchanged capital %f, returned resource %i"), ticket.exchangedCapital, ticket.resourceAmount);
+	//}
+ */
+	
 }
 
 void ASaveGameManager::Tick(float DeltaTime)

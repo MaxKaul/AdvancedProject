@@ -20,8 +20,8 @@ bool AMarketManager::InitMarketManager(FMarketManagerSaveData _saveData)
 
 	if (!NullcheckDependencies())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AMarketManager, !NullcheckDependencies"))
-			status = false;
+		UE_LOG(LogTemp, Warning, TEXT("AMarketManager, !NullcheckDependencies"));
+		return false;
 	}
 	else
 		status = true;
@@ -38,6 +38,16 @@ bool AMarketManager::InitMarketManager(bool _noSaveData)
 {
 	bool status = false;
 
+	world = GetWorld();
+
+	if (!NullcheckDependencies())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AMarketManager, !NullcheckDependencies"));
+		return false;
+	}
+	else
+		status = true;
+
 	TArray<FResourceTableBase*> resourcebasevalues;
 
 	for(TTuple<FName, unsigned char*> rowitem : resourceDefaultTable->GetRowMap())
@@ -50,6 +60,8 @@ bool AMarketManager::InitMarketManager(bool _noSaveData)
 		InitIndividualResource(resourcebasevalues[i]->Resource.lastResourcePrice, resourcebasevalues[i]->Resource.priceEvaluationTime, resourcebasevalues[i]->Resource.resourceAmount, resourcebasevalues[i]->Resource.resourceIdent);
 	}
 
+	InitMarketStalls();
+
 	return status;
 }
 
@@ -60,6 +72,8 @@ void AMarketManager::Tick(float DeltaTime)
 
 }
 
+// Noch resourcen auf dem markt auf 0 checken
+// Obergrenzen müssen noch mit einfaktoriert werden
 TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResourceTransactionTicket> _resourcesToBuy)
 {
 	TArray<FResourceTransactionTicket> returntickets;
@@ -71,10 +85,10 @@ TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResource
 		EResourceIdent currident = ticket.resourceIdent;
 		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
 
-		if(ticket.exchangedCapital <= ticket.resourceAmount * resourcelistinfo.lastResourcePrice)
+		if(resourcelistinfo.lastResourcePrice <= ticket.maxBuyPricePerResource.GetValue())
 		{
-			FIndividualResourceInfo todetuct = resourceList.FindRef(ticket.resourceIdent);
-			todetuct.resourceAmount -= ticket.resourceAmount;
+			// !! NOCH EINE LÖSUNG FÜR CALLS FINDEN WELCHE ZEITGLEICH STATTFINDEN !! -> Waiting List?
+			resourceList.Find(ticket.resourceIdent)->resourceAmount -= ticket.resourceAmount;
 
 			newticketentry.resourceIdent = ticket.resourceIdent;
 			newticketentry.resourceAmount = ticket.resourceAmount;
@@ -88,19 +102,51 @@ TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResource
 		{
 			newticketentry.resourceIdent = ticket.resourceIdent;
 			newticketentry.resourceAmount = 0;
-			newticketentry.exchangedCapital = ticket.resourceAmount;
+			newticketentry.exchangedCapital = ticket.exchangedCapital;
 
 			returntickets.Add(newticketentry);
-			UE_LOG(LogTemp, Warning, TEXT("AMarketManager, Resource could not be bought because the prize is to high"));
+			UE_LOG(LogTemp, Warning, TEXT("AMarketManager, Resource could not be bought because the price is to high"));
 		}
 	}
 
 	return returntickets;
 }
 
+// Ich glaub min brauch ich nicht?
+// Untergrenzen müssen noch mit einfaktoriert werden
 TArray<FResourceTransactionTicket> AMarketManager::SellResources(TArray<FResourceTransactionTicket> _resourcesToSell)
 {
 	TArray<FResourceTransactionTicket> returntickets;
+
+	for (FResourceTransactionTicket ticket : _resourcesToSell)
+	{
+		FResourceTransactionTicket newticketentry;
+
+		EResourceIdent currident = ticket.resourceIdent;
+		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
+
+		if (resourcelistinfo.lastResourcePrice >= ticket.minSellPricePricePerResource.GetValue())
+		{
+			resourceList.Find(ticket.resourceIdent)->resourceAmount += ticket.resourceAmount;
+
+			newticketentry.resourceIdent = ticket.resourceIdent;
+			newticketentry.resourceAmount = 0;
+
+			// Wir geben die differenz wieder zurück da jeder käufer immer all sein geld reinwirft
+			newticketentry.exchangedCapital = ticket.resourceAmount * resourcelistinfo.lastResourcePrice;
+
+			returntickets.Add(newticketentry);
+		}
+		else
+		{
+			newticketentry.resourceIdent = ticket.resourceIdent;
+			newticketentry.resourceAmount = ticket.resourceAmount;
+			newticketentry.exchangedCapital = 0;
+
+			returntickets.Add(newticketentry);
+			UE_LOG(LogTemp, Warning, TEXT("AMarketManager, Resource could not be bought because the price is not high enough"));
+		}
+	}
 
 	return returntickets;
 }
@@ -109,9 +155,8 @@ void AMarketManager::InitMarketStalls()
 {
 	for (size_t i = 0; i < stallPositions.Num(); i++)
 	{
-		AMarketStall* tospawn;
 		FVector spawnpos =  stallPositions[i];
-		tospawn = Cast<AMarketStall>(world->SpawnActor(marketStallClass, &spawnpos));
+		AMarketStall* tospawn = Cast<AMarketStall>(world->SpawnActor(marketStallClass, &spawnpos));
 
 		if (tospawn)
 		{
