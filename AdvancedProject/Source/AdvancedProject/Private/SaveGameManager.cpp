@@ -85,6 +85,8 @@ bool ASaveGameManager::InitAllManager()
 	else
 		spawnedMarketManager->InitMarketManager(false);
 
+	SaveGameData();
+
 	return status;
 }
 
@@ -112,7 +114,7 @@ bool ASaveGameManager::SaveGameData()
 		return false;
 	}
 
-	spawnedMarketManager->GetManagerSaveData();
+	FMarketManagerSaveData resourcemanagersavedata = spawnedMarketManager->GetManagerSaveData();
 
 	return status;
 }

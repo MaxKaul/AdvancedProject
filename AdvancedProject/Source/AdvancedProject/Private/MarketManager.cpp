@@ -65,7 +65,6 @@ bool AMarketManager::InitMarketManager(bool _noSaveData)
 	return status;
 }
 
-
 void AMarketManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -171,71 +170,71 @@ void AMarketManager::InitMarketStalls()
 void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
 {
 
-	for(TTuple<EResourceIdent, FIndividualResourceInfo> key : _saveData.resourceIdentInfoPair)
+	for(TTuple<EResourceIdent, FIndividualResourceInfo> key : _saveData.GetResourceInfoPair())
 	{
 		switch (key.Key)
 		{
 		case EResourceIdent::ERI_Gold:
-			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
-			break;
-
-		case EResourceIdent::ERI_Iron:
-			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
-			break;
-
-		case EResourceIdent::ERI_Wheat:
-			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
-			break;
-
-		case EResourceIdent::ERI_Meat:
-			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
-			break;
-
-		case EResourceIdent::ERI_Fruit:
-			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
-			break;
-
-		case EResourceIdent::ERI_Resin:
-			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
-			break;
-
-		case EResourceIdent::ERI_Jewelry:
-			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
-			break;
-
-		case EResourceIdent::ERI_Furniture:
-			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
-			break;
-
-		case EResourceIdent::ERI_Ambrosia:
-			InitIndividualResource(_saveData.resourceIdentInfoPair.Find(key.Key)->lastResourcePrice,
-						      	   _saveData.resourceIdentInfoPair.Find(key.Key)->priceEvaluationTime,
-						      	   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceAmount,
-								   _saveData.resourceIdentInfoPair.Find(key.Key)->resourceIdent);
+			InitIndividualResource(_saveData.GetResourceInfoPair().Find(key.Key)->lastResourcePrice,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->priceEvaluationTime,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceAmount,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceIdent);
+			break;							 
+											 
+		case EResourceIdent::ERI_Iron:		 
+			InitIndividualResource(_saveData.GetResourceInfoPair().Find(key.Key)->lastResourcePrice,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->priceEvaluationTime,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceAmount,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceIdent);
+			break;							
+											
+		case EResourceIdent::ERI_Wheat:		
+			InitIndividualResource(_saveData.GetResourceInfoPair().Find(key.Key)->lastResourcePrice,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->priceEvaluationTime,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceAmount,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceIdent);
+			break;							
+											
+		case EResourceIdent::ERI_Meat:		
+			InitIndividualResource(_saveData.GetResourceInfoPair().Find(key.Key)->lastResourcePrice,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->priceEvaluationTime,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceAmount,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceIdent);
+			break;							
+											
+		case EResourceIdent::ERI_Fruit:		
+			InitIndividualResource(_saveData.GetResourceInfoPair().Find(key.Key)->lastResourcePrice,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->priceEvaluationTime,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceAmount,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceIdent);
+			break;							 
+											 
+		case EResourceIdent::ERI_Resin:		 
+			InitIndividualResource(_saveData.GetResourceInfoPair().Find(key.Key)->lastResourcePrice,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->priceEvaluationTime,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceAmount,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceIdent);
+			break;							
+											
+		case EResourceIdent::ERI_Jewelry:	
+			InitIndividualResource(_saveData.GetResourceInfoPair().Find(key.Key)->lastResourcePrice,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->priceEvaluationTime,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceAmount,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceIdent);
+			break;							
+											
+		case EResourceIdent::ERI_Furniture:	
+			InitIndividualResource(_saveData.GetResourceInfoPair().Find(key.Key)->lastResourcePrice,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->priceEvaluationTime,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceAmount,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceIdent);
+			break;							
+											
+		case EResourceIdent::ERI_Ambrosia:	
+			InitIndividualResource(_saveData.GetResourceInfoPair().Find(key.Key)->lastResourcePrice,
+						      	   _saveData.GetResourceInfoPair().Find(key.Key)->priceEvaluationTime,
+						      	   _saveData.GetResourceInfoPair().Find(key.Key)->resourceAmount,
+								   _saveData.GetResourceInfoPair().Find(key.Key)->resourceIdent);
 			break;
 
 
@@ -260,6 +259,14 @@ void AMarketManager::InitIndividualResource(float _lastResourcePrice, float _pri
 	currentresource.resourceIdent = _resourceIdent;
 
 	resourceList.Add(_resourceIdent, currentresource);
+}
+
+
+FMarketManagerSaveData AMarketManager::GetManagerSaveData()
+{
+	FMarketManagerSaveData newsavefile = {resourceList};
+
+	return newsavefile;
 }
 
 bool AMarketManager::NullcheckDependencies()

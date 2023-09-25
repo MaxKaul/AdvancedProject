@@ -34,7 +34,20 @@ struct FMarketManagerSaveData
 {
 	GENERATED_BODY()
 
+private:
 	TMap<EResourceIdent, FIndividualResourceInfo> resourceIdentInfoPair;
+
+
+public:
+	FORCEINLINE
+		TMap<EResourceIdent, FIndividualResourceInfo> GetResourceInfoPair() { return resourceIdentInfoPair; }
+
+	FMarketManagerSaveData() {}
+
+	FMarketManagerSaveData(TMap<EResourceIdent, FIndividualResourceInfo> _resourceIdentInfoPair)
+	{
+		resourceIdentInfoPair = _resourceIdentInfoPair;
+	}
 };
 
 
@@ -70,17 +83,14 @@ class ADVANCEDPROJECT_API AMarketManager : public AActor
 {
 	GENERATED_BODY()
 
-		UPROPERTY()
-		FMarketManagerSaveData SAVE_DATA;
-
 public:	
 	AMarketManager();
 
 	bool InitMarketManager(FMarketManagerSaveData _saveData);
 	bool InitMarketManager(bool _noSaveData);
 
-	FORCEINLINE
-		FMarketManagerSaveData GetManagerSaveData() { return SAVE_DATA; }
+	UFUNCTION()
+		FMarketManagerSaveData GetManagerSaveData();
 
 public:	
 	virtual void Tick(float DeltaTime) override;
