@@ -85,8 +85,6 @@ bool ASaveGameManager::InitAllManager()
 	else
 		spawnedMarketManager->InitMarketManager(false);
 
-	SaveGameData();
-
 	return status;
 }
 

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "EnumLibrary.h"
+#include "Components/TimelineComponent.h"
 #include "MarketManager.generated.h"
 
 
@@ -23,10 +24,11 @@ struct FIndividualResourceInfo
 	
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float lastResourcePrice;
-	
-	// In seconds with (P(t) = P0 * e(pow(k * t - k * t)))
+
+
+	// Decay or Growth value of the individual resource, starts with 0 and is representativ for resources entering/leaving the market
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		float priceEvaluationTime;
+		float k_Value;
 };
 
 USTRUCT(BlueprintType)
@@ -36,7 +38,6 @@ struct FMarketManagerSaveData
 
 private:
 	TMap<EResourceIdent, FIndividualResourceInfo> resourceIdentInfoPair;
-
 
 public:
 	FORCEINLINE
@@ -91,9 +92,11 @@ public:
 
 	UFUNCTION()
 		FMarketManagerSaveData GetManagerSaveData();
-
 public:	
 	virtual void Tick(float DeltaTime) override;
+
+	int test;
+
 
 	// Wir geben transactiontickets zurück um dem käufer sowohl resourcen als auch überschuss geld zurück zu geben
 	UFUNCTION()
@@ -112,8 +115,10 @@ private:
 	UFUNCTION()
 		void InitResources(FMarketManagerSaveData _saveData);
 
-	void InitIndividualResource(float _lastResourcePrice, float _priceEvaluationTime,int _resourceAmount, EResourceIdent _resourceIdent);
+	UFUNCTION()
+		void  UpdateResourcePrices();
 
+	void InitIndividualResource(float _lastResourcePrice,int _resourceAmount, EResourceIdent _resourceIdent);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ComponentInfos, meta = (AllowPrivateAccess))
@@ -125,13 +130,18 @@ private:
 		TArray<class AMarketStall*> spawnedStalls;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess))
 		TSubclassOf<AMarketStall> marketStallClass;
-
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Resources, meta = (AllowPrivateAccess))
 		TMap<EResourceIdent ,FIndividualResourceInfo> resourceList;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Resources, meta = (AllowPrivateAccess))
 		class UDataTable* resourceDefaultTable;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = MarketInfo, meta = (AllowPrivateAccess))
+		float resourcePriceTick;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = MarketInfo, meta = (AllowPrivateAccess))
+		float resourceMinValue;
 
 	UPROPERTY()
 		UWorld* world;
