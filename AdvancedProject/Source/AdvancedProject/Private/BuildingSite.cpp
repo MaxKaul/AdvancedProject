@@ -1,0 +1,36 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "BuildingSite.h"
+
+// Sets default values
+ABuildingSite::ABuildingSite()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	actorMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Actor Mesh");
+	RootComponent = actorMeshComponent;
+}
+
+// Called when the game starts or when spawned
+void ABuildingSite::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+// Called every frame
+void ABuildingSite::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+void ABuildingSite::SetBuildStatus(bool _wasBuildOn)
+{
+	bhasBeenBuildOn = _wasBuildOn;
+
+	if (bhasBeenBuildOn)
+		actorMeshComponent->SetMaterial(0, translucentMat);
+}
+

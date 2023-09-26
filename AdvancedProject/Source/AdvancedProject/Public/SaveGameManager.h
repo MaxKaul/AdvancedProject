@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "MarketManager.h"
+#include "ProductionSiteManager.h"
 #include "GameFramework/Actor.h"
 #include "SaveGameManager.generated.h"
 
@@ -31,14 +32,22 @@ private:
 		bool SaveGameData();
 
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
-		TSubclassOf<class AMarketManager> marketManagerClass;
-
 	UPROPERTY()
 		UWorld* world;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
+		TSubclassOf<AMarketManager> marketManagerClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
 		AMarketManager* spawnedMarketManager;
 
 	TOptional<FMarketManagerSaveData> marketManagerSaveData;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
+	//	TSubclassOf<class AProductionSiteManager> productionSiteManagerClass;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
+	//	AProductionSiteManager* productionSiteManager;
+
+	//TOptional<FProductionSiteManagerSaveData> productionSiteManagerSaveData;
 };

@@ -17,3 +17,15 @@ enum class EResourceIdent : uint8
 	ERI_Ambrosia,
 	ERI_ENTRY_AMOUNT
 };
+
+UENUM()
+enum class EProductionSiteType : uint8
+{
+	PST_DEFAULT,
+	PST_Meat,
+	PST_Fruits,
+	PST_Hardwood_Resin,
+	PST_Furniture_Jewelry,
+	PST_Ambrosia,
+	PST_ENTRY_AMOUNT
+};
