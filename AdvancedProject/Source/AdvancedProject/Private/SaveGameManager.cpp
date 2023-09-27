@@ -83,7 +83,7 @@ bool ASaveGameManager::InitAllManager()
 	if (marketManagerSaveData.IsSet())
 		spawnedMarketManager->InitMarketManager(marketManagerSaveData.GetValue());
 	else
-		spawnedMarketManager->InitMarketManager(false);
+		spawnedMarketManager->InitMarketManager();
 
 	
 
@@ -114,7 +114,7 @@ bool ASaveGameManager::SaveGameData()
 		return false;
 	}
 
-	FMarketManagerSaveData resourcemanagersavedata = spawnedMarketManager->GetManagerSaveData();
+	FMarketManagerSaveData resourcemanagersavedata = spawnedMarketManager->GetMarketManagerSaveData();
 
 	return status;
 }

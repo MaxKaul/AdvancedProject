@@ -37,7 +37,7 @@ bool AMarketManager::InitMarketManager(FMarketManagerSaveData _saveData)
 	return status;
 }
 
-bool AMarketManager::InitMarketManager(bool _noSaveData)
+bool AMarketManager::InitMarketManager()
 {
 	bool status = false;
 
@@ -257,7 +257,7 @@ void AMarketManager::InitIndividualResource(float _lastResourcePrice, int _resou
 	resourceList.Add(_resourceIdent, currentresource);
 }
 
-FMarketManagerSaveData AMarketManager::GetManagerSaveData()
+FMarketManagerSaveData AMarketManager::GetMarketManagerSaveData()
 {
 	FMarketManagerSaveData newsavefile = {resourceList};
 

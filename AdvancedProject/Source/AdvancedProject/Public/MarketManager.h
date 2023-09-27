@@ -88,10 +88,10 @@ public:
 	AMarketManager();
 
 	bool InitMarketManager(FMarketManagerSaveData _saveData);
-	bool InitMarketManager(bool _noSaveData);
+	bool InitMarketManager();
 
 	UFUNCTION()
-		FMarketManagerSaveData GetManagerSaveData();
+		FMarketManagerSaveData GetMarketManagerSaveData();
 public:	
 	virtual void Tick(float DeltaTime) override;
 

@@ -42,12 +42,4 @@ private:
 		AMarketManager* spawnedMarketManager;
 
 	TOptional<FMarketManagerSaveData> marketManagerSaveData;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
-	//	TSubclassOf<class AProductionSiteManager> productionSiteManagerClass;
-
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
-	//	AProductionSiteManager* productionSiteManager;
-
-	//TOptional<FProductionSiteManagerSaveData> productionSiteManagerSaveData;
 };

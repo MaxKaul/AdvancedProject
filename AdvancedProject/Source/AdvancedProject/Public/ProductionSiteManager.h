@@ -8,6 +8,7 @@
 #include "ProductionSiteManager.generated.h"
 
 
+struct FProductionSiteSaveData;
 USTRUCT(BlueprintType)
 struct FProductionSiteManagerSaveData
 {
@@ -15,15 +16,17 @@ struct FProductionSiteManagerSaveData
 
 private:
 	UPROPERTY()
-		TArray<class AProductionsite*> allProductionSites;
+		TArray<FProductionSiteSaveData> productionSiteData;
 
 public:
 	FProductionSiteManagerSaveData() {}
 
-	// MUSS NOCH ERSTEZT WERDEN DURCH DIE INDIVIDDUELLEN SAVE DATEN DER PRODUCTIONSITES
-	FProductionSiteManagerSaveData(TArray<AProductionsite*> _allProductionSites)
+	FORCEINLINE
+		TArray<FProductionSiteSaveData> GetSaveData() { return productionSiteData; }
+
+	FProductionSiteManagerSaveData(TArray<FProductionSiteSaveData> _productionSiteData)
 	{
-		allProductionSites = _allProductionSites;
+		productionSiteData = _productionSiteData;
 	}
 };
 
@@ -38,11 +41,14 @@ public:
 	AProductionSiteManager();
 
 	UFUNCTION()
-	void InitProductionSiteManager();
+	void InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData);
+	void InitProductionSiteManager(AActor* _managerOwner);
 
 private:
 	UFUNCTION()
-		void InitAllProductionSites();
+		void InitAllProductionSites(FProductionSiteManagerSaveData _saveData);
+
+
 	UFUNCTION()
 		bool NullcheckDependencies();
 
@@ -53,22 +59,28 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
-		void SubscribeProductionsite( AProductionsite* _newProductionSite);
+		void SubscribeProductionsite(class AProductionsite* _newProductionSite);
+
+	UFUNCTION()
+		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData();
 
 private:
 	UPROPERTY()
-	TArray< AProductionsite*> allProductionSites;
+		TArray<AProductionsite*> allProductionSites;
 	UPROPERTY()
 		UWorld* world;
+
+	UPROPERTY()
+		AActor* managerOwner;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
 		TSubclassOf<AProductionsite> productionSiteClass;
 
-	//TOptional<AProductionsite> productionsiteSaveData;
-
+	TOptional<AProductionsite> productionsiteSaveData;
+	 // TEST SHIT
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
-		TMap<EProductionSiteType, UStaticMesh*> siteKeyMeshPair;
+		TArray<UStaticMesh*> TESTMESHES;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
-	TArray<class ABuildingSite*> buildingSites;
+		TArray<class ABuildingSite*> TESTSITES;
 };
 
