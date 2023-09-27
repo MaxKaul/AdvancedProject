@@ -4,6 +4,7 @@
 #include "ProductionSiteManager.h"
 
 #include "BuildingSite.h"
+#include "Builder.h"
 #include "Productionsite.h"
 
 // Sets default values
@@ -12,6 +13,9 @@ AProductionSiteManager::AProductionSiteManager()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	//TESTBUILDERCOMP = CreateDefaultSubobject<UBuilder>("SS");
+	TESTBUILDERCOMP = CreateDefaultSubobject<UBuilder>("dd");
+
 }
 
 // Called when the game starts or when spawned
@@ -19,16 +23,14 @@ void AProductionSiteManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Grade nur zu testzwecken als solches implementiert, hat von spieler/AI aus gespawned zu werden, von diesem aus wird auch die FProductionSiteManagerSaveData übertragen
 
-
-	TArray<FProductionSiteSaveData> testproductionsitedata =
+	/*Zu testzwecken als solches implementiert, hat von spieler/AI aus gespawned zu werden, von diesem aus wird auch die FProductionSiteManagerSaveData übertragen
+	 *TArray<FProductionSiteSaveData> testproductionsitedata =
 	{
 		FProductionSiteSaveData {TESTMESHES[0], EProductionSiteType::PST_Fruits, TESTSITES[0] },
 		FProductionSiteSaveData {TESTMESHES[1], EProductionSiteType::PST_Furniture_Jewelry, TESTSITES[1] },
 		FProductionSiteSaveData {TESTMESHES[2], EProductionSiteType::PST_Ambrosia, TESTSITES[2] }
 	};
-
 
 	FProductionSiteManagerSaveData testsavedata=
 	{
@@ -36,6 +38,10 @@ void AProductionSiteManager::BeginPlay()
 	};
 
 	InitProductionSiteManager(nullptr, testsavedata);
+	 */
+
+	TESTBUILDERCOMP->InitBuilder(this);
+	TESTBUILDERCOMP->BuildProductionSite(EProductionSiteType::PST_Ambrosia, TESTSITES[0], TESTMESHES[0]);
 }
 
 // Called every frame

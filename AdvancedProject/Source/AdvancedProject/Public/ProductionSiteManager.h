@@ -64,6 +64,9 @@ public:
 	UFUNCTION()
 		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData();
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+		class UBuilder* TESTBUILDERCOMP;
+
 private:
 	UPROPERTY()
 		TArray<AProductionsite*> allProductionSites;
@@ -77,6 +80,8 @@ private:
 		TSubclassOf<AProductionsite> productionSiteClass;
 
 	TOptional<AProductionsite> productionsiteSaveData;
+
+
 	 // TEST SHIT
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
 		TArray<UStaticMesh*> TESTMESHES;

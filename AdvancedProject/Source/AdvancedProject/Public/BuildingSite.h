@@ -27,6 +27,9 @@ public:
 	UFUNCTION()
 		void SetBuildStatus(bool _status);
 
+	FORCEINLINE
+		TArray<EProductionSiteType> GetAllowedTypes() { return allowedTypes; }
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Side Infos", meta=(AllowPrivateAccess))
 		TArray<EProductionSiteType> allowedTypes;
