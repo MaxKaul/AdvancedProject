@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EnumLibrary.h"
+#include "Productionsite.h"
 #include "Components/ActorComponent.h"
 #include "Builder.generated.h"
 
@@ -26,7 +27,7 @@ public:
 	bool InitBuilder(class AProductionSiteManager* _manager);
 
 	UFUNCTION()
-		bool BuildProductionSite(EProductionSiteType _productionSiteType, class ABuildingSite* _buildingSite, UStaticMesh* _buildingMesh);
+		bool BuildProductionSite(FProductionSiteSaveData _siteData);
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();

@@ -13,9 +13,6 @@ AProductionSiteManager::AProductionSiteManager()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	//TESTBUILDERCOMP = CreateDefaultSubobject<UBuilder>("SS");
-	TESTBUILDERCOMP = CreateDefaultSubobject<UBuilder>("dd");
-
 }
 
 // Called when the game starts or when spawned
@@ -38,10 +35,12 @@ void AProductionSiteManager::BeginPlay()
 	};
 
 	InitProductionSiteManager(nullptr, testsavedata);
-	 */
+	 
 
 	TESTBUILDERCOMP->InitBuilder(this);
 	TESTBUILDERCOMP->BuildProductionSite(EProductionSiteType::PST_Ambrosia, TESTSITES[0], TESTMESHES[0]);
+
+	*/
 }
 
 // Called every frame

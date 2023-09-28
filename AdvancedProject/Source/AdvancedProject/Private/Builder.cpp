@@ -47,27 +47,28 @@ bool UBuilder::InitBuilder(AProductionSiteManager* _manager)
 	return status;
 }
 
-bool UBuilder::BuildProductionSite(EProductionSiteType _productionSiteType, ABuildingSite* _buildingSite, UStaticMesh* _buildingMesh)
+// Eine PRoductionSite wird mit einem savedata struct initialised (Einfach damit ich das nicht doppelt machen muss, die save data soll die selben daten speichern wie die welche benötigt werden zum inin)
+bool UBuilder::BuildProductionSite(FProductionSiteSaveData _siteData)
 {
 	bool status = false;
 
-	for(EProductionSiteType type : _buildingSite->GetAllowedTypes())
+	for(EProductionSiteType type : _siteData.GetSavedBuildingSite()->GetAllowedTypes())
 	{
-		if (_productionSiteType == type)
+		if (_siteData.GetSavedType() == type)
 		{
-			FVector spawnpos = _buildingSite->GetActorLocation();
-			FRotator spawnrot = _buildingSite->GetActorRotation();
+			FVector spawnpos = _siteData.GetSavedBuildingSite()->GetActorLocation();
+			FRotator spawnrot = _siteData.GetSavedBuildingSite()->GetActorRotation();
 
 			// Debug weil die gebäude meshes noch angepasst werden müssen
 			spawnpos.Z -= 300.f;
 
 			AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
 
-			spawnedsite->InitProductionSite(_buildingMesh, _productionSiteType, _buildingSite);
+			spawnedsite->InitProductionSite(_siteData.GetSavedMesh(), _siteData.GetSavedType(), _siteData.GetSavedBuildingSite());
 
 
 			productionSiteManager->SubscribeProductionsite(spawnedsite);
-			_buildingSite->SetBuildStatus(true);
+			_siteData.GetSavedBuildingSite()->SetBuildStatus(true);
 
 			status = true;
 			break;

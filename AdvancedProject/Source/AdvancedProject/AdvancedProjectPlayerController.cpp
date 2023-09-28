@@ -1,21 +1,23 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "AdvancedProjectPlayerController.h"
-#include "GameFramework/Pawn.h"
-#include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "AdvancedProjectCharacter.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AAdvancedProjectPlayerController::AAdvancedProjectPlayerController()
 {
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
-	CachedDestination = FVector::ZeroVector;
-	FollowTime = 0.f;
+
+	rotationSpeed = 10.f;
 }
 
 void AAdvancedProjectPlayerController::BeginPlay()
@@ -30,88 +32,46 @@ void AAdvancedProjectPlayerController::BeginPlay()
 	}
 }
 
+void AAdvancedProjectPlayerController::InitPlayerController(AAdvancedProjectCharacter* _controllerOwner)
+{
+	controllerOwner = _controllerOwner;
+	CameraBoom = controllerOwner->GetCameraBoom();
+}
+
 void AAdvancedProjectPlayerController::SetupInputComponent()
 {
-	// set up gameplay key bindings
 	Super::SetupInputComponent();
 
-	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
 	{
-		// Setup mouse input events
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &AAdvancedProjectPlayerController::OnInputStarted);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::OnSetDestinationTriggered);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &AAdvancedProjectPlayerController::OnSetDestinationReleased);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &AAdvancedProjectPlayerController::OnSetDestinationReleased);
-
-		// Setup touch input events
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Started, this, &AAdvancedProjectPlayerController::OnInputStarted);
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::OnTouchTriggered);
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Completed, this, &AAdvancedProjectPlayerController::OnTouchReleased);
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &AAdvancedProjectPlayerController::OnTouchReleased);
+		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::RotateCamera);
 	}
 }
 
-void AAdvancedProjectPlayerController::OnInputStarted()
+void AAdvancedProjectPlayerController::RotateCamera()
 {
-	StopMovement();
-}
+	float deltaX;
+	float deltaY;
 
-// Triggered every frame when the input is held down
-void AAdvancedProjectPlayerController::OnSetDestinationTriggered()
-{
-	// We flag that the input is being pressed
-	FollowTime += GetWorld()->GetDeltaSeconds();
-	
-	// We look for the location in the world where the player has pressed the input
-	FHitResult Hit;
-	bool bHitSuccessful = false;
-	if (bIsTouch)
-	{
-		bHitSuccessful = GetHitResultUnderFinger(ETouchIndex::Touch1, ECollisionChannel::ECC_Visibility, true, Hit);
-	}
+	GetInputMouseDelta(deltaX, deltaY);
+
+	if (deltaX == 0 && deltaY == 0)
+		return;
+
+	float  newyaw = CameraBoom->GetComponentRotation().Yaw;
+	//float  newpitch = CameraBoom->GetComponentRotation().Pitch;
+
+	if(deltaX > 0)
+		newyaw += rotationSpeed;
 	else
-	{
-		bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
-	}
+		newyaw -= rotationSpeed;
 
-	// If we hit a surface, cache the location
-	if (bHitSuccessful)
-	{
-		CachedDestination = Hit.Location;
-	}
-	
-	// Move towards mouse pointer or touch
-	APawn* ControlledPawn = GetPawn();
-	if (ControlledPawn != nullptr)
-	{
-		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
-		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
-	}
-}
+	//if (deltaY > 0)
+	//	newpitch += rotationSpeed;
+	//else
+	//	newpitch -= rotationSpeed;
 
-void AAdvancedProjectPlayerController::OnSetDestinationReleased()
-{
-	// If it was a short press
-	if (FollowTime <= ShortPressThreshold)
-	{
-		// We move there and spawn some particles
-		UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
-	}
+	FHitResult hit;
 
-	FollowTime = 0.f;
-}
-
-// Triggered every frame when the input is held down
-void AAdvancedProjectPlayerController::OnTouchTriggered()
-{
-	bIsTouch = true;
-	OnSetDestinationTriggered();
-}
-
-void AAdvancedProjectPlayerController::OnTouchReleased()
-{
-	bIsTouch = false;
-	OnSetDestinationReleased();
+	CameraBoom->K2_SetRelativeRotation(FRotator(CameraBoom->GetComponentRotation().Pitch, newyaw, CameraBoom->GetComponentRotation().Roll), false, hit, false);
 }

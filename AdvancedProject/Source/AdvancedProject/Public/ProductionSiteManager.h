@@ -83,9 +83,9 @@ private:
 
 
 	 // TEST SHIT
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
-		TArray<UStaticMesh*> TESTMESHES;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
-		TArray<class ABuildingSite*> TESTSITES;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
+	//	TArray<UStaticMesh*> TESTMESHES;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
+	//	TArray<class ABuildingSite*> TESTSITES;
 };
 
