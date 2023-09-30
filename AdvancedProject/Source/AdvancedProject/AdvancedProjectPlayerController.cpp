@@ -17,7 +17,8 @@ AAdvancedProjectPlayerController::AAdvancedProjectPlayerController()
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
 
-	rotationSpeed = 10.f;
+	rotationSpeed = 1.f;
+	zoomSpeed = 1.f;
 }
 
 void AAdvancedProjectPlayerController::BeginPlay()
@@ -45,6 +46,9 @@ void AAdvancedProjectPlayerController::SetupInputComponent()
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
 	{
 		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::RotateCamera);
+		EnhancedInputComponent->BindAction(cameraMoveInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::MoveCamera);
+		EnhancedInputComponent->BindAction(zoomInInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCameraIn);
+		EnhancedInputComponent->BindAction(zoomOutInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCameraOut);
 	}
 }
 
@@ -59,19 +63,35 @@ void AAdvancedProjectPlayerController::RotateCamera()
 		return;
 
 	float  newyaw = CameraBoom->GetComponentRotation().Yaw;
-	//float  newpitch = CameraBoom->GetComponentRotation().Pitch;
 
 	if(deltaX > 0)
-		newyaw += rotationSpeed;
+		newyaw += rotationSpeed * GetWorld()->GetDeltaSeconds();
 	else
-		newyaw -= rotationSpeed;
-
-	//if (deltaY > 0)
-	//	newpitch += rotationSpeed;
-	//else
-	//	newpitch -= rotationSpeed;
+		newyaw -= rotationSpeed * GetWorld()->GetDeltaSeconds();
 
 	FHitResult hit;
 
 	CameraBoom->K2_SetRelativeRotation(FRotator(CameraBoom->GetComponentRotation().Pitch, newyaw, CameraBoom->GetComponentRotation().Roll), false, hit, false);
+}
+
+void AAdvancedProjectPlayerController::MoveCamera()
+{
+}
+
+void AAdvancedProjectPlayerController::ZoomCameraOut(const FInputActionValue& _value)
+{
+	FVector2D ttt = _value.Get<FVector2D>();
+
+	UE_LOG(LogTemp, Warning, TEXT("%f"), ttt.X)
+
+	CameraBoom->TargetArmLength += zoomSpeed * GetWorld()->GetDeltaSeconds();
+}
+
+void AAdvancedProjectPlayerController::ZoomCameraIn(const FInputActionValue& _value)
+{
+	FVector2D ttt = _value.Get<FVector2D>();
+
+	UE_LOG(LogTemp,Warning,TEXT("%f"), ttt.X)
+
+	CameraBoom->TargetArmLength -= zoomSpeed * GetWorld()->GetDeltaSeconds();
 }

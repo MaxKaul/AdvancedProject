@@ -23,6 +23,12 @@ protected:
 private:
 	UFUNCTION()
 		void RotateCamera();
+	UFUNCTION()
+		void ZoomCameraIn(const FInputActionValue& _value);
+	UFUNCTION()
+		void ZoomCameraOut(const FInputActionValue& _value);
+	UFUNCTION()
+		void MoveCamera();
 
 private:
 	UPROPERTY()
@@ -38,7 +44,22 @@ private:
 		class UInputAction* rotateInputAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
+		UInputAction* zoomInInputAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
+		UInputAction* zoomOutInputAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
+		UInputAction* cameraMoveInputAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		float rotationSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
+		float cameraMovementSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
+		float zoomSpeed;
 };
 
 
