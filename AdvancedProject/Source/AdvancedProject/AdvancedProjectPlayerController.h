@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
+#include "EnumLibrary.h"
 #include "GameFramework/PlayerController.h"
 #include "AdvancedProjectPlayerController.generated.h"
 
@@ -19,16 +21,21 @@ public:
 protected:
 	virtual void SetupInputComponent() override;
 	virtual void BeginPlay();
+	virtual void Tick(float DeltaSeconds) override;
 
 private:
 	UFUNCTION()
 		void RotateCamera();
 	UFUNCTION()
-		void ZoomCameraIn(const FInputActionValue& _value);
-	UFUNCTION()
-		void ZoomCameraOut(const FInputActionValue& _value);
+		void ZoomCamera(const FInputActionValue& _value);
 	UFUNCTION()
 		void MoveCamera();
+
+	UFUNCTION()
+		void BeginZoomTimeline();
+
+	UFUNCTION()
+		void ZoomTimelineProgress(float _timelineAlpha);
 
 private:
 	UPROPERTY()
@@ -37,6 +44,12 @@ private:
 	UPROPERTY()
 		class USpringArmComponent* CameraBoom;
 
+	FTimeline zoomCurveTimeline;
+
+	UPROPERTY(EditAnywhere, Category = Timeline, meta = (AllowPrivateAccess))
+		UCurveFloat* zoomCurveFloat;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;
 
@@ -44,10 +57,7 @@ private:
 		class UInputAction* rotateInputAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
-		UInputAction* zoomInInputAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
-		UInputAction* zoomOutInputAction;
+		UInputAction* zoomInputAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		UInputAction* cameraMoveInputAction;
@@ -60,6 +70,12 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		float zoomSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
+		FVector2D cameraZoomLenghtMinMax;
+
+	UPROPERTY()
+		ECameraZoomStatus zoomStatus;
 };
 
 

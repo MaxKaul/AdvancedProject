@@ -8,29 +8,40 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blueprint/UserWidget.h"
-#include "Blueprint/WidgetLayoutLibrary.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 AAdvancedProjectPlayerController::AAdvancedProjectPlayerController()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
 
-	rotationSpeed = 1.f;
-	zoomSpeed = 1.f;
+	rotationSpeed = 100.f;
+	zoomSpeed = 100.f;
+
+	cameraZoomLenghtMinMax = FVector2D{ 500,10000};
 }
 
 void AAdvancedProjectPlayerController::BeginPlay()
 {
-	// Call the base class  
 	Super::BeginPlay();
 
-	//Add Input Mapping Context
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
+}
+
+void AAdvancedProjectPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (zoomCurveTimeline.IsPlaying())
+		zoomCurveTimeline.TickTimeline(DeltaSeconds);
+
+	UE_LOG(LogTemp,Warning,TEXT("%f"), zoomSpeed)
 }
 
 void AAdvancedProjectPlayerController::InitPlayerController(AAdvancedProjectCharacter* _controllerOwner)
@@ -47,8 +58,7 @@ void AAdvancedProjectPlayerController::SetupInputComponent()
 	{
 		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::RotateCamera);
 		EnhancedInputComponent->BindAction(cameraMoveInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::MoveCamera);
-		EnhancedInputComponent->BindAction(zoomInInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCameraIn);
-		EnhancedInputComponent->BindAction(zoomOutInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCameraOut);
+		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCamera);
 	}
 }
 
@@ -78,20 +88,43 @@ void AAdvancedProjectPlayerController::MoveCamera()
 {
 }
 
-void AAdvancedProjectPlayerController::ZoomCameraOut(const FInputActionValue& _value)
+void AAdvancedProjectPlayerController::ZoomCamera(const FInputActionValue& _value)
 {
-	FVector2D ttt = _value.Get<FVector2D>();
+	if (zoomCurveTimeline.IsPlaying())
+		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("%f"), ttt.X)
 
-	CameraBoom->TargetArmLength += zoomSpeed * GetWorld()->GetDeltaSeconds();
+	if(_value.Get<float>() == 1)
+		zoomStatus = ECameraZoomStatus::ETS_ZoomOut;
+	else if(_value.Get<float>() == -1)
+		zoomStatus = ECameraZoomStatus::ETS_ZoomIn;
+	else 
+		zoomStatus = ECameraZoomStatus::ETS_NoZoom;
+
+	BeginZoomTimeline();
+
 }
 
-void AAdvancedProjectPlayerController::ZoomCameraIn(const FInputActionValue& _value)
+void AAdvancedProjectPlayerController::BeginZoomTimeline()
 {
-	FVector2D ttt = _value.Get<FVector2D>();
+	FOnTimelineFloat timelineprogress;
 
-	UE_LOG(LogTemp,Warning,TEXT("%f"), ttt.X)
+	timelineprogress.BindUFunction(this, FName("ZoomTimelineProgress"));
 
-	CameraBoom->TargetArmLength -= zoomSpeed * GetWorld()->GetDeltaSeconds();
+	zoomCurveTimeline.SetTimelineLengthMode(TL_LastKeyFrame);
+	zoomCurveTimeline.SetPlayRate(zoomSpeed);
+	zoomCurveTimeline.SetLooping(false);
+	zoomCurveTimeline.AddInterpFloat(zoomCurveFloat, timelineprogress);
+
+	zoomCurveTimeline.PlayFromStart();
+}
+
+void AAdvancedProjectPlayerController::ZoomTimelineProgress(float _timelineAlpha)
+{
+	if (zoomStatus == ECameraZoomStatus::ETS_ZoomIn && CameraBoom->TargetArmLength >= cameraZoomLenghtMinMax.X)
+		CameraBoom->TargetArmLength -= _timelineAlpha * GetWorld()->GetDeltaSeconds();
+	else if (zoomStatus == ECameraZoomStatus::ETS_ZoomOut && CameraBoom->TargetArmLength <= cameraZoomLenghtMinMax.Y)
+		CameraBoom->TargetArmLength += _timelineAlpha * GetWorld()->GetDeltaSeconds();
+	else
+		zoomCurveTimeline.Stop();
 }
