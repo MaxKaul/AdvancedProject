@@ -40,8 +40,6 @@ void AAdvancedProjectPlayerController::Tick(float DeltaSeconds)
 
 	if (zoomCurveTimeline.IsPlaying())
 		zoomCurveTimeline.TickTimeline(DeltaSeconds);
-
-	UE_LOG(LogTemp,Warning,TEXT("%f"), zoomSpeed)
 }
 
 void AAdvancedProjectPlayerController::InitPlayerController(AAdvancedProjectCharacter* _controllerOwner)
@@ -58,7 +56,7 @@ void AAdvancedProjectPlayerController::SetupInputComponent()
 	{
 		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::RotateCamera);
 		EnhancedInputComponent->BindAction(cameraMoveInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::MoveCamera);
-		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCamera);
+		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Completed , this, &AAdvancedProjectPlayerController::ZoomCamera);
 	}
 }
 
@@ -90,10 +88,6 @@ void AAdvancedProjectPlayerController::MoveCamera()
 
 void AAdvancedProjectPlayerController::ZoomCamera(const FInputActionValue& _value)
 {
-	if (zoomCurveTimeline.IsPlaying())
-		return;
-
-
 	if(_value.Get<float>() == 1)
 		zoomStatus = ECameraZoomStatus::ETS_ZoomOut;
 	else if(_value.Get<float>() == -1)
@@ -102,7 +96,6 @@ void AAdvancedProjectPlayerController::ZoomCamera(const FInputActionValue& _valu
 		zoomStatus = ECameraZoomStatus::ETS_NoZoom;
 
 	BeginZoomTimeline();
-
 }
 
 void AAdvancedProjectPlayerController::BeginZoomTimeline()
@@ -111,9 +104,12 @@ void AAdvancedProjectPlayerController::BeginZoomTimeline()
 
 	timelineprogress.BindUFunction(this, FName("ZoomTimelineProgress"));
 
+	zoomCurveTimeline.SetPlaybackPosition(0.f, false);
+
 	zoomCurveTimeline.SetTimelineLengthMode(TL_LastKeyFrame);
-	zoomCurveTimeline.SetPlayRate(zoomSpeed);
+	zoomCurveTimeline.SetPlayRate(10.f);
 	zoomCurveTimeline.SetLooping(false);
+
 	zoomCurveTimeline.AddInterpFloat(zoomCurveFloat, timelineprogress);
 
 	zoomCurveTimeline.PlayFromStart();
@@ -121,10 +117,15 @@ void AAdvancedProjectPlayerController::BeginZoomTimeline()
 
 void AAdvancedProjectPlayerController::ZoomTimelineProgress(float _timelineAlpha)
 {
-	if (zoomStatus == ECameraZoomStatus::ETS_ZoomIn && CameraBoom->TargetArmLength >= cameraZoomLenghtMinMax.X)
-		CameraBoom->TargetArmLength -= _timelineAlpha * GetWorld()->GetDeltaSeconds();
-	else if (zoomStatus == ECameraZoomStatus::ETS_ZoomOut && CameraBoom->TargetArmLength <= cameraZoomLenghtMinMax.Y)
-		CameraBoom->TargetArmLength += _timelineAlpha * GetWorld()->GetDeltaSeconds();
+	FVector offset = CameraBoom->SocketOffset;
+	float speed = zoomSpeed;
+
+	if (zoomStatus == ECameraZoomStatus::ETS_ZoomIn)
+		offset.X += 100 * _timelineAlpha;
+	else if (zoomStatus == ECameraZoomStatus::ETS_ZoomOut)
+		offset.X -= 100 * _timelineAlpha;
 	else
 		zoomCurveTimeline.Stop();
+
+	CameraBoom->SocketOffset = offset;
 }

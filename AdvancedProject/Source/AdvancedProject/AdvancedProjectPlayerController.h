@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/TimelineComponent.h"
 #include "EnumLibrary.h"
+#include "InputActionValue.h"
 #include "GameFramework/PlayerController.h"
 #include "AdvancedProjectPlayerController.generated.h"
 
@@ -49,7 +50,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = Timeline, meta = (AllowPrivateAccess))
 		UCurveFloat* zoomCurveFloat;
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;
 
@@ -76,6 +76,7 @@ private:
 
 	UPROPERTY()
 		ECameraZoomStatus zoomStatus;
+
 };
 
 
