@@ -53,7 +53,7 @@ void AAdvancedProjectPlayerController::SetupInputComponent()
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
 	{
 		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::RotateCamera);
-		EnhancedInputComponent->BindAction(cameraMoveInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::MoveCamera);
+
 		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCamera);
 	}
 }
@@ -80,9 +80,7 @@ void AAdvancedProjectPlayerController::RotateCamera()
 	CameraBoom->K2_SetRelativeRotation(FRotator(CameraBoom->GetComponentRotation().Pitch, newyaw, CameraBoom->GetComponentRotation().Roll), false, hit, false);
 }
 
-void AAdvancedProjectPlayerController::MoveCamera()
-{
-}
+
 
 void AAdvancedProjectPlayerController::ZoomCamera(const FInputActionValue& _value)
 {
@@ -92,9 +90,9 @@ void AAdvancedProjectPlayerController::ZoomCamera(const FInputActionValue& _valu
 	FVector offset = CameraBoom->SocketOffset;
 
 	if(_value.Get<float>() == 1 && offset.X > cameraZoomLenghtMinMax.X)
-		offset.X -= 100;
+		offset.X -= zoomSpeed;
 	else if(_value.Get<float>() == -1 && offset.X < cameraZoomLenghtMinMax.Y)
-		offset.X += 100;
+		offset.X += zoomSpeed;
 
 	CameraBoom->SocketOffset = offset;
 }

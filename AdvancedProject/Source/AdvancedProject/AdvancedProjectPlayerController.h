@@ -29,8 +29,6 @@ private:
 		void RotateCamera();
 	UFUNCTION()
 		void ZoomCamera(const FInputActionValue& _value);
-	UFUNCTION()
-		void MoveCamera();
 
 private:
 	UPROPERTY()
@@ -47,9 +45,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		UInputAction* zoomInputAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
-		UInputAction* cameraMoveInputAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		float rotationSpeed;
