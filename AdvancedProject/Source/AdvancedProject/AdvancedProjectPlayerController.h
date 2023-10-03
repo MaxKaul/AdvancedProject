@@ -32,23 +32,12 @@ private:
 	UFUNCTION()
 		void MoveCamera();
 
-	UFUNCTION()
-		void BeginZoomTimeline();
-
-	UFUNCTION()
-		void ZoomTimelineProgress(float _timelineAlpha);
-
 private:
 	UPROPERTY()
 		class AAdvancedProjectCharacter* controllerOwner;
 
 	UPROPERTY()
 		class USpringArmComponent* CameraBoom;
-
-	FTimeline zoomCurveTimeline;
-
-	UPROPERTY(EditAnywhere, Category = Timeline, meta = (AllowPrivateAccess))
-		UCurveFloat* zoomCurveFloat;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;
@@ -73,10 +62,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		FVector2D cameraZoomLenghtMinMax;
-
-	UPROPERTY()
-		ECameraZoomStatus zoomStatus;
-
 };
 
 

@@ -29,13 +29,3 @@ enum class EProductionSiteType : uint8
 	PST_Ambrosia,
 	PST_ENTRY_AMOUNT
 };
-
-UENUM()
-enum class ECameraZoomStatus : uint8
-{
-	ETS_DEFAULT,
-	ETS_ZoomIn,
-	ETS_ZoomOut,
-	ETS_NoZoom,
-	ETS_ENTRY_AMOUNT
-};
