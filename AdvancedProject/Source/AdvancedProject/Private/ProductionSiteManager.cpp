@@ -48,6 +48,11 @@ void AProductionSiteManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!NullcheckDependencies())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager, !NullcheckDependencies()"))
+		return;
+	}
 }
 
 
@@ -153,22 +158,25 @@ FProductionSiteManagerSaveData AProductionSiteManager::GetProductionSiteManagerS
 
 bool AProductionSiteManager::NullcheckDependencies()
 {
-	bool status = false;
+	bool status = true;
 
-	if (productionSiteClass)
-		status = true;
-	else
+	if(!productionSiteClass)
+	{
+		status = false;
 		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !marketStall"));
+	}
 
-	if (world)
-		status = true;
-	else
+	if (!world)
+	{
+		status = false;
 		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !world"));
+	}
 
-	if (managerOwner)
-		status = true;
-	else
+	if (!managerOwner)
+	{
+		status = false;
 		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !world"));
+	}
 
 	return status;
 }

@@ -19,7 +19,7 @@ void ASaveGameManager::BeginPlay()
 	if (!NullcheckDependencies())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !NullcheckDependencies"));
-			return;;
+		return;;
 	}
 
 	if (!InitAllManager())
@@ -62,6 +62,12 @@ void ASaveGameManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
+	if (!NullcheckDependencies())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !NullcheckDependencies"));
+		return;;
+	}
 }
 
 bool ASaveGameManager::InitAllManager()
@@ -93,12 +99,13 @@ bool ASaveGameManager::InitAllManager()
 
 bool ASaveGameManager::NullcheckDependencies()
 {
-	bool status = false;
+	bool status = true;
 
-	if (marketManagerClass)
-		status = true;
-	else
+	if (!marketManagerClass)
+	{
+		status = false;
 		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !marketStall"));
+	}
 
 	return status;
 }

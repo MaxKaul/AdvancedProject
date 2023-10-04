@@ -29,6 +29,9 @@ struct FIndividualResourceInfo
 	// Decay or Growth value of the individual resource, starts with 0 and is representativ for resources entering/leaving the market
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float k_Value;
+
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		float resourceTickRate;
 };
 
 USTRUCT(BlueprintType)
@@ -92,11 +95,6 @@ public:
 
 	UFUNCTION()
 		FMarketManagerSaveData GetMarketManagerSaveData();
-public:	
-	virtual void Tick(float DeltaTime) override;
-
-	int test;
-
 
 	// Wir geben transactiontickets zurück um dem käufer sowohl resourcen als auch überschuss geld zurück zu geben
 	UFUNCTION()

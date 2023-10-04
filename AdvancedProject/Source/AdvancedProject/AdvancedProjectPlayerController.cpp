@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -24,26 +25,29 @@ AAdvancedProjectPlayerController::AAdvancedProjectPlayerController()
 	cameraZoomLenghtMinMax = FVector2D{ -2000,1000 };
 }
 
-void AAdvancedProjectPlayerController::BeginPlay()
-{
-	Super::BeginPlay();
-
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-	{
-		Subsystem->AddMappingContext(DefaultMappingContext, 0);
-	}
-}
-
 void AAdvancedProjectPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	if (!NullcheckDependencies())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AAdvancedProjectPlayerController, !NullcheckDependencies"));
+		return;
+	}
 }
 
 void AAdvancedProjectPlayerController::InitPlayerController(AAdvancedProjectCharacter* _controllerOwner)
 {
 	controllerOwner = _controllerOwner;
 	CameraBoom = controllerOwner->GetCameraBoom();
+
+	UWidgetBlueprintLibrary::SetInputMode_GameOnly(this, false);
+
+
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	{
+		Subsystem->AddMappingContext(DefaultMappingContext, 0);
+	}
 }
 
 void AAdvancedProjectPlayerController::SetupInputComponent()
@@ -52,9 +56,14 @@ void AAdvancedProjectPlayerController::SetupInputComponent()
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
 	{
+		EnhancedInputComponent->BindAction(zoomMoveRightInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::MoveRight);
+		EnhancedInputComponent->BindAction(zoomMoveForwardInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::MoveForward);
+		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCamera);
 		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::RotateCamera);
 
-		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCamera);
+
+		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Completed , this, &AAdvancedProjectPlayerController::ZoomCamera);
+		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Completed, this, &AAdvancedProjectPlayerController::RotateCamera);
 	}
 }
 
@@ -75,12 +84,39 @@ void AAdvancedProjectPlayerController::RotateCamera()
 	else
 		newyaw -= rotationSpeed * GetWorld()->GetDeltaSeconds();
 
-	FHitResult hit;
-
-	CameraBoom->K2_SetRelativeRotation(FRotator(CameraBoom->GetComponentRotation().Pitch, newyaw, CameraBoom->GetComponentRotation().Roll), false, hit, false);
+	controllerOwner->SetActorRotation(FRotator(controllerOwner->GetActorRotation().Pitch, newyaw, controllerOwner->GetActorRotation().Roll));
+	CameraBoom->SetRelativeRotation(FRotator(CameraBoom->GetComponentRotation().Pitch, newyaw, CameraBoom->GetComponentRotation().Roll), false);
 }
 
+void AAdvancedProjectPlayerController::MoveRight(const FInputActionValue& _value)
+{
+	float movemefloatright = _value.Get<float>();
 
+	if (controllerOwner != nullptr)
+	{
+		const FRotator rotation = controllerOwner->GetActorRotation();
+		const FRotator yawrotation(0, rotation.Yaw, 0);
+
+		const FVector rightdirection = FRotationMatrix(yawrotation).GetUnitAxis(EAxis::Y);
+
+		controllerOwner->AddMovementInput(rightdirection, movemefloatright);
+	}
+}
+
+void AAdvancedProjectPlayerController::MoveForward(const FInputActionValue& _value)
+{
+	float movemefloatforward = _value.Get<float>();
+
+	if (controllerOwner != nullptr)
+	{
+		const FRotator rotation = controllerOwner->GetActorRotation();
+		const FRotator yawrotation(0, rotation.Yaw, 0);
+
+		const FVector forwarddirection = FRotationMatrix(yawrotation).GetUnitAxis(EAxis::X);
+
+		controllerOwner->AddMovementInput(forwarddirection, movemefloatforward);
+	}
+}
 
 void AAdvancedProjectPlayerController::ZoomCamera(const FInputActionValue& _value)
 {
@@ -95,4 +131,24 @@ void AAdvancedProjectPlayerController::ZoomCamera(const FInputActionValue& _valu
 		offset.X += zoomSpeed;
 
 	CameraBoom->SocketOffset = offset;
+}
+
+
+bool AAdvancedProjectPlayerController::NullcheckDependencies()
+{
+	bool status = true;
+
+	if(!controllerOwner)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AAdvancedProjectPlayerController, !ControllerOwner"));
+		status = false;
+	}
+
+	if (!CameraBoom)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AAdvancedProjectPlayerController, !ControllerOwner"));
+		status = false;
+	}
+
+	return status;
 }

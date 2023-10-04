@@ -4,8 +4,42 @@
 
 #include "CoreMinimal.h"
 #include "EnumLibrary.h"
+#include "Engine/DataTable.h"
 #include "GameFramework/Actor.h"
 #include "Productionsite.generated.h"
+
+
+USTRUCT()
+struct FProduktionResources
+{
+	GENERATED_BODY()
+
+private:
+	EResourceIdent resourceIdent;
+
+	int resourceAmount;
+
+	float resourceTickRate;
+
+public:
+	FProduktionResources() {  }
+
+	FProduktionResources(EResourceIdent _resourceIdent, int _resourceAmount, float _resourceTickRate)
+	{
+		resourceIdent = _resourceIdent;
+		resourceAmount = _resourceAmount;
+		resourceTickRate = _resourceTickRate;
+	}
+
+	FORCEINLINE
+		EResourceIdent GetResourceIdent() { return resourceIdent; }
+
+	FORCEINLINE
+		int GetResourceAmount() { return resourceAmount; }
+
+	FORCEINLINE
+		float GetResourceTickRate() { return resourceTickRate; }
+};
 
 USTRUCT(BlueprintType)
 struct FProductionSiteSaveData
@@ -48,9 +82,6 @@ class ADVANCEDPROJECT_API AProductionsite : public AActor
 public:	
 	AProductionsite();
 
-protected:
-	virtual void BeginPlay() override;
-
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -62,11 +93,21 @@ public:
 	UFUNCTION()
 		FProductionSiteSaveData GetProductionSiteSaveData();
 
+	FORCEINLINE
+		TArray<FProduktionResources> GetCurrentResources() { return productionResource; };
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();
 
+	UFUNCTION()
+		void TickResourceProduction();
+	UFUNCTION()
+		void InitResources();
+
 private:
+	UPROPERTY()
+		bool bWasInit;
 	UPROPERTY()
 		UStaticMesh* actorMesh;
 	UPROPERTY()
@@ -77,4 +118,19 @@ private:
 
 	UPROPERTY()
 		EProductionSiteType productionSiteType;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
+		TArray<class AWorker*> employedWorker;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
+		UDataTable* resourceDataTable;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
+		float currentResourceOutput;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
+		TArray<FProduktionResources> productionResource;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ResourceInfo)
+		float resourceTickRate;
 };

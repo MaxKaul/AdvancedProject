@@ -12,6 +12,7 @@ enum class EResourceIdent : uint8
 	ERI_Meat,
 	ERI_Fruit,
 	ERI_Resin,
+	ERI_Hardwood,
 	ERI_Jewelry,
 	ERI_Furniture,
 	ERI_Ambrosia,
@@ -24,7 +25,9 @@ enum class EProductionSiteType : uint8
 	PST_DEFAULT,
 	PST_Meat,
 	PST_Fruits,
+	PST_Wheat,
 	PST_Hardwood_Resin,
+	PST_Gold_Iron,
 	PST_Furniture_Jewelry,
 	PST_Ambrosia,
 	PST_ENTRY_AMOUNT

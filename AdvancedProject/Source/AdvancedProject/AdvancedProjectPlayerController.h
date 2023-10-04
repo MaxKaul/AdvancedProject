@@ -21,7 +21,6 @@ public:
 
 protected:
 	virtual void SetupInputComponent() override;
-	virtual void BeginPlay();
 	virtual void Tick(float DeltaSeconds) override;
 
 private:
@@ -29,6 +28,13 @@ private:
 		void RotateCamera();
 	UFUNCTION()
 		void ZoomCamera(const FInputActionValue& _value);
+	UFUNCTION()
+		void MoveRight(const FInputActionValue& _value);
+	UFUNCTION()
+		void MoveForward(const FInputActionValue& _value);
+
+	UFUNCTION()
+		bool NullcheckDependencies();
 
 private:
 	UPROPERTY()
@@ -47,6 +53,12 @@ private:
 		UInputAction* zoomInputAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
+		UInputAction* zoomMoveRightInputAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
+		UInputAction* zoomMoveForwardInputAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		float rotationSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
@@ -58,5 +70,3 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		FVector2D cameraZoomLenghtMinMax;
 };
-
-

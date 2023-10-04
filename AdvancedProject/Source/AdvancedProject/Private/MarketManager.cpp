@@ -20,6 +20,7 @@ bool AMarketManager::InitMarketManager(FMarketManagerSaveData _saveData)
 	bool status = false;
 
 	world = GetWorld();
+
 	if (!NullcheckDependencies())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AMarketManager, !NullcheckDependencies"));
@@ -69,11 +70,6 @@ bool AMarketManager::InitMarketManager()
 	world->GetTimerManager().SetTimer(handle, this, &AMarketManager::UpdateResourcePrices, resourcePriceTick, false);
 
 	return status;
-}
-
-void AMarketManager::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 // Noch resourcen auf dem markt auf 0 checken
@@ -266,28 +262,31 @@ FMarketManagerSaveData AMarketManager::GetMarketManagerSaveData()
 
 bool AMarketManager::NullcheckDependencies()
 {
-	bool status = false;
+	bool status = true;
 
-	if (stallPositions.Num() > 0)
+	if (stallPositions.Num() <= 0)
+	{
 		status = true;
-	else
 		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !stallPositions"));
+	}
 
-	if (world)
-		status = true;
-	else
-		UE_LOG(LogTemp, Warning, TEXT("world !stallPositions"));
+	if (!world)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !world"));
+	}
 
-	if (marketStallClass)
-		status = true;
-	else
-		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !marketStall"));
+	if (!marketStallClass)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !marketStallClass"));
+	}
 
-	if(resourceDefaultTable)
-		status = true;
-	else
-		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !marketStall"));
-
+	if (!resourceDefaultTable)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("AMarketManager !resourceDefaultTable"));
+	}
 
 	return status;
 }
