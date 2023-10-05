@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EnumLibrary.h"
+#include "MarketManager.h"
 #include "Engine/DataTable.h"
 #include "ResourceTableBase.generated.h"
 

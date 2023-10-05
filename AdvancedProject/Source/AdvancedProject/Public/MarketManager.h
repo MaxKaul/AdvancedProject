@@ -10,14 +10,18 @@
 
 
 
-
+// Resource Info für den Markt, FProduktionResources ist für die individuellen Produktionsites
 USTRUCT(BlueprintType)
 struct FIndividualResourceInfo
 {
 	GENERATED_BODY()
 
+private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		EResourceIdent resourceIdent;
+
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		EProductionSiteType allowedProductionSites;
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		int resourceAmount;
@@ -32,6 +36,40 @@ struct FIndividualResourceInfo
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float resourceTickRate;
+
+public:
+	FORCEINLINE
+		float GetResourceTickRate() { return resourceTickRate; }
+	FORCEINLINE
+		int GetResourceAmount() { return resourceAmount; }
+	FORCEINLINE
+		float GetLastResourcePrice() { return lastResourcePrice; }
+	FORCEINLINE
+		float Get_K_Value() { return k_Value; }
+	FORCEINLINE
+		EResourceIdent GetResourceIdent() { return resourceIdent; }
+	FORCEINLINE
+		EProductionSiteType GetAllowedProductionSites() { return allowedProductionSites; }
+
+
+	FORCEINLINE
+		void SetResourceTickRate(float _newValue) { resourceTickRate = _newValue; }
+	FORCEINLINE
+		void SetLastResourcePrice(float _newValue) { lastResourcePrice = _newValue; }
+	FORCEINLINE
+		void AddResourceAmount(int _addValue) { resourceAmount += _addValue; }
+	FORCEINLINE
+		void SubtractResourceAmount(int _subValue) { resourceAmount -= _subValue; }
+	FORCEINLINE
+		void SetResourceAmount(float _newValue) { resourceAmount = _newValue; }
+	FORCEINLINE
+		void Add_K_Value(float _addValue) { k_Value += _addValue; }
+	FORCEINLINE
+		void Subtract_K_Value(float _subValue) { k_Value -= _subValue; }
+	FORCEINLINE
+		void Set_K_Value(float _newValue) { k_Value = _newValue; }
+	FORCEINLINE
+		void SetResourceIdent(EResourceIdent _ident) { resourceIdent = _ident; }
 };
 
 USTRUCT(BlueprintType)
@@ -61,6 +99,7 @@ struct FResourceTransactionTicket
 {
 	GENERATED_BODY()
 
+//private:
 	int resourceAmount;
 	// exchangedCapital ist der wert für ALLE EINHEITEN dieser resource (resourceAmount * (P0) = exchangedCapital)
 	float exchangedCapital;
@@ -103,7 +142,7 @@ public:
 		TArray<FResourceTransactionTicket> SellResources(TArray<FResourceTransactionTicket> _resourcesToSell);
 
 	FORCEINLINE
-		TMap<EResourceIdent,FIndividualResourceInfo> GetPoolInfo() { return resourceList; }
+		TMap<EResourceIdent, FIndividualResourceInfo> GetPoolInfo() { return resourceList; }
 
 private:
 	UFUNCTION()

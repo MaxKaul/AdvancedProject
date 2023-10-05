@@ -17,8 +17,6 @@ UBuilder::UBuilder()
 void UBuilder::BeginPlay()
 {
 	Super::BeginPlay();
-
-	
 }
 
 
@@ -28,11 +26,12 @@ void UBuilder::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 
 }
 
-bool UBuilder::InitBuilder(AProductionSiteManager* _manager)
+bool UBuilder::InitBuilder(AProductionSiteManager* _manager, AMarketManager* _marketManager)
 {
 	bool status = false;
 
 	world = GetWorld();
+	marketManager = _marketManager;
 
 	if (!NullcheckDependencies())
 	{
@@ -47,7 +46,7 @@ bool UBuilder::InitBuilder(AProductionSiteManager* _manager)
 	return status;
 }
 
-// Eine PRoductionSite wird mit einem savedata struct initialised (Einfach damit ich das nicht doppelt machen muss, die save data soll die selben daten speichern wie die welche benötigt werden zum inin)
+// Eine ProductionSite wird mit einem savedata struct initialised (Einfach damit ich das nicht doppelt machen muss, die save data soll die selben daten speichern wie die welche benötigt werden zum inin)
 bool UBuilder::BuildProductionSite(FProductionSiteSaveData _siteData)
 {
 	bool status = false;
@@ -64,7 +63,7 @@ bool UBuilder::BuildProductionSite(FProductionSiteSaveData _siteData)
 
 			AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
 
-			spawnedsite->InitProductionSite(_siteData.GetSavedMesh(), _siteData.GetSavedType(), _siteData.GetSavedBuildingSite());
+			spawnedsite->InitProductionSite(_siteData.GetSavedMesh(), _siteData.GetSavedType(), _siteData.GetSavedBuildingSite(), marketManager);
 
 
 			productionSiteManager->SubscribeProductionsite(spawnedsite);
@@ -91,11 +90,16 @@ bool UBuilder::NullcheckDependencies()
 		status = true;
 	else
 		UE_LOG(LogTemp, Warning, TEXT("UBuilder !productionSiteManager"));
-
+	
 	if (!world)
 		status = true;
 	else
 		UE_LOG(LogTemp, Warning, TEXT("UBuilder !world"));
+
+	if (!marketManager)
+		status = true;
+	else
+		UE_LOG(LogTemp, Warning, TEXT("UBuilder !marketManager"));
 
 	//if(!productionSiteClass)
 	//	status = true;

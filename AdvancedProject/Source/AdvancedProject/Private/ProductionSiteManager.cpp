@@ -56,10 +56,11 @@ void AProductionSiteManager::Tick(float DeltaTime)
 }
 
 
-void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner)
+void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager)
 {
 	world = GetWorld();
 	managerOwner = _managerOwner;
+	marketManager = _marketManager;
 
 	if(!NullcheckDependencies())
 	{
@@ -69,10 +70,11 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner)
 }
 
 
-void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData)
+void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData, AMarketManager* _marketManager)
 {
 	world = GetWorld();
 	managerOwner = _managerOwner;
+	marketManager = _marketManager;
 
 	if (!NullcheckDependencies())
 	{
@@ -110,7 +112,7 @@ void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 		AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
 
-		spawnedsite->InitProductionSite(savedmesh ,savedtype, savedbuildingsite);
+		spawnedsite->InitProductionSite(savedmesh ,savedtype, savedbuildingsite, marketManager);
 
 		allProductionSites.Add(spawnedsite);
 		
@@ -163,19 +165,25 @@ bool AProductionSiteManager::NullcheckDependencies()
 	if(!productionSiteClass)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !marketStall"));
+		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager !marketStall"));
 	}
 
 	if (!world)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !world"));
+		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager !world"));
 	}
 
 	if (!managerOwner)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !world"));
+		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager !managerOwner"));
+	}
+
+	if (!marketManager)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager !marketManager"));
 	}
 
 	return status;

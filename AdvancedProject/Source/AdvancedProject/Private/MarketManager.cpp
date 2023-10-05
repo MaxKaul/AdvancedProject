@@ -61,7 +61,7 @@ bool AMarketManager::InitMarketManager()
 
 	for (size_t i = 0; i < resourcebasevalues.Num(); i++)
 	{
-		InitIndividualResource(resourcebasevalues[i]->Resource.lastResourcePrice, resourcebasevalues[i]->Resource.resourceAmount, resourcebasevalues[i]->Resource.resourceIdent);
+		InitIndividualResource(resourcebasevalues[i]->Resource.GetLastResourcePrice(), resourcebasevalues[i]->Resource.GetResourceAmount(), resourcebasevalues[i]->Resource.GetResourceIdent());
 	}
 
 	InitMarketStalls();
@@ -85,17 +85,17 @@ TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResource
 		EResourceIdent currident = ticket.resourceIdent;
 		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
 
-		if(resourcelistinfo.lastResourcePrice <= ticket.maxBuyPricePerResource.GetValue())
+		if(resourcelistinfo.GetLastResourcePrice() <= ticket.maxBuyPricePerResource.GetValue())
 		{
 			// !! NOCH EINE LÖSUNG FÜR CALLS FINDEN WELCHE ZEITGLEICH STATTFINDEN !! -> Waiting List?
-			resourceList.Find(ticket.resourceIdent)->resourceAmount -= ticket.resourceAmount;
-			resourceList.Find(ticket.resourceIdent)->k_Value -= ticket.resourceAmount;
+			resourceList.Find(ticket.resourceIdent)->SubtractResourceAmount(ticket.resourceAmount);
+			resourceList.Find(ticket.resourceIdent)->Subtract_K_Value(ticket.resourceAmount);
 
 			newticketentry.resourceIdent = ticket.resourceIdent;
 			newticketentry.resourceAmount = ticket.resourceAmount;
 
 			// Wir geben die differenz wieder zurück da jeder käufer immer all sein geld reinwirft
-			newticketentry.exchangedCapital = ticket.exchangedCapital - ticket.resourceAmount * resourcelistinfo.lastResourcePrice;
+			newticketentry.exchangedCapital = ticket.exchangedCapital - ticket.resourceAmount * resourcelistinfo.GetLastResourcePrice();
 
 			returntickets.Add(newticketentry);
 		}
@@ -126,16 +126,16 @@ TArray<FResourceTransactionTicket> AMarketManager::SellResources(TArray<FResourc
 		EResourceIdent currident = ticket.resourceIdent;
 		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
 
-		if (resourcelistinfo.lastResourcePrice >= ticket.minSellPricePricePerResource.GetValue())
+		if (resourcelistinfo.GetLastResourcePrice() >= ticket.minSellPricePricePerResource.GetValue())
 		{
-			resourceList.Find(ticket.resourceIdent)->resourceAmount += ticket.resourceAmount;
-			resourceList.Find(ticket.resourceIdent)->k_Value += ticket.resourceAmount;
+			resourceList.Find(ticket.resourceIdent)->AddResourceAmount(ticket.resourceAmount);
+			resourceList.Find(ticket.resourceIdent)->Add_K_Value(ticket.resourceAmount);
 
 			newticketentry.resourceIdent = ticket.resourceIdent;
 			newticketentry.resourceAmount = 0;
 
 			// Wir geben die differenz wieder zurück da jeder käufer immer all sein geld reinwirft
-			newticketentry.exchangedCapital = ticket.resourceAmount * resourcelistinfo.lastResourcePrice;
+			newticketentry.exchangedCapital = ticket.resourceAmount * resourcelistinfo.GetLastResourcePrice();
 
 			returntickets.Add(newticketentry);
 		}
@@ -177,7 +177,7 @@ void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
 
 	for (FIndividualResourceInfo resource : allresources)
 	{
-		InitIndividualResource(resource.lastResourcePrice, resource.resourceAmount, resource.resourceIdent);
+		InitIndividualResource(resource.GetLastResourcePrice(), resource.GetResourceAmount(), resource.GetResourceIdent());
 	}
 }
 
@@ -188,8 +188,8 @@ void AMarketManager::UpdateResourcePrices()
 
 	for(FIndividualResourceInfo resource : allresources)
 	{
-		float lastresourceprize = resource.lastResourcePrice;
-		float k_value = resource.k_Value;
+		float lastresourceprize = resource.GetLastResourcePrice();
+		float k_value = resource.Get_K_Value();
 		float timeframe = resourcePriceTick;
 		// Timeframe sollte unter umsatänden durch einen wert ersetzt werden welcher die meneg an zeit zwischen der letzten und dieser tranaktion darstellt
 		float newPrice = lastresourceprize;
@@ -203,8 +203,8 @@ void AMarketManager::UpdateResourcePrices()
 		if (newPrice < resourceMinValue)
 			newPrice = resourceMinValue;
 
-		resourceList.Find(resource.resourceIdent)->lastResourcePrice = newPrice;
-		resourceList.Find(resource.resourceIdent)->k_Value = 0;
+		resourceList.Find(resource.GetResourceIdent())->SetResourceTickRate(newPrice);
+		resourceList.Find(resource.GetResourceIdent())->Set_K_Value(0.f);
 	}
 
 	/* Kauf und verkauf test zum checken ob die formel richtig funzt
@@ -244,11 +244,11 @@ void AMarketManager::InitIndividualResource(float _lastResourcePrice, int _resou
 	FIndividualResourceInfo currentresource;
 
 	// Startet mit 0 weil wir noch keinen unterschied haben
-	currentresource.k_Value = 0.f;
+	currentresource.Set_K_Value(0.f);
 
-	currentresource.lastResourcePrice = _lastResourcePrice;
-	currentresource.resourceAmount = _resourceAmount;
-	currentresource.resourceIdent = _resourceIdent;
+	currentresource.SetLastResourcePrice(_lastResourcePrice);
+	currentresource.SetResourceAmount(_resourceAmount);
+	currentresource.SetResourceIdent(_resourceIdent);
 
 	resourceList.Add(_resourceIdent, currentresource);
 }

@@ -2,6 +2,7 @@
 
 
 #include "SaveGameManager.h"
+#include "ProductionSiteManager.h"
 #include "MarketManager.h"
 
 ASaveGameManager::ASaveGameManager()
@@ -91,7 +92,9 @@ bool ASaveGameManager::InitAllManager()
 	else
 		spawnedMarketManager->InitMarketManager();
 
-	
+	AProductionSiteManager* testmanager = Cast<AProductionSiteManager>(world->SpawnActor(TESTPSManager, &pos));
+
+	testmanager->InitProductionSiteManager(this, spawnedMarketManager);
 
 	return status;
 }
@@ -105,6 +108,12 @@ bool ASaveGameManager::NullcheckDependencies()
 	{
 		status = false;
 		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !marketStall"));
+	}
+
+	if (!world)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !world"));
 	}
 
 	return status;

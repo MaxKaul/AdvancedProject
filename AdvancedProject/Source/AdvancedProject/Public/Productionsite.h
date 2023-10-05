@@ -9,26 +9,41 @@
 #include "Productionsite.generated.h"
 
 
-USTRUCT()
-struct FProduktionResources
+// Resource Info für die productionsite, FIndividualResourceInfo ist für den Markt
+USTRUCT(BlueprintType)
+struct FProductionResources
 {
 	GENERATED_BODY()
 
 private:
 	EResourceIdent resourceIdent;
 
-	int resourceAmount;
+	float resourceAmount;
 
+	// Wir holen uns bei resorucen init die tick rate aus der welt und arbeiten lokal mit diesem wert weiter
+	// Dies dient dazu dass die einzelnen productionsites bonis bekommen können welche diesen wert ändert, gillt auch für den resourceMultiplicator
 	float resourceTickRate;
 
 public:
-	FProduktionResources() {  }
+	FProductionResources() {  }
 
-	FProduktionResources(EResourceIdent _resourceIdent, int _resourceAmount, float _resourceTickRate)
+	FProductionResources(EResourceIdent _resourceIdent, int _resourceAmount, float _resourceTickRate)
 	{
 		resourceIdent = _resourceIdent;
 		resourceAmount = _resourceAmount;
 		resourceTickRate = _resourceTickRate;
+	}
+
+	int ID;
+
+	bool operator== (const FProductionResources& Other)
+	{
+		
+		return ID == Other.ID;
+	}
+	friend uint32 GetTypeHash(const FProductionResources& Other)
+	{
+		return GetTypeHash(Other.ID);
 	}
 
 	FORCEINLINE
@@ -39,6 +54,9 @@ public:
 
 	FORCEINLINE
 		float GetResourceTickRate() { return resourceTickRate; }
+
+	FORCEINLINE
+		void TickResource(float _amount) { resourceAmount += _amount; }
 };
 
 USTRUCT(BlueprintType)
@@ -53,7 +71,7 @@ private:
 		EProductionSiteType type;
 	UPROPERTY()
 		class ABuildingSite* buildingSite;
-
+	
 public:
 
 	FORCEINLINE
@@ -88,20 +106,20 @@ public:
 
 public:
 	UFUNCTION()
-		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type,  ABuildingSite* _buildingSite);
+		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type,  ABuildingSite* _buildingSite, class AMarketManager* _marketManager);
 
 	UFUNCTION()
 		FProductionSiteSaveData GetProductionSiteSaveData();
 
-	FORCEINLINE
-		TArray<FProduktionResources> GetCurrentResources() { return productionResource; };
+	UFUNCTION()
+		TArray<FProductionResources> GetCurrentResources();
 
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();
 
 	UFUNCTION()
-		void TickResourceProduction();
+		void TickResourceProduction(EResourceIdent _ident);
 	UFUNCTION()
 		void InitResources();
 
@@ -119,6 +137,12 @@ private:
 	UPROPERTY()
 		EProductionSiteType productionSiteType;
 
+	UPROPERTY()
+		UWorld* world;
+
+	UPROPERTY()
+		 AMarketManager* marketManager;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
 		TArray<class AWorker*> employedWorker;
 
@@ -128,9 +152,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
 		float currentResourceOutput;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
-		TArray<FProduktionResources> productionResource;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ResourceInfo)
-		float resourceTickRate;
+	// Speicher alle lokalen resourcen, also alle welche sich in der produktionsite befinden, von dieser liste aus müssen wir resourcen entnehmen und ticken, enthält auch den timer handle zum ticken der resource
+	UPROPERTY()
+		TMap<FProductionResources, FTimerHandle> productionResourceHandlePair;
+
+	// Standard tick value für resourcen, der resourcenoutput pro minute wird  durch die tickrate bestimmt
+	// Kann aber auch für bonis und stuff genutzt werden
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ResourceInfo, meta =(AllowPrivateAccess))
+		float resourceTickValue;
 };

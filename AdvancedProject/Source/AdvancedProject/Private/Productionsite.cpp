@@ -2,6 +2,7 @@
 
 #include "Productionsite.h"
 #include "BuildingSite.h"
+#include "MarketManager.h"
 #include "ResourceTableBase.h"
 
 AProductionsite::AProductionsite()
@@ -24,14 +25,14 @@ void AProductionsite::Tick(float DeltaTime)
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !NullcheckDependencies()"))
 		return;
 	}
-
-	TickResourceProduction();
 }
 
-void AProductionsite::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite)
+void AProductionsite::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite,  AMarketManager* _marketManager)
 {
+	world = GetWorld();
 	productionSiteType = _type;
 	actorMeshComponent->SetStaticMesh(_siteMesh);
+	marketManager = _marketManager;
 
 	InitResources();
 }
@@ -55,75 +56,105 @@ bool AProductionsite::NullcheckDependencies()
 	if (!actorMeshComponent)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("AProductionsite !actorMeshComponent"));
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !actorMeshComponent"));
 	}
 
 	if (!actorMesh)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("AProductionsite !actorMesh"));
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !actorMesh"));
 	}
 
 	if (!buildingSite)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("AProductionsite !buildingSite"));
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !buildingSite"));
 	}
 
 	if (productionSiteType == EProductionSiteType::PST_DEFAULT)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("AProductionsite !EProductionSiteType::PST_DEFAULT"));
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !EProductionSiteType::PST_DEFAULT"));
+	}
+
+	if (!world)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !world"));
 	}
 
 	return status;
 }
 
-void AProductionsite::TickResourceProduction()
+TArray<FProductionResources> AProductionsite::GetCurrentResources()
 {
+	TArray<FProductionResources> productionresources;
 
+	//productionResourceHandlePair.GenerateKeyArray(productionresources);
+
+	return productionresources;
+}
+
+void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
+{
+	//for (TTuple<FProduktionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
+	//{
+	//	if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
+	//	{
+	//		resourcehandlepair.Key.TickResource(resourceTickValue);
+	//
+	//		FTimerDelegate  currdelegate;
+	//		currdelegate.BindUFunction(this, FName("TickResourceProduction"), resourcehandlepair.Key.GetResourceIdent());
+	//
+	//		world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, resourcehandlepair.Key.GetResourceTickRate(), false);
+	//	}
+	//}
 }
 
 void AProductionsite::InitResources()
 {
-
-	TArray<FResourceTableBase*> resourcebasevalues;
-
-	//for (TTuple<FName, unsigned char*> rowitem : resourceDefaultTable->GetRowMap())
+	//TMap<EResourceIdent, FIndividualResourceInfo> poolinfo = marketManager->GetPoolInfo();
+	//
+	//for(TTuple<EResourceIdent, FIndividualResourceInfo> item: poolinfo)
 	//{
-	//	resourcebasevalues.Add(reinterpret_cast<FResourceTableBase*>(rowitem.Value));
+	//	if(productionSiteType == item.Value.GetAllowedProductionSites())
+	//	{
+	//		switch (productionSiteType)
+	//		{
+	//		case EProductionSiteType::PST_Meat:
+	//			productionResourceHandlePair.Add({  FProduktionResources(EResourceIdent::ERI_Meat, 0, item.Value.GetResourceTickRate()), FTimerHandle() });
+	//			break;
+	//		case EProductionSiteType::PST_Fruits:
+	//			productionResourceHandlePair.Add({  FProduktionResources(EResourceIdent::ERI_Fruit, 0, item.Value.GetResourceTickRate()), FTimerHandle() });
+	//			break;
+	//		case EProductionSiteType::PST_Hardwood_Resin:
+	//			productionResourceHandlePair.Add({  FProduktionResources(EResourceIdent::ERI_Hardwood, 0, item.Value.GetResourceTickRate()), FTimerHandle() });
+	//			productionResourceHandlePair.Add({  FProduktionResources(EResourceIdent::ERI_Resin, 0, item.Value.GetResourceTickRate()), FTimerHandle() });
+	//			break;
+	//		case EProductionSiteType::PST_Furniture_Jewelry:
+	//			productionResourceHandlePair.Add({  FProduktionResources(EResourceIdent::ERI_Furniture, 0, item.Value.GetResourceTickRate()), FTimerHandle() });
+	//			productionResourceHandlePair.Add({  FProduktionResources(EResourceIdent::ERI_Jewelry, 0, item.Value.GetResourceTickRate()), FTimerHandle() });
+	//			break;
+	//		case EProductionSiteType::PST_Ambrosia:
+	//			productionResourceHandlePair.Add({  FProduktionResources(EResourceIdent::ERI_Ambrosia, 0, item.Value.GetResourceTickRate()), FTimerHandle() });;
+	//			break;
+	//		case EProductionSiteType::PST_Wheat:
+	//			productionResourceHandlePair.Add({  FProduktionResources(EResourceIdent::ERI_Wheat, 0, item.Value.GetResourceTickRate()), FTimerHandle() });
+	//			break;
+	//
+	//		default:
+	//			UE_LOG(LogTemp, Warning, TEXT("AProductionsite, resourcesAmountPairs could not Init"))
+	//				break;
+	//		}
+	//	}
 	//}
-
-	//for (size_t i = 0; i < resourcebasevalues.Num(); i++)
+	//
+	//
+	//if (productionResourceHandlePair.Num() > 0)
 	//{
-	//	if(resourcebasevalues[i]->Resource)
+	//	for (TTuple<FProduktionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
+	//		TickResourceProduction(resourcehandlepair.Key.GetResourceIdent());
 	//}
-
-	switch (productionSiteType)
-	{
-	case EProductionSiteType::PST_Meat:
-		productionResource.Add({ EResourceIdent::ERI_Meat, 0, 5.f});
-		break;
-	case EProductionSiteType::PST_Fruits:
-		productionResource.Add({ EResourceIdent::ERI_Fruit, 0, 5.f });
-		break;
-	case EProductionSiteType::PST_Hardwood_Resin:
-		productionResource.Add({ EResourceIdent::ERI_Hardwood, 0, 5.f });
-		productionResource.Add({ EResourceIdent::ERI_Resin, 0, 5.f });
-		break;
-	case EProductionSiteType::PST_Furniture_Jewelry:
-		productionResource.Add({ EResourceIdent::ERI_Furniture, 0, 5.f });
-		productionResource.Add({ EResourceIdent::ERI_Jewelry, 0, 5.f });
-		break;
-	case EProductionSiteType::PST_Ambrosia:
-		productionResource.Add({ EResourceIdent::ERI_Ambrosia, 0, 5.f });
-		break;
-	case EProductionSiteType::PST_Wheat:
-		productionResource.Add({ EResourceIdent::ERI_Wheat, 0, 5.f });
-		break;
-
-	default:
-	UE_LOG(LogTemp,Warning,TEXT("AProductionsite, resourcesAmountPairs could not Init"))
-		break;
-	}
+	//else
+	//	UE_LOG(LogTemp,Warning,TEXT("AProductionsite, productionResource.Num() < 0"))
 }

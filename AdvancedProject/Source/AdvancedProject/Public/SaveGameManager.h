@@ -38,6 +38,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
 		TSubclassOf<AMarketManager> marketManagerClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
+		TSubclassOf<class AProductionSiteManager> TESTPSManager;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
 		AMarketManager* spawnedMarketManager;
 

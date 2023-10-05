@@ -41,8 +41,8 @@ public:
 	AProductionSiteManager();
 
 	UFUNCTION()
-	void InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData);
-	void InitProductionSiteManager(AActor* _managerOwner);
+	void InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData,class AMarketManager* _marketManager);
+	void InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager);
 
 private:
 	UFUNCTION()
@@ -75,6 +75,9 @@ private:
 
 	UPROPERTY()
 		AActor* managerOwner;
+
+	UPROPERTY()
+		AMarketManager* marketManager;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
 		TSubclassOf<AProductionsite> productionSiteClass;

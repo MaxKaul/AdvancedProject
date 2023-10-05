@@ -24,7 +24,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION()
-	bool InitBuilder(class AProductionSiteManager* _manager);
+	bool InitBuilder(class AProductionSiteManager* _manager, class AMarketManager* marketManager);
 
 	UFUNCTION()
 		bool BuildProductionSite(FProductionSiteSaveData _siteData);
@@ -38,6 +38,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ProductionSite, meta = (AllowPrivateAccess))
 		TSubclassOf<class AProductionsite> productionSiteClass;
+
+	UPROPERTY()
+		AMarketManager* marketManager;
 
 	UPROPERTY()
 		UWorld* world;
