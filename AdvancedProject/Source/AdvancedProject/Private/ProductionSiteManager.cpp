@@ -3,9 +3,9 @@
 
 #include "ProductionSiteManager.h"
 
+#include "Productionsite.h"
 #include "BuildingSite.h"
 #include "Builder.h"
-#include "Productionsite.h"
 
 // Sets default values
 AProductionSiteManager::AProductionSiteManager()
@@ -13,6 +13,7 @@ AProductionSiteManager::AProductionSiteManager()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	TESTBUILDERCOMP = CreateDefaultSubobject<UBuilder>("DD");
 }
 
 // Called when the game starts or when spawned
@@ -20,27 +21,6 @@ void AProductionSiteManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-
-	/*Zu testzwecken als solches implementiert, hat von spieler/AI aus gespawned zu werden, von diesem aus wird auch die FProductionSiteManagerSaveData übertragen
-	 *TArray<FProductionSiteSaveData> testproductionsitedata =
-	{
-		FProductionSiteSaveData {TESTMESHES[0], EProductionSiteType::PST_Fruits, TESTSITES[0] },
-		FProductionSiteSaveData {TESTMESHES[1], EProductionSiteType::PST_Furniture_Jewelry, TESTSITES[1] },
-		FProductionSiteSaveData {TESTMESHES[2], EProductionSiteType::PST_Ambrosia, TESTSITES[2] }
-	};
-
-	FProductionSiteManagerSaveData testsavedata=
-	{
-		testproductionsitedata
-	};
-
-	InitProductionSiteManager(nullptr, testsavedata);
-	 
-
-	TESTBUILDERCOMP->InitBuilder(this);
-	TESTBUILDERCOMP->BuildProductionSite(EProductionSiteType::PST_Ambrosia, TESTSITES[0], TESTMESHES[0]);
-
-	*/
 }
 
 // Called every frame
@@ -56,7 +36,7 @@ void AProductionSiteManager::Tick(float DeltaTime)
 }
 
 
-void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager)
+void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager, ABuildingSite* _TESTBSITE)
 {
 	world = GetWorld();
 	managerOwner = _managerOwner;
@@ -67,6 +47,10 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AM
 		UE_LOG(LogTemp,Warning,TEXT("AProductionSiteManager, !NullcheckDependencies()"))
 		return;
 	}
+
+	TESTBUILDERCOMP->InitBuilder(this, marketManager);
+	FProductionSiteSaveData testsavedata = { TESTMESHES[0],EProductionSiteType::PST_Furniture_Jewelry,_TESTBSITE };
+	TESTBUILDERCOMP->BuildProductionSite(testsavedata);
 }
 
 
@@ -82,12 +66,13 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, FP
 			return;
 	}
 
-	InitAllProductionSites(_saveData);
+	// Raus um zu testen
+	//InitAllProductionSites(_saveData);
 }
 
 void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveData _saveData)
 {
-	// -> Hier würde ich die save data entgegen nehmen
+	// -> Hier nehme ich die save data entgegen nehmen
 
 	TArray<FProductionSiteSaveData> allsavedsites = _saveData.GetSaveData();
 
@@ -122,13 +107,13 @@ void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 void AProductionSiteManager::SubscribeProductionsite(AProductionsite* _newProductionSite)
 {
-	if(allProductionSites.Contains(_newProductionSite))
-	{
-		UE_LOG(LogTemp,Warning,TEXT("AProductionSiteManager, allProductionSites.Contains(_newProductionSite)"))
-		return;
-	}
-
-	allProductionSites.Add(_newProductionSite);
+	//if(!allProductionSites.IsEmpty() && allProductionSites.Contains(_newProductionSite))
+	//{
+	//	UE_LOG(LogTemp,Warning,TEXT("AProductionSiteManager, allProductionSites.Contains(_newProductionSite)"))
+	//	return;
+	//}
+	//
+	//allProductionSites.Add(_newProductionSite);
 }
 
 FProductionSiteManagerSaveData AProductionSiteManager::GetProductionSiteManagerSaveData()

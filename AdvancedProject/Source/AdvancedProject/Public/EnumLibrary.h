@@ -19,7 +19,7 @@ enum class EResourceIdent : uint8
 	ERI_ENTRY_AMOUNT
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum class EProductionSiteType : uint8
 {
 	PST_DEFAULT,

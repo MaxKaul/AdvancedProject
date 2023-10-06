@@ -41,8 +41,8 @@ public:
 	AProductionSiteManager();
 
 	UFUNCTION()
-	void InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData,class AMarketManager* _marketManager);
-	void InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager);
+	void InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData, class AMarketManager* _marketManager);
+	void InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager, class ABuildingSite* _TESTBSITE);
 
 private:
 	UFUNCTION()
@@ -85,10 +85,10 @@ private:
 	TOptional<AProductionsite> productionsiteSaveData;
 
 
-	 // TEST SHIT
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
-	//	TArray<UStaticMesh*> TESTMESHES;
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
-	//	TArray<class ABuildingSite*> TESTSITES;
+	 // Comps für Testing
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
+		TArray<UStaticMesh*> TESTMESHES;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
+		TArray<class ABuildingSite*> TESTSITES;
 };
 

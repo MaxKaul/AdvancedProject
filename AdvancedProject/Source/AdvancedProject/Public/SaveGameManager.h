@@ -36,6 +36,9 @@ private:
 		UWorld* world;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
+		ABuildingSite* TESTSITE;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
 		TSubclassOf<AMarketManager> marketManagerClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))

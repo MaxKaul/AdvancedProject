@@ -15,6 +15,26 @@ struct FProductionResources
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
+		FString structName = FString("NONE");
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
+		FString structID = FString("NONE");
+
+	bool operator==(const  FProductionResources& Other) const
+	{
+		return Equals(Other);
+	}
+
+	bool operator!=(const  FProductionResources& Other) const
+	{
+		return !Equals(Other);
+	}
+	bool Equals(const  FProductionResources& Other) const
+	{
+		return structName == Other.structName && structID == Other.structID;
+	}
+
 private:
 	EResourceIdent resourceIdent;
 
@@ -27,23 +47,14 @@ private:
 public:
 	FProductionResources() {  }
 
-	FProductionResources(EResourceIdent _resourceIdent, int _resourceAmount, float _resourceTickRate)
+	FProductionResources(EResourceIdent _resourceIdent, int _resourceAmount, float _resourceTickRate, const FString& _inMyStruct, const FString& _structID)
 	{
 		resourceIdent = _resourceIdent;
 		resourceAmount = _resourceAmount;
 		resourceTickRate = _resourceTickRate;
-	}
 
-	int ID;
-
-	bool operator== (const FProductionResources& Other)
-	{
-		
-		return ID == Other.ID;
-	}
-	friend uint32 GetTypeHash(const FProductionResources& Other)
-	{
-		return GetTypeHash(Other.ID);
+		structName = _inMyStruct;
+		structID = _structID;
 	}
 
 	FORCEINLINE
@@ -58,6 +69,12 @@ public:
 	FORCEINLINE
 		void TickResource(float _amount) { resourceAmount += _amount; }
 };
+
+FORCEINLINE uint32 GetTypeHash(const  FProductionResources& _this)
+{
+	const uint32 Hash = FCrc::MemCrc32(&_this, sizeof(FProductionResources));
+	return Hash;
+}
 
 USTRUCT(BlueprintType)
 struct FProductionSiteSaveData
@@ -101,7 +118,6 @@ public:
 	AProductionsite();
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 public:

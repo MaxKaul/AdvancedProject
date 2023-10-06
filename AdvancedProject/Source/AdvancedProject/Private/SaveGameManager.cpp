@@ -27,7 +27,7 @@ void ASaveGameManager::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("SAVEGAME MANAGER, ERROR LOADING DATA"));
 
 
-/* MUSTER: Zum Resourcen kaufen/verkaufen/
+ //MUSTER: Zum Resourcen kaufen/verkaufen/
 	//// Beim Kaufen steht unser exchange capital für das geld welches wir mitgeben, dies ist der MaxBuyPricePerResource * BuyAmount
 	//// Erstmal als flicken, da kann noch was besseres ran
 	//TOptional<float> nomaxsellprice;
@@ -55,8 +55,7 @@ void ASaveGameManager::BeginPlay()
 	//{
 	//	UE_LOG(LogTemp, Warning, TEXT("exchanged capital %f, returned resource %i"), ticket.exchangedCapital, ticket.resourceAmount);
 	//}
- */
-	
+ 
 }
 
 void ASaveGameManager::Tick(float DeltaTime)
@@ -94,7 +93,7 @@ bool ASaveGameManager::InitAllManager()
 
 	AProductionSiteManager* testmanager = Cast<AProductionSiteManager>(world->SpawnActor(TESTPSManager, &pos));
 
-	testmanager->InitProductionSiteManager(this, spawnedMarketManager);
+	testmanager->InitProductionSiteManager(this, spawnedMarketManager, TESTSITE);
 
 	return status;
 }

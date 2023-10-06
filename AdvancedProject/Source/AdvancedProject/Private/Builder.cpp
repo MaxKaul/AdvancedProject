@@ -32,6 +32,7 @@ bool UBuilder::InitBuilder(AProductionSiteManager* _manager, AMarketManager* _ma
 
 	world = GetWorld();
 	marketManager = _marketManager;
+	productionSiteManager = _manager;
 
 	if (!NullcheckDependencies())
 	{
@@ -47,10 +48,12 @@ bool UBuilder::InitBuilder(AProductionSiteManager* _manager, AMarketManager* _ma
 }
 
 // Eine ProductionSite wird mit einem savedata struct initialised (Einfach damit ich das nicht doppelt machen muss, die save data soll die selben daten speichern wie die welche benötigt werden zum inin)
+// Dran denken; Ohne savedata können zum start keine BuildProductionSite existieren
 bool UBuilder::BuildProductionSite(FProductionSiteSaveData _siteData)
 {
 	bool status = false;
 
+	// Jeder buildingsdite hat erlaubte productiontype, hier teste ich gegen
 	for(EProductionSiteType type : _siteData.GetSavedBuildingSite()->GetAllowedTypes())
 	{
 		if (_siteData.GetSavedType() == type)
@@ -62,9 +65,7 @@ bool UBuilder::BuildProductionSite(FProductionSiteSaveData _siteData)
 			spawnpos.Z -= 300.f;
 
 			AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
-
 			spawnedsite->InitProductionSite(_siteData.GetSavedMesh(), _siteData.GetSavedType(), _siteData.GetSavedBuildingSite(), marketManager);
-
 
 			productionSiteManager->SubscribeProductionsite(spawnedsite);
 			_siteData.GetSavedBuildingSite()->SetBuildStatus(true);
@@ -84,27 +85,31 @@ bool UBuilder::BuildProductionSite(FProductionSiteSaveData _siteData)
 
 bool UBuilder::NullcheckDependencies()
 {
-	bool status = false;
+	bool status = true;
 
-	if (!productionSiteManager)
-		status = true;
-	else
+	if(!productionSiteManager)
+	{
+		status = false;
 		UE_LOG(LogTemp, Warning, TEXT("UBuilder !productionSiteManager"));
-	
+	}
+
 	if (!world)
-		status = true;
-	else
+	{
+		status = false;
 		UE_LOG(LogTemp, Warning, TEXT("UBuilder !world"));
+	}
 
 	if (!marketManager)
-		status = true;
-	else
+	{
+		status = false;
 		UE_LOG(LogTemp, Warning, TEXT("UBuilder !marketManager"));
+	}
 
-	//if(!productionSiteClass)
-	//	status = true;
-	//else
-	//	UE_LOG(LogTemp, Warning, TEXT("UBuilder !productionSiteClass"));
+	if (!productionSiteClass)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("UBuilder !productionSiteClass"));
+	}
 
 	return status;
 }
