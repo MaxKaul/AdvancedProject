@@ -4,6 +4,7 @@
 #include "SaveGameManager.h"
 #include "ProductionSiteManager.h"
 #include "MarketManager.h"
+#include "Productionsite.h"
 
 ASaveGameManager::ASaveGameManager()
 {

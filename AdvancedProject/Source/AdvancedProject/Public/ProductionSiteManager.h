@@ -28,6 +28,9 @@ public:
 	{
 		productionSiteData = _productionSiteData;
 	}
+
+	FORCEINLINE
+		void AddProductionSiteSaveData(FProductionSiteSaveData _newSaveData) { productionSiteData.Add(_newSaveData); }
 };
 
 

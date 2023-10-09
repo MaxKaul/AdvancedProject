@@ -16,6 +16,18 @@ struct FIndividualResourceInfo
 {
 	GENERATED_BODY()
 
+	FIndividualResourceInfo(EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSites, int _resourceAmount, float _lastResourcePrice, float _k_Value, float _resourceTickRate)
+	{
+		resourceIdent = _resourceIdent;
+		allowedProductionSites = _allowedProductionSites;
+		resourceAmount = _resourceAmount;
+		lastResourcePrice = _lastResourcePrice;
+		k_Value = _k_Value;
+		resourceTickRate = _resourceTickRate;
+	}
+
+	FIndividualResourceInfo(){}
+
 private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		EResourceIdent resourceIdent;
@@ -28,7 +40,6 @@ private:
 	
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float lastResourcePrice;
-
 
 	// Decay or Growth value of the individual resource, starts with 0 and is representativ for resources entering/leaving the market
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
@@ -155,7 +166,7 @@ private:
 	UFUNCTION()
 		void  UpdateResourcePrices();
 
-	void InitIndividualResource(float _lastResourcePrice,int _resourceAmount, EResourceIdent _resourceIdent);
+	void InitIndividualResource(float _lastResourcePrice,int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ComponentInfos, meta = (AllowPrivateAccess))

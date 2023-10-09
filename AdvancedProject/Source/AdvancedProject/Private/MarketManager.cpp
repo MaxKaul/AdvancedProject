@@ -61,7 +61,8 @@ bool AMarketManager::InitMarketManager()
 
 	for (size_t i = 0; i < resourcebasevalues.Num(); i++)
 	{
-		InitIndividualResource(resourcebasevalues[i]->Resource.GetLastResourcePrice(), resourcebasevalues[i]->Resource.GetResourceAmount(), resourcebasevalues[i]->Resource.GetResourceIdent());
+		InitIndividualResource(resourcebasevalues[i]->Resource.GetLastResourcePrice(), resourcebasevalues[i]->Resource.GetResourceAmount(), resourcebasevalues[i]->Resource.GetResourceIdent(), 
+							   resourcebasevalues[i]->Resource.GetAllowedProductionSites(), resourcebasevalues[i]->Resource.GetResourceTickRate());
 	}
 
 	InitMarketStalls();
@@ -177,7 +178,7 @@ void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
 
 	for (FIndividualResourceInfo resource : allresources)
 	{
-		InitIndividualResource(resource.GetLastResourcePrice(), resource.GetResourceAmount(), resource.GetResourceIdent());
+		InitIndividualResource(resource.GetLastResourcePrice(), resource.GetResourceAmount(), resource.GetResourceIdent(), resource.GetAllowedProductionSites(), resource.GetResourceTickRate());
 	}
 }
 
@@ -239,9 +240,17 @@ void AMarketManager::UpdateResourcePrices()
 	world->GetTimerManager().SetTimer(handle, this, &AMarketManager::UpdateResourcePrices, resourcePriceTick, false);
 }
 
-void AMarketManager::InitIndividualResource(float _lastResourcePrice, int _resourceAmount, EResourceIdent _resourceIdent)
+void AMarketManager::InitIndividualResource(float _lastResourcePrice, int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate)
 {
-	FIndividualResourceInfo currentresource;
+	FIndividualResourceInfo currentresource =
+	{
+		_resourceIdent,
+		_allowedProductionSite,
+		_resourceAmount,
+		_lastResourcePrice,
+		0.f,
+		_resourceTickRate
+	};
 
 	// Startet mit 0 weil wir noch keinen unterschied haben
 	currentresource.Set_K_Value(0.f);

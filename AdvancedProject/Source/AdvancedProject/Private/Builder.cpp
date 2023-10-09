@@ -6,6 +6,7 @@
 #include "BuildingSite.h"
 #include "Productionsite.h"
 #include "ProductionSiteManager.h"
+#include "Kismet/KismetStringLibrary.h"
 
 UBuilder::UBuilder()
 {
@@ -65,7 +66,7 @@ bool UBuilder::BuildProductionSite(FProductionSiteSaveData _siteData)
 			spawnpos.Z -= 300.f;
 
 			AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
-			spawnedsite->InitProductionSite(_siteData.GetSavedMesh(), _siteData.GetSavedType(), _siteData.GetSavedBuildingSite(), marketManager);
+			spawnedsite->InitProductionSite(_siteData.GetSavedMesh(), _siteData.GetSavedType(), _siteData.GetSavedBuildingSite(), marketManager, UKismetStringLibrary::Conv_StringToInt(_siteData.structID));
 
 			productionSiteManager->SubscribeProductionsite(spawnedsite);
 			_siteData.GetSavedBuildingSite()->SetBuildStatus(true);
@@ -74,7 +75,6 @@ bool UBuilder::BuildProductionSite(FProductionSiteSaveData _siteData)
 			break;
 		}
 	}
-
 
 	if(!status)
 		UE_LOG(LogTemp, Warning, TEXT("Wrong building type"));

@@ -21,18 +21,23 @@ struct FProductionResources
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
 		FString structID = FString("NONE");
 
-	bool operator==(const  FProductionResources& Other) const
+public:
+	FORCEINLINE
+	bool operator==(const  FProductionResources& _other) const
 	{
-		return Equals(Other);
+		return Equals(_other);
 	}
 
-	bool operator!=(const  FProductionResources& Other) const
+	FORCEINLINE
+	bool operator!=(const  FProductionResources& _other) const
 	{
-		return !Equals(Other);
+		return !Equals(_other);
 	}
-	bool Equals(const  FProductionResources& Other) const
+
+	FORCEINLINE
+	bool Equals(const  FProductionResources& _other) const
 	{
-		return structName == Other.structName && structID == Other.structID;
+		return structName == _other.structName && structID == _other.structID;
 	}
 
 private:
@@ -81,6 +86,31 @@ struct FProductionSiteSaveData
 {
 	GENERATED_BODY()
 
+		UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
+		FString structName = FString("NONE");
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
+		FString structID = FString("NONE");
+
+public:
+	FORCEINLINE
+		bool operator==(const  FProductionSiteSaveData& _other) const
+	{
+		return Equals(_other);
+	}
+
+	FORCEINLINE
+		bool operator!=(const  FProductionSiteSaveData& _other) const
+	{
+		return !Equals(_other);
+	}
+
+	FORCEINLINE
+		bool Equals(const  FProductionSiteSaveData& _other) const
+	{
+		return structName == _other.structName && structID == _other.structID;
+	}
+
 private:
 	UPROPERTY()
 		UStaticMesh* siteMesh;
@@ -100,14 +130,21 @@ public:
 
 	FProductionSiteSaveData() {}
 
-	FProductionSiteSaveData(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite)
+	FProductionSiteSaveData(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, FString _structName, FString _structID)
 	{
 		siteMesh = _siteMesh;
 		type = _type;
 		buildingSite = _buildingSite;
+		structName = _structName;
+		structID = _structID;
 	}
 };
 
+FORCEINLINE uint32 GetTypeHash(const  FProductionSiteSaveData& _this)
+{
+	const uint32 Hash = FCrc::MemCrc32(&_this, sizeof(FProductionSiteSaveData));
+	return Hash;
+}
 
 UCLASS()
 class ADVANCEDPROJECT_API AProductionsite : public AActor
@@ -122,8 +159,9 @@ public:
 
 public:
 	UFUNCTION()
-		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type,  ABuildingSite* _buildingSite, class AMarketManager* _marketManager);
+		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type,  ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID);
 
+	// Sollte eign alles theoretisch klappen, ist getestet
 	UFUNCTION()
 		FProductionSiteSaveData GetProductionSiteSaveData();
 
@@ -168,12 +206,16 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
 		float currentResourceOutput;
 
+	// Dies sind die resourcen welche produziert werden
 	// Speicher alle lokalen resourcen, also alle welche sich in der produktionsite befinden, von dieser liste aus müssen wir resourcen entnehmen und ticken, enthält auch den timer handle zum ticken der resource
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, meta=(AllowPrivateAccess))
 		TMap<FProductionResources, FTimerHandle> productionResourceHandlePair;
 
 	// Standard tick value für resourcen, der resourcenoutput pro minute wird  durch die tickrate bestimmt
 	// Kann aber auch für bonis und stuff genutzt werden
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ResourceInfo, meta =(AllowPrivateAccess))
 		float resourceTickValue;
+
+	UPROPERTY()
+		int siteID;
 };

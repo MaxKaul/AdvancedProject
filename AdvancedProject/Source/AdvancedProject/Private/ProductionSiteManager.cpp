@@ -49,7 +49,7 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AM
 	}
 
 	TESTBUILDERCOMP->InitBuilder(this, marketManager);
-	FProductionSiteSaveData testsavedata = { TESTMESHES[0],EProductionSiteType::PST_Furniture_Jewelry,_TESTBSITE };
+	FProductionSiteSaveData testsavedata = { TESTMESHES[0],EProductionSiteType::PST_Meat,_TESTBSITE, "",""};
 	TESTBUILDERCOMP->BuildProductionSite(testsavedata);
 }
 
@@ -97,7 +97,7 @@ void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 		AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
 
-		spawnedsite->InitProductionSite(savedmesh ,savedtype, savedbuildingsite, marketManager);
+		spawnedsite->InitProductionSite(savedmesh ,savedtype, savedbuildingsite, marketManager, allProductionSites.Num());
 
 		allProductionSites.Add(spawnedsite);
 		
@@ -107,13 +107,13 @@ void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 void AProductionSiteManager::SubscribeProductionsite(AProductionsite* _newProductionSite)
 {
-	//if(!allProductionSites.IsEmpty() && allProductionSites.Contains(_newProductionSite))
-	//{
-	//	UE_LOG(LogTemp,Warning,TEXT("AProductionSiteManager, allProductionSites.Contains(_newProductionSite)"))
-	//	return;
-	//}
-	//
-	//allProductionSites.Add(_newProductionSite);
+	if(!allProductionSites.IsEmpty() && allProductionSites.Contains(_newProductionSite))
+	{
+		UE_LOG(LogTemp,Warning,TEXT("AProductionSiteManager, allProductionSites.Contains(_newProductionSite)"))
+		return;
+	}
+	
+	allProductionSites.Add(_newProductionSite);
 }
 
 FProductionSiteManagerSaveData AProductionSiteManager::GetProductionSiteManagerSaveData()
@@ -126,12 +126,13 @@ FProductionSiteManagerSaveData AProductionSiteManager::GetProductionSiteManagerS
 
 		allpssavedata.Add(savedata);
 
-		/* 	Geht net weril kein linksseiter == operand für das struct geht (nehm ich an)
-			if (!allpssavedata.Contains(savedata))
-				allpssavedata.Add(savedata);
-			else
-				UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager, Production Site save data duplicate"))
-		 */
+		// OPERAND MACHEN
+
+		// 	Geht net weril kein linksseiter == operand für das struct geht (nehm ich an)
+		if (!allpssavedata.Contains(savedata))
+			allpssavedata.Add(savedata);
+		else
+			UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager, Production Site save data duplicate"))
 	}
 	
 	FProductionSiteManagerSaveData savedata =

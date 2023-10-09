@@ -1,6 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Productionsite.h"
+
+#include <string>
+
 #include "BuildingSite.h"
 #include "MarketManager.h"
 #include "ResourceTableBase.h"
@@ -27,12 +30,15 @@ void AProductionsite::Tick(float DeltaTime)
 	}
 }
 
-void AProductionsite::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite,  AMarketManager* _marketManager)
+void AProductionsite::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite,  AMarketManager* _marketManager, int _siteID)
 {
 	world = GetWorld();
 	productionSiteType = _type;
+	actorMesh = _siteMesh;
 	actorMeshComponent->SetStaticMesh(_siteMesh);
 	marketManager = _marketManager;
+	buildingSite = _buildingSite;
+	siteID = _siteID;
 
 	InitResources();
 }
@@ -43,7 +49,9 @@ FProductionSiteSaveData AProductionsite::GetProductionSiteSaveData()
 	{
 		actorMesh,
 		productionSiteType,
-		buildingSite
+		buildingSite,
+		FString::FromInt(siteID) + FString::FromInt((int)productionSiteType),
+		FString::FromInt(siteID)
 	};
 
 	return savedata;
@@ -100,10 +108,16 @@ TArray<FProductionResources> AProductionsite::GetCurrentResources()
 // Danach resette ich den timer der resource
 void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
 {
+	//  Ich muss ja noc h mir einfaktorieren das es productionsites gibt welche neben arbeitern auch resourcen benötigen.
+	//	Dafür bool im table ? Mit map für benötigte resource + int für menge pro einheit ?
+	//	Dann brauch ich noch ne dynamische lösung zum hinterlegen der resourcen in der productionsite
+
 	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
 	{
 		if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
 		{
+			UE_LOG(LogTemp,Warning, TEXT("Tick"))
+
 			resourcehandlepair.Key.TickResource(resourceTickValue);
 	
 			FTimerDelegate  currdelegate;
