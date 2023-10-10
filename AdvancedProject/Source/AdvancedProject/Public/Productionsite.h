@@ -8,8 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "Productionsite.generated.h"
 
-
-// Resource Info für die productionsite, FIndividualResourceInfo ist für den Markt
+// Resource Info für die resourcen welche in der productionsite produziert werden, FIndividualResourceInfo ist für den Markt
 USTRUCT(BlueprintType)
 struct FProductionResources
 {
@@ -41,22 +40,34 @@ public:
 	}
 
 private:
+	UPROPERTY(VisibleAnywhere, meta =(AllowPrivateAccess))
 	EResourceIdent resourceIdent;
 
-	float resourceAmount;
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
+		float resourceAmount;
 
 	// Wir holen uns bei resorucen init die tick rate aus der welt und arbeiten lokal mit diesem wert weiter
 	// Dies dient dazu dass die einzelnen productionsites bonis bekommen können welche diesen wert ändert, gillt auch für den resourceMultiplicator
-	float resourceTickRate;
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
+		float resourceTickRate;
+
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
+		bool bHasCost;
+
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
+	TMap<EResourceIdent, int> resourceIdentCostPair;
 
 public:
 	FProductionResources() {  }
 
-	FProductionResources(EResourceIdent _resourceIdent, int _resourceAmount, float _resourceTickRate, const FString& _inMyStruct, const FString& _structID)
+	FProductionResources(EResourceIdent _resourceIdent, int _resourceAmount, float _resourceTickRate, const FString& _inMyStruct, const FString& _structID, bool _bHasCost, TMap<EResourceIdent, int> _resourceIdentCostPair)
 	{
 		resourceIdent = _resourceIdent;
 		resourceAmount = _resourceAmount;
 		resourceTickRate = _resourceTickRate;
+		bHasCost = _bHasCost;
+
+		resourceIdentCostPair = _resourceIdentCostPair;
 
 		structName = _inMyStruct;
 		structID = _structID;
@@ -67,12 +78,18 @@ public:
 
 	FORCEINLINE
 		int GetResourceAmount() { return resourceAmount; }
+	FORCEINLINE
+		bool GetHasCost() { return bHasCost; }
+	FORCEINLINE
+		TMap<EResourceIdent, int> GetResourceCost() { return resourceIdentCostPair; }
 
 	FORCEINLINE
 		float GetResourceTickRate() { return resourceTickRate; }
 
 	FORCEINLINE
 		void TickResource(float _amount) { resourceAmount += _amount; }
+	FORCEINLINE
+		void DeductResource(float _amount) { resourceAmount -= _amount; }
 };
 
 FORCEINLINE uint32 GetTypeHash(const  FProductionResources& _this)
@@ -118,7 +135,9 @@ private:
 		EProductionSiteType type;
 	UPROPERTY()
 		class ABuildingSite* buildingSite;
-	
+	UPROPERTY()
+		TMap<EResourceIdent, int> productionSiteResourcePool;
+
 public:
 
 	FORCEINLINE
@@ -127,16 +146,19 @@ public:
 		EProductionSiteType GetSavedType(){ return type; }
 	FORCEINLINE
 		ABuildingSite* GetSavedBuildingSite(){ return buildingSite; }
+	FORCEINLINE
+		TMap<EResourceIdent, int> GetSavedResourcePool() { return productionSiteResourcePool; }
 
 	FProductionSiteSaveData() {}
 
-	FProductionSiteSaveData(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, FString _structName, FString _structID)
+	FProductionSiteSaveData(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, FString _structName, FString _structID, TMap<EResourceIdent, int> _productionSiteResourcePool)
 	{
 		siteMesh = _siteMesh;
 		type = _type;
 		buildingSite = _buildingSite;
 		structName = _structName;
 		structID = _structID;
+		productionSiteResourcePool = _productionSiteResourcePool;
 	}
 };
 
@@ -159,7 +181,8 @@ public:
 
 public:
 	UFUNCTION()
-		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type,  ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID);
+		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type,  ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID, 
+								TMap<EResourceIdent, int> _productionSiteResourcePool);
 
 	// Sollte eign alles theoretisch klappen, ist getestet
 	UFUNCTION()
@@ -173,7 +196,9 @@ private:
 		bool NullcheckDependencies();
 
 	UFUNCTION()
-		void TickResourceProduction(EResourceIdent _ident);
+		void TickResourceProduction(EResourceIdent _resourceIdent);
+		void TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost);
+
 	UFUNCTION()
 		void InitResources();
 
@@ -207,14 +232,12 @@ private:
 		float currentResourceOutput;
 
 	// Dies sind die resourcen welche produziert werden
-	// Speicher alle lokalen resourcen, also alle welche sich in der produktionsite befinden, von dieser liste aus müssen wir resourcen entnehmen und ticken, enthält auch den timer handle zum ticken der resource
+	// Speichert alle produzierenden resourcen
 	UPROPERTY(VisibleAnywhere, meta=(AllowPrivateAccess))
 		TMap<FProductionResources, FTimerHandle> productionResourceHandlePair;
-
-	// Standard tick value für resourcen, der resourcenoutput pro minute wird  durch die tickrate bestimmt
-	// Kann aber auch für bonis und stuff genutzt werden
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ResourceInfo, meta =(AllowPrivateAccess))
-		float resourceTickValue;
+	// Speichert alle resourcen welche sich in dieser prodductionsite befinden, wird mit allen resourcen welche sich auf dem markt befinden initialisiert
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		TMap<EResourceIdent, int> productionSiteResourcePool;
 
 	UPROPERTY()
 		int siteID;

@@ -66,7 +66,8 @@ bool UBuilder::BuildProductionSite(FProductionSiteSaveData _siteData)
 			spawnpos.Z -= 300.f;
 
 			AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
-			spawnedsite->InitProductionSite(_siteData.GetSavedMesh(), _siteData.GetSavedType(), _siteData.GetSavedBuildingSite(), marketManager, UKismetStringLibrary::Conv_StringToInt(_siteData.structID));
+			spawnedsite->InitProductionSite(_siteData.GetSavedMesh(), _siteData.GetSavedType(), _siteData.GetSavedBuildingSite(), marketManager, 
+											UKismetStringLibrary::Conv_StringToInt(_siteData.structID), _siteData.GetSavedResourcePool());
 
 			productionSiteManager->SubscribeProductionsite(spawnedsite);
 			_siteData.GetSavedBuildingSite()->SetBuildStatus(true);

@@ -16,7 +16,8 @@ struct FIndividualResourceInfo
 {
 	GENERATED_BODY()
 
-	FIndividualResourceInfo(EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSites, int _resourceAmount, float _lastResourcePrice, float _k_Value, float _resourceTickRate)
+	FIndividualResourceInfo(EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSites, int _resourceAmount, float _lastResourcePrice, float _k_Value, float _resourceTickRate, bool _bHasCost,
+							TMap<EResourceIdent, int> _resourceIdentCostPair)
 	{
 		resourceIdent = _resourceIdent;
 		allowedProductionSites = _allowedProductionSites;
@@ -24,20 +25,27 @@ struct FIndividualResourceInfo
 		lastResourcePrice = _lastResourcePrice;
 		k_Value = _k_Value;
 		resourceTickRate = _resourceTickRate;
+		bHasResourceCost = _bHasCost;
+
+		resourceIdentCostPair = _resourceIdentCostPair;
 	}
 
 	FIndividualResourceInfo(){}
 
 private:
+	// Tehe unique ident of the Resource
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		EResourceIdent resourceIdent;
 
+	// The types of Productionsites in which this Resource can be produced
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		EProductionSiteType allowedProductionSites;
 
+	// The initial amount with which this resource will be Initialized at the start of each new game
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		int resourceAmount;
-	
+
+	// The Resource Price with which the Resource will be initialised at the start of each new game
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float lastResourcePrice;
 
@@ -45,8 +53,17 @@ private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float k_Value;
 
+	// The tick rate with which the resource amount in the ProductionSites will be updated 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float resourceTickRate;
+
+	// Bool to inidcate wether of not this resource is dependent, or has a cost in form of another resource
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		bool bHasResourceCost;
+
+	// If this resource has a cost, this map holds the resources that need to be supplied and the the amount of cost resource units are needed to produce ONE unit of Prodction Resource
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess), meta = (EditCondition = "bHasResourceCost"))
+		TMap<EResourceIdent, int> resourceIdentCostPair;
 
 public:
 	FORCEINLINE
@@ -58,10 +75,13 @@ public:
 	FORCEINLINE
 		float Get_K_Value() { return k_Value; }
 	FORCEINLINE
+		bool GetHasCost() { return bHasResourceCost; }
+	FORCEINLINE
 		EResourceIdent GetResourceIdent() { return resourceIdent; }
 	FORCEINLINE
 		EProductionSiteType GetAllowedProductionSites() { return allowedProductionSites; }
-
+	FORCEINLINE
+		TMap<EResourceIdent, int> GetResourceCost() { return resourceIdentCostPair; };
 
 	FORCEINLINE
 		void SetResourceTickRate(float _newValue) { resourceTickRate = _newValue; }
@@ -166,7 +186,8 @@ private:
 	UFUNCTION()
 		void  UpdateResourcePrices();
 
-	void InitIndividualResource(float _lastResourcePrice,int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate);
+	void InitIndividualResource(float _lastResourcePrice,int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate,
+						        bool _bHasCost, TMap<EResourceIdent, int> _resourceCost);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ComponentInfos, meta = (AllowPrivateAccess))
