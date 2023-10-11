@@ -51,6 +51,7 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AM
 	TMap<EResourceIdent, int> testpool;
 	testpool.Add(EResourceIdent::ERI_Hardwood, 1);
 	testpool.Add(EResourceIdent::ERI_Resin, 1);
+	testpool.Add(EResourceIdent::ERI_Furniture, 0);
 
 	TESTBUILDERCOMP->InitBuilder(this, marketManager);
 	FProductionSiteSaveData testsavedata = { TESTMESHES[0],EProductionSiteType::PST_Furniture_Jewelry,_TESTBSITE, "","", testpool};

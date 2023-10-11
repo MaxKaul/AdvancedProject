@@ -43,9 +43,6 @@ private:
 	UPROPERTY(VisibleAnywhere, meta =(AllowPrivateAccess))
 	EResourceIdent resourceIdent;
 
-	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
-		float resourceAmount;
-
 	// Wir holen uns bei resorucen init die tick rate aus der welt und arbeiten lokal mit diesem wert weiter
 	// Dies dient dazu dass die einzelnen productionsites bonis bekommen können welche diesen wert ändert, gillt auch für den resourceMultiplicator
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
@@ -60,10 +57,9 @@ private:
 public:
 	FProductionResources() {  }
 
-	FProductionResources(EResourceIdent _resourceIdent, int _resourceAmount, float _resourceTickRate, const FString& _inMyStruct, const FString& _structID, bool _bHasCost, TMap<EResourceIdent, int> _resourceIdentCostPair)
+	FProductionResources(EResourceIdent _resourceIdent, float _resourceTickRate, const FString& _inMyStruct, const FString& _structID, bool _bHasCost, TMap<EResourceIdent, int> _resourceIdentCostPair)
 	{
 		resourceIdent = _resourceIdent;
-		resourceAmount = _resourceAmount;
 		resourceTickRate = _resourceTickRate;
 		bHasCost = _bHasCost;
 
@@ -77,19 +73,12 @@ public:
 		EResourceIdent GetResourceIdent() { return resourceIdent; }
 
 	FORCEINLINE
-		int GetResourceAmount() { return resourceAmount; }
-	FORCEINLINE
 		bool GetHasCost() { return bHasCost; }
 	FORCEINLINE
 		TMap<EResourceIdent, int> GetResourceCost() { return resourceIdentCostPair; }
 
 	FORCEINLINE
 		float GetResourceTickRate() { return resourceTickRate; }
-
-	FORCEINLINE
-		void TickResource(float _amount) { resourceAmount += _amount; }
-	FORCEINLINE
-		void DeductResource(float _amount) { resourceAmount -= _amount; }
 };
 
 FORCEINLINE uint32 GetTypeHash(const  FProductionResources& _this)
@@ -241,4 +230,8 @@ private:
 
 	UPROPERTY()
 		int siteID;
+
+	// Value by which the resource gets added per tick
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
+		float resourceStdTickValue;
 };

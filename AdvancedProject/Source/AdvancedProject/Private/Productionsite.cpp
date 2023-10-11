@@ -14,6 +14,7 @@ AProductionsite::AProductionsite()
 
 	actorMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Actor Mesh");
 	RootComponent = actorMeshComponent;
+	resourceStdTickValue = 1.f;
 }
 
 void AProductionsite::Tick(float DeltaTime)
@@ -118,7 +119,7 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
 	{
 		if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
 		{
-			resourcehandlepair.Key.TickResource(resourcehandlepair.Key.GetResourceTickRate());
+			//resourcehandlepair.Key.TickResource(resourcehandlepair.Key.GetResourceTickRate());
 	
 			FTimerDelegate  currdelegate;
 			currdelegate.BindUFunction(this, FName("TickResourceProduction"), resourcehandlepair.Key.GetResourceIdent());
@@ -137,20 +138,31 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent, TMap
 	{
 		if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
 		{
+			bool bcanafford = false;
+			int index = 0;
+
 			for (TTuple<EResourceIdent, int> item : _resourceCost)
 			{
-				if(productionSiteResourcePool.FindRef(item.Key) >= item.Value)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("DDDDDDDDDDDDDDD"))
+				index++;
 
-					resourcehandlepair.Key.TickResource(resourcehandlepair.Key.GetResourceTickRate());
-
-					int newamount = productionSiteResourcePool.FindRef(item.Key) - item.Value;
-					productionSiteResourcePool.Add(item.Key, newamount);
-				}
-				else
-					UE_LOG(LogTemp,Warning,TEXT("AProductionsite, Not enough resources to tick resource with cost"))
+				if (productionSiteResourcePool.FindRef(item.Key) >= item.Value)
+					if (index >= _resourceCost.Num())
+						bcanafford = true;
 			}
+
+			if(!bcanafford)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("AProductionsite, Not enough resources to tick resource with cost"));
+				return;
+			}
+
+			for (TTuple<EResourceIdent, int> item : _resourceCost)
+			{
+				productionSiteResourcePool.Add(item.Key, productionSiteResourcePool.FindRef(item.Key) - item.Value);
+			}
+
+			productionSiteResourcePool.Add(EResourceIdent::ERI_Furniture, productionSiteResourcePool.FindRef(EResourceIdent::ERI_Furniture) + resourceStdTickValue);
+
 
 			FTimerDelegate  currdelegate;
 			currdelegate.BindUFunction(this, FName("TickResourceProduction"), resourcehandlepair.Key.GetResourceIdent(), resourcehandlepair.Key.GetResourceCost());
@@ -172,44 +184,21 @@ void AProductionsite::InitResources()
 
 	for(TTuple<EResourceIdent, FIndividualResourceInfo> item: poolinfo)
 	{
-		if(productionSiteType == item.Value.GetAllowedProductionSites())
-		{
-			switch (productionSiteType)
-			{
-			case EProductionSiteType::PST_Meat:
-				productionResourceHandlePair.Add({ FProductionResources(EResourceIdent::ERI_Meat, 0, item.Value.GetResourceTickRate(),"meat", FString::FromInt((int)EResourceIdent::ERI_Meat), 
-					item.Value.GetHasCost(), item.Value.GetResourceCost()), FTimerHandle()});
-				break;
-			case EProductionSiteType::PST_Fruits:
-				productionResourceHandlePair.Add({ FProductionResources(EResourceIdent::ERI_Fruit, 0, item.Value.GetResourceTickRate(),"fruit",FString::FromInt((int)EResourceIdent::ERI_Fruit), 
-					item.Value.GetHasCost(), item.Value.GetResourceCost()), FTimerHandle() });
-				break;
-			case EProductionSiteType::PST_Hardwood_Resin:
-				productionResourceHandlePair.Add({ FProductionResources(EResourceIdent::ERI_Hardwood, 0, item.Value.GetResourceTickRate(),"hardwood",FString::FromInt((int)EResourceIdent::ERI_Hardwood), 
-					item.Value.GetHasCost(), item.Value.GetResourceCost()), FTimerHandle() });
-				productionResourceHandlePair.Add({ FProductionResources(EResourceIdent::ERI_Resin, 0, item.Value.GetResourceTickRate(),"resin",FString::FromInt((int)EResourceIdent::ERI_Resin), 
-					item.Value.GetHasCost(), item.Value.GetResourceCost()), FTimerHandle() });
-				break;
-			case EProductionSiteType::PST_Furniture_Jewelry:
-				productionResourceHandlePair.Add({ FProductionResources(EResourceIdent::ERI_Furniture, 0, item.Value.GetResourceTickRate(),"furniture",FString::FromInt((int)EResourceIdent::ERI_Furniture), 
-					item.Value.GetHasCost(), item.Value.GetResourceCost()), FTimerHandle() });
-				productionResourceHandlePair.Add({ FProductionResources(EResourceIdent::ERI_Jewelry, 0, item.Value.GetResourceTickRate(),"jewelry",FString::FromInt((int)EResourceIdent::ERI_Jewelry), 
-					item.Value.GetHasCost(), item.Value.GetResourceCost()), FTimerHandle() });
-				break;
-			case EProductionSiteType::PST_Ambrosia:
-				productionResourceHandlePair.Add({ FProductionResources(EResourceIdent::ERI_Ambrosia, 0, item.Value.GetResourceTickRate(),"ambrosia",FString::FromInt((int)EResourceIdent::ERI_Ambrosia), 
-					item.Value.GetHasCost(), item.Value.GetResourceCost()), FTimerHandle() });;
-				break;
-			case EProductionSiteType::PST_Wheat:
-				productionResourceHandlePair.Add({ FProductionResources(EResourceIdent::ERI_Wheat, 0, item.Value.GetResourceTickRate(),"wheat",FString::FromInt((int)EResourceIdent::ERI_Wheat), 
-					item.Value.GetHasCost(), item.Value.GetResourceCost()), FTimerHandle() });
-				break;
-		
-			default:
-				UE_LOG(LogTemp, Warning, TEXT("AProductionsite, resourcesAmountPairs could not Init"))
-					break;
-			}
-		}
+		if (productionSiteType != item.Value.GetAllowedProductionSites())
+			return;
+
+		//FProductionResources currResource =
+		//{
+		//	item.Key,
+		//	item.Value.GetResourceAmount(),
+		//	item.Value.GetResourceTickRate(),
+		//	FString::FromInt((int)item.Value.GetResourceIdent()),
+		//	FString::FromInt((int)item.Value.GetAllowedProductionSites()),
+		//	item.Value.GetHasCost(),
+		//	item.Value.GetResourceCost()
+		//};
+
+		//productionResourceHandlePair.Add(currResource, FTimerHandle());
 	}
 	
 	if (productionResourceHandlePair.Num() > 0)

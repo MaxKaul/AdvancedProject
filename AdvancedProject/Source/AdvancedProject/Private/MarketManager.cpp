@@ -179,7 +179,7 @@ void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
 	for (FIndividualResourceInfo resource : allresources)
 	{
 		InitIndividualResource(resource.GetLastResourcePrice(), resource.GetResourceAmount(), resource.GetResourceIdent(), resource.GetAllowedProductionSites(), 
-							   resource.GetResourceTickRate(), resource.GetHastCost(), resource.GetResourceCost());
+							   resource.GetResourceTickRate(), resource.GetHasCost(), resource.GetResourceCost());
 	}
 }
 
