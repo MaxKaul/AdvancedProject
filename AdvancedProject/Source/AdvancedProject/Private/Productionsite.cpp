@@ -7,6 +7,7 @@
 #include "BuildingSite.h"
 #include "MarketManager.h"
 #include "ResourceTableBase.h"
+#include <Runtime/Engine/Classes/Kismet/KismetStringLibrary.h>
 
 AProductionsite::AProductionsite()
 {
@@ -31,17 +32,37 @@ void AProductionsite::Tick(float DeltaTime)
 	}
 }
 
-void AProductionsite::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite,  AMarketManager* _marketManager, int _siteID,
-										 TMap<EResourceIdent, int> _productionSiteResourcePool)
+void AProductionsite::InitProductionSite(FProductionSiteSaveData _saveData, AMarketManager* _marketManager)
+{
+	world = GetWorld();
+	productionSiteType = _saveData.GetSavedType();
+	actorMesh = _saveData.GetSavedMesh();
+	actorMeshComponent->SetStaticMesh(actorMesh);
+	marketManager = _marketManager;
+	buildingSite = _saveData.GetSavedBuildingSite();
+	siteID = UKismetStringLibrary::Conv_StringToInt(_saveData.structID);
+
+	productionSiteResourcePool = _saveData.GetSavedResourcePool();
+	productionResourceHandlePair = _saveData.GetSavedResourceHandle();
+
+	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
+	{
+		if (resourcehandlepair.Key.GetHasCost())
+			TickResourceProduction(resourcehandlepair.Key.GetResourceIdent(), resourcehandlepair.Key.GetResourceCost());
+		else
+			TickResourceProduction(resourcehandlepair.Key.GetResourceIdent());
+	}
+}
+
+void AProductionsite::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, AMarketManager* _marketManager, int _siteID)
 {
 	world = GetWorld();
 	productionSiteType = _type;
 	actorMesh = _siteMesh;
-	actorMeshComponent->SetStaticMesh(_siteMesh);
+	actorMeshComponent->SetStaticMesh(actorMesh);
 	marketManager = _marketManager;
 	buildingSite = _buildingSite;
 	siteID = _siteID;
-	productionSiteResourcePool = _productionSiteResourcePool;
 
 	InitResources();
 }
@@ -55,7 +76,8 @@ FProductionSiteSaveData AProductionsite::GetProductionSiteSaveData()
 		buildingSite,
 		FString::FromInt(siteID) + FString::FromInt((int)productionSiteType),
 		FString::FromInt(siteID),
-		productionSiteResourcePool
+		productionSiteResourcePool,
+		productionResourceHandlePair
 	};
 
 	return savedata;
@@ -131,7 +153,8 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
 	}
 }
 
-// _resourceIdent ist produziert wird, _resourceCost representiert die kosten einer einheit
+// _resourceIdent ist die welche produziert wird, _resourceCost representiert die kosten einer einheit
+// Das ist mit abfrage für den ident um es generisch zu halten
 void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost)
 {
 	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
@@ -150,26 +173,31 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent, TMap
 						bcanafford = true;
 			}
 
-			if(!bcanafford)
+			if(bcanafford)
 			{
+				for (TTuple<EResourceIdent, int> item : _resourceCost)
+				{
+					productionSiteResourcePool.Add(item.Key, productionSiteResourcePool.FindRef(item.Key) - item.Value);
+				}
+
+				EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
+				productionSiteResourcePool.Add(ident, productionSiteResourcePool.FindRef(ident) + resourceStdTickValue);
+			}
+			else
 				UE_LOG(LogTemp, Warning, TEXT("AProductionsite, Not enough resources to tick resource with cost"));
-				return;
-			}
 
-			for (TTuple<EResourceIdent, int> item : _resourceCost)
+			EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
+			TMap<EResourceIdent, int> resourcecost = resourcehandlepair.Key.GetResourceCost();
+
+			auto ticklambda = [this, ident, resourcecost]()
 			{
-				productionSiteResourcePool.Add(item.Key, productionSiteResourcePool.FindRef(item.Key) - item.Value);
-			}
-
-			productionSiteResourcePool.Add(EResourceIdent::ERI_Furniture, productionSiteResourcePool.FindRef(EResourceIdent::ERI_Furniture) + resourceStdTickValue);
-
+				TickResourceProduction(ident, resourcecost);
+			};
 
 			FTimerDelegate  currdelegate;
-			currdelegate.BindUFunction(this, FName("TickResourceProduction"), resourcehandlepair.Key.GetResourceIdent(), resourcehandlepair.Key.GetResourceCost());
+			currdelegate.BindLambda(ticklambda);
 
 			world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, resourcehandlepair.Key.GetResourceTickRate(), false);
-
-			break;
 		}
 	}
 }
@@ -184,21 +212,22 @@ void AProductionsite::InitResources()
 
 	for(TTuple<EResourceIdent, FIndividualResourceInfo> item: poolinfo)
 	{
-		if (productionSiteType != item.Value.GetAllowedProductionSites())
-			return;
+		productionSiteResourcePool.Add(item.Key, 100);
 
-		//FProductionResources currResource =
-		//{
-		//	item.Key,
-		//	item.Value.GetResourceAmount(),
-		//	item.Value.GetResourceTickRate(),
-		//	FString::FromInt((int)item.Value.GetResourceIdent()),
-		//	FString::FromInt((int)item.Value.GetAllowedProductionSites()),
-		//	item.Value.GetHasCost(),
-		//	item.Value.GetResourceCost()
-		//};
+		if (productionSiteType == item.Value.GetAllowedProductionSites())
+		{
+			FProductionResources productionResource =
+			{
+				item.Key,
+				item.Value.GetResourceTickRate(),
+				FString::FromInt((int)item.Value.GetResourceIdent()),
+				FString::FromInt((int)item.Value.GetAllowedProductionSites()),
+				item.Value.GetHasCost(),
+				item.Value.GetResourceCost()
+			};
 
-		//productionResourceHandlePair.Add(currResource, FTimerHandle());
+			productionResourceHandlePair.Add(productionResource, FTimerHandle());
+		}
 	}
 	
 	if (productionResourceHandlePair.Num() > 0)

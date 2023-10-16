@@ -26,8 +26,11 @@ public:
 	UFUNCTION()
 	bool InitBuilder(class AProductionSiteManager* _manager, class AMarketManager* marketManager);
 
+	// Gespeicherte Productionsites werden aus dem ProductionSiteManager (Welcher unique für alle player entities ist) gespawned
+	// Bedeutet der builder wird zum bauen der sites nur gecalled wenn eine player entetie auch tatsächlich etwas baut
 	UFUNCTION()
-		bool BuildProductionSite(FProductionSiteSaveData _siteData);
+		bool BuildProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID);
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();

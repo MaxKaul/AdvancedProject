@@ -28,9 +28,9 @@ void ABuildingSite::Tick(float DeltaTime)
 
 void ABuildingSite::SetBuildStatus(bool _wasBuildOn)
 {
-	bhasBeenBuildOn = _wasBuildOn;
+	bHasBeenBuildOn = _wasBuildOn;
 
-	if (bhasBeenBuildOn)
+	if (bHasBeenBuildOn)
 		actorMeshComponent->SetMaterial(0, translucentMat);
 }
 

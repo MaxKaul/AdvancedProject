@@ -48,14 +48,10 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AM
 		return;
 	}
 
-	TMap<EResourceIdent, int> testpool;
-	testpool.Add(EResourceIdent::ERI_Hardwood, 1);
-	testpool.Add(EResourceIdent::ERI_Resin, 1);
-	testpool.Add(EResourceIdent::ERI_Furniture, 0);
 
 	TESTBUILDERCOMP->InitBuilder(this, marketManager);
-	FProductionSiteSaveData testsavedata = { TESTMESHES[0],EProductionSiteType::PST_Furniture_Jewelry,_TESTBSITE, "","", testpool};
-	TESTBUILDERCOMP->BuildProductionSite(testsavedata);
+
+	TESTBUILDERCOMP->BuildProductionSite(TESTMESHES[0], EProductionSiteType::PST_Furniture_Jewelry, _TESTBSITE, marketManager, 0);
 }
 
 
@@ -72,7 +68,7 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, FP
 	}
 
 	// Raus um zu testen
-	//InitAllProductionSites(_saveData);
+	InitAllProductionSites(_saveData);
 }
 
 void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveData _saveData)
@@ -90,10 +86,7 @@ void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 	for (FProductionSiteSaveData sitedata : allsavedsites)
 	{
-		UStaticMesh* savedmesh = sitedata.GetSavedMesh();
-		EProductionSiteType savedtype = sitedata.GetSavedType();
 		ABuildingSite* savedbuildingsite = sitedata.GetSavedBuildingSite();
-		TMap<EResourceIdent, int> savedpool = sitedata.GetSavedResourcePool();
 
 		FVector spawnpos = savedbuildingsite->GetActorLocation();
 		FRotator spawnrot = savedbuildingsite->GetActorRotation();
@@ -103,7 +96,7 @@ void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 		AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
 
-		spawnedsite->InitProductionSite(savedmesh ,savedtype, savedbuildingsite, marketManager, allProductionSites.Num(), savedpool);
+		spawnedsite->InitProductionSite(sitedata, marketManager);
 
 		allProductionSites.Add(spawnedsite);
 		

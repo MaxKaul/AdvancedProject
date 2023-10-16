@@ -28,6 +28,9 @@ public:
 		void SetBuildStatus(bool _status);
 
 	FORCEINLINE
+		bool GetBuildStatus() { return bHasBeenBuildOn; }
+
+	FORCEINLINE
 		TArray<EProductionSiteType> GetAllowedTypes() { return allowedTypes; }
 
 private:
@@ -41,5 +44,5 @@ private:
 		UMaterialInterface* translucentMat;
 
 	UPROPERTY()
-		bool bhasBeenBuildOn;
+		bool bHasBeenBuildOn;
 };

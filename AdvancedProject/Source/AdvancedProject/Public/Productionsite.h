@@ -9,6 +9,8 @@
 #include "Productionsite.generated.h"
 
 // Resource Info für die resourcen welche in der productionsite produziert werden, FIndividualResourceInfo ist für den Markt
+// FProductionResources sollte keine infos über die menge der production resource haben es soll nur dazu dienen die infos 
+// über die zu produzierende resource zu sichern, falls wir mit save daten arbeiten wird die menge der resorucen über den lokaloen pool geladen
 USTRUCT(BlueprintType)
 struct FProductionResources
 {
@@ -57,7 +59,7 @@ private:
 public:
 	FProductionResources() {  }
 
-	FProductionResources(EResourceIdent _resourceIdent, float _resourceTickRate, const FString& _inMyStruct, const FString& _structID, bool _bHasCost, TMap<EResourceIdent, int> _resourceIdentCostPair)
+	FProductionResources(EResourceIdent _resourceIdent, float _resourceTickRate, const FString& _inName, const FString& _inID, bool _bHasCost, TMap<EResourceIdent, int> _resourceIdentCostPair)
 	{
 		resourceIdent = _resourceIdent;
 		resourceTickRate = _resourceTickRate;
@@ -65,8 +67,8 @@ public:
 
 		resourceIdentCostPair = _resourceIdentCostPair;
 
-		structName = _inMyStruct;
-		structID = _structID;
+		structName = _inName;
+		structID = _inID;
 	}
 
 	FORCEINLINE
@@ -127,6 +129,9 @@ private:
 	UPROPERTY()
 		TMap<EResourceIdent, int> productionSiteResourcePool;
 
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
+		TMap<FProductionResources, FTimerHandle> productionResourceHandlePair;
+
 public:
 
 	FORCEINLINE
@@ -137,10 +142,13 @@ public:
 		ABuildingSite* GetSavedBuildingSite(){ return buildingSite; }
 	FORCEINLINE
 		TMap<EResourceIdent, int> GetSavedResourcePool() { return productionSiteResourcePool; }
+	FORCEINLINE
+		TMap<FProductionResources, FTimerHandle> GetSavedResourceHandle() { return productionResourceHandlePair; }
 
 	FProductionSiteSaveData() {}
 
-	FProductionSiteSaveData(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, FString _structName, FString _structID, TMap<EResourceIdent, int> _productionSiteResourcePool)
+	FProductionSiteSaveData(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, FString _structName, FString _structID, 
+							TMap<EResourceIdent, int> _productionSiteResourcePool, TMap<FProductionResources, FTimerHandle> _productionResourceHandlePair)
 	{
 		siteMesh = _siteMesh;
 		type = _type;
@@ -148,6 +156,7 @@ public:
 		structName = _structName;
 		structID = _structID;
 		productionSiteResourcePool = _productionSiteResourcePool;
+		productionResourceHandlePair = _productionResourceHandlePair;
 	}
 };
 
@@ -169,9 +178,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
+	// Init mit savedata, wird vom ProductionSiteManager aus gecalled
 	UFUNCTION()
-		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type,  ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID, 
-								TMap<EResourceIdent, int> _productionSiteResourcePool);
+		void InitProductionSite(FProductionSiteSaveData _saveData, AMarketManager* marketManager);
+	// Init ohne save data, bedeutet die productionsite wurde frisch gebaut
+		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID);
 
 	// Sollte eign alles theoretisch klappen, ist getestet
 	UFUNCTION()
@@ -188,6 +199,8 @@ private:
 		void TickResourceProduction(EResourceIdent _resourceIdent);
 		void TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost);
 
+
+	// Diese function wird nur gecalled wenn eine productionsite frisch gebaut wurde und nicht aus den save daten herraus erstellt wurde
 	UFUNCTION()
 		void InitResources();
 

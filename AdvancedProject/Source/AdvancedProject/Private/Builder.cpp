@@ -50,39 +50,45 @@ bool UBuilder::InitBuilder(AProductionSiteManager* _manager, AMarketManager* _ma
 
 // Eine ProductionSite wird mit einem savedata struct initialised (Einfach damit ich das nicht doppelt machen muss, die save data soll die selben daten speichern wie die welche benötigt werden zum inin)
 // Dran denken; Ohne savedata können zum start keine BuildProductionSite existieren
-bool UBuilder::BuildProductionSite(FProductionSiteSaveData _siteData)
+bool UBuilder::BuildProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID)
 {
 	bool status = false;
 
 	// Jeder buildingsdite hat erlaubte productiontype, hier teste ich gegen
-	for(EProductionSiteType type : _siteData.GetSavedBuildingSite()->GetAllowedTypes())
+	for(EProductionSiteType type : _buildingSite->GetAllowedTypes())
 	{
-		if (_siteData.GetSavedType() == type)
+		if (_type == type)
 		{
-			FVector spawnpos = _siteData.GetSavedBuildingSite()->GetActorLocation();
-			FRotator spawnrot = _siteData.GetSavedBuildingSite()->GetActorRotation();
+			if (_buildingSite->GetBuildStatus())
+				break;
+
+			FVector spawnpos = _buildingSite->GetActorLocation();
+			FRotator spawnrot = _buildingSite->GetActorRotation();
 
 			// Debug weil die gebäude meshes noch angepasst werden müssen
 			spawnpos.Z -= 300.f;
 
 			AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
-			spawnedsite->InitProductionSite(_siteData.GetSavedMesh(), _siteData.GetSavedType(), _siteData.GetSavedBuildingSite(), marketManager, 
-											UKismetStringLibrary::Conv_StringToInt(_siteData.structID), _siteData.GetSavedResourcePool());
+
+			spawnedsite->InitProductionSite(_siteMesh,_type,_buildingSite, marketManager, _siteID);
 
 			productionSiteManager->SubscribeProductionsite(spawnedsite);
-			_siteData.GetSavedBuildingSite()->SetBuildStatus(true);
+			_buildingSite->SetBuildStatus(true);
 
 			status = true;
 			break;
 		}
 	}
 
-	if(!status)
-		UE_LOG(LogTemp, Warning, TEXT("Wrong building type"));
+	if(!status && !_buildingSite->GetBuildStatus())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UBuilder, Wrong building type"));
+	}
+	else if(!status)
+		UE_LOG(LogTemp, Warning, TEXT("UBuilder, Site is occupied"));
 
 	return status;
 }
-
 
 bool UBuilder::NullcheckDependencies()
 {
