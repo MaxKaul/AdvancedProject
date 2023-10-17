@@ -9,13 +9,17 @@
 #include "ResourceTableBase.h"
 #include <Runtime/Engine/Classes/Kismet/KismetStringLibrary.h>
 
+#include "Worker.h"
+
 AProductionsite::AProductionsite()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	actorMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Actor Mesh");
 	RootComponent = actorMeshComponent;
+
 	resourceStdTickValue = 1.f;
+	productionSiteProductivity = 0.f;
 }
 
 void AProductionsite::Tick(float DeltaTime)
@@ -77,7 +81,8 @@ FProductionSiteSaveData AProductionsite::GetProductionSiteSaveData()
 		FString::FromInt(siteID) + FString::FromInt((int)productionSiteType),
 		FString::FromInt(siteID),
 		productionSiteResourcePool,
-		productionResourceHandlePair
+		productionResourceHandlePair,
+		productionSiteProductivity
 	};
 
 	return savedata;
@@ -137,6 +142,12 @@ TArray<FProductionResources> AProductionsite::GetCurrentResources()
 // Danach resette ich den timer der resource
 void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
 {
+	if (subscribedWorker.Num() <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Num() <= 0"));
+		return;
+	}
+
 	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
 	{
 		if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
@@ -145,8 +156,10 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
 	
 			FTimerDelegate  currdelegate;
 			currdelegate.BindUFunction(this, FName("TickResourceProduction"), resourcehandlepair.Key.GetResourceIdent());
-	
-			world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, resourcehandlepair.Key.GetResourceTickRate(), false);
+
+			float tickrate = resourcehandlepair.Key.GetResourceTickRate() - productionSiteProductivity;
+
+			world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
 
 			break;
 		}
@@ -157,6 +170,12 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
 // Das ist mit abfrage für den ident um es generisch zu halten
 void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost)
 {
+	if (subscribedWorker.Num() <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Num() <= 0"));
+		return;
+	}
+
 	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
 	{
 		if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
@@ -197,9 +216,35 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent, TMap
 			FTimerDelegate  currdelegate;
 			currdelegate.BindLambda(ticklambda);
 
-			world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, resourcehandlepair.Key.GetResourceTickRate(), false);
+			float tickrate = resourcehandlepair.Key.GetResourceTickRate() - productionSiteProductivity;
+
+			world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
 		}
 	}
+}
+
+void AProductionsite::SubscribeWorker(AWorker* _toSub)
+{
+	if (!subscribedWorker.Contains(_toSub))
+	{
+		subscribedWorker.Add(_toSub);
+
+		productionSiteProductivity += _toSub->GetProductivity();
+	}
+	else
+		UE_LOG(LogTemp,Warning,TEXT("AProductionsite, subscribedWorker.Contains(_toSub)"))
+}
+
+void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub)
+{
+	if (subscribedWorker.Contains(_toUnsub))
+	{
+		subscribedWorker.Remove(_toUnsub);
+
+		productionSiteProductivity -= _toUnsub->GetProductivity();
+	}
+	else
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))
 }
 
 // Ich checke welcher resourcentyp mit welcher production site übereinstimmt und adde dann das pair

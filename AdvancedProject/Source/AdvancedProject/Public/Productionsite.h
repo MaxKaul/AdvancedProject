@@ -132,6 +132,9 @@ private:
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
 		TMap<FProductionResources, FTimerHandle> productionResourceHandlePair;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
+		float productionSiteProductivity;
+
 public:
 
 	FORCEINLINE
@@ -145,10 +148,13 @@ public:
 	FORCEINLINE
 		TMap<FProductionResources, FTimerHandle> GetSavedResourceHandle() { return productionResourceHandlePair; }
 
+
+
 	FProductionSiteSaveData() {}
 
 	FProductionSiteSaveData(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, FString _structName, FString _structID, 
-							TMap<EResourceIdent, int> _productionSiteResourcePool, TMap<FProductionResources, FTimerHandle> _productionResourceHandlePair)
+							TMap<EResourceIdent, int> _productionSiteResourcePool, TMap<FProductionResources, FTimerHandle> _productionResourceHandlePair,
+							float _productivity)
 	{
 		siteMesh = _siteMesh;
 		type = _type;
@@ -157,6 +163,7 @@ public:
 		structID = _structID;
 		productionSiteResourcePool = _productionSiteResourcePool;
 		productionResourceHandlePair = _productionResourceHandlePair;
+		productionSiteProductivity = _productivity;
 	}
 };
 
@@ -180,7 +187,7 @@ public:
 public:
 	// Init mit savedata, wird vom ProductionSiteManager aus gecalled
 	UFUNCTION()
-		void InitProductionSite(FProductionSiteSaveData _saveData, AMarketManager* marketManager);
+		void InitProductionSite(FProductionSiteSaveData _saveData, class AMarketManager* marketManager);
 	// Init ohne save data, bedeutet die productionsite wurde frisch gebaut
 		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID);
 
@@ -199,6 +206,10 @@ private:
 		void TickResourceProduction(EResourceIdent _resourceIdent);
 		void TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost);
 
+	UFUNCTION()
+		void SubscribeWorker(class AWorker* _toSub);
+	UFUNCTION()
+		void UnsubscribeWorker(AWorker* _toUnsub);
 
 	// Diese function wird nur gecalled wenn eine productionsite frisch gebaut wurde und nicht aus den save daten herraus erstellt wurde
 	UFUNCTION()
@@ -224,14 +235,16 @@ private:
 	UPROPERTY()
 		 AMarketManager* marketManager;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
-		TArray<class AWorker*> employedWorker;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
 		UDataTable* resourceDataTable;
 
+	// Dieser wert ist in abhängigkeit zu der von den subscribedWorker mitgeteilten productivity, welche gelesen wird wenn diese auf die productionsite subscriben
+	// Unter umständen kann ich noch eine seperate function zum updaten der productivity machen sollte sich ddiese bei einem der subscribedWorker ändern
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
-		float currentResourceOutput;
+		float productionSiteProductivity;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
+		TArray<AWorker*> subscribedWorker;
 
 	// Dies sind die resourcen welche produziert werden
 	// Speichert alle produzierenden resourcen

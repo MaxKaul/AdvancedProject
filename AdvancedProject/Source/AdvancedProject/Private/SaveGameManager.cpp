@@ -2,9 +2,12 @@
 
 
 #include "SaveGameManager.h"
+
+#include "ASPSaveGame.h"
 #include "ProductionSiteManager.h"
 #include "MarketManager.h"
 #include "Productionsite.h"
+#include "Kismet/GameplayStatics.h"
 
 ASaveGameManager::ASaveGameManager()
 {
@@ -28,7 +31,10 @@ void ASaveGameManager::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("SAVEGAME MANAGER, ERROR LOADING DATA"));
 
 
- //MUSTER: Zum Resourcen kaufen/verkaufen/
+	/*
+
+
+    //MUSTER: Zum Resourcen kaufen/verkaufen/
 	//// Beim Kaufen steht unser exchange capital für das geld welches wir mitgeben, dies ist der MaxBuyPricePerResource * BuyAmount
 	//// Erstmal als flicken, da kann noch was besseres ran
 	//TOptional<float> nomaxsellprice;
@@ -49,14 +55,14 @@ void ASaveGameManager::BeginPlay()
 	//	FResourceTransactionTicket(10, 0, EResourceIdent::ERI_Gold, nomaxbuyprice,0),
 	//	FResourceTransactionTicket(10, 0, EResourceIdent::ERI_Wheat, nomaxbuyprice,0),
 	//};
-
 	//TArray<FResourceTransactionTicket> transactionreturn = spawnedMarketManager->SellResources(transactioncall);
 
 	//for (FResourceTransactionTicket ticket : transactionreturn)
 	//{
 	//	UE_LOG(LogTemp, Warning, TEXT("exchanged capital %f, returned resource %i"), ticket.exchangedCapital, ticket.resourceAmount);
 	//}
- 
+ 	 *
+	 */
 }
 
 void ASaveGameManager::Tick(float DeltaTime)
@@ -92,10 +98,6 @@ bool ASaveGameManager::InitAllManager()
 	else
 		spawnedMarketManager->InitMarketManager();
 
-	AProductionSiteManager* testmanager = Cast<AProductionSiteManager>(world->SpawnActor(TESTPSManager, &pos));
-
-	testmanager->InitProductionSiteManager(this, spawnedMarketManager, TESTSITE);
-
 	return status;
 }
 
@@ -130,7 +132,46 @@ bool ASaveGameManager::SaveGameData()
 		return false;
 	}
 
-	FMarketManagerSaveData resourcemanagersavedata = spawnedMarketManager->GetMarketManagerSaveData();
+
+	FString savedir = FPaths::ProjectSavedDir() + TEXT("SaveGames/");  
+
+	IFileManager::Get().FindFiles(savedGames, *savedir, TEXT("*.sav")); 
+
+	if (saveGameName == "")
+		saveGameName = FString("save_") + FString::FromInt(savedGames.Num());
+
+	FMarketManagerSaveData marketmanagersavedata = spawnedMarketManager->GetMarketManagerSaveData();
+
+	UASPSaveGame* newsave = Cast<UASPSaveGame>(UGameplayStatics::CreateSaveGameObject(UASPSaveGame::StaticClass()));
+	newsave->InitSaveGame(marketmanagersavedata);
+
+	int saveslot = savedGames.Num() + 1;
+
+	UGameplayStatics::SaveGameToSlot(newsave, saveGameName, saveslot);
 
 	return status;
+}
+
+bool ASaveGameManager::LoadGameData(FString _saveGameName, int _saveGameSlot)
+{
+	bool status = false;
+
+	UASPSaveGame* loadedsavegame = Cast<UASPSaveGame>(UGameplayStatics::CreateSaveGameObject(UASPSaveGame::StaticClass()));
+	loadedsavegame = Cast<UASPSaveGame>(UGameplayStatics::LoadGameFromSlot(_saveGameName, _saveGameSlot));
+
+	if (IsValid(loadedsavegame))
+	{
+		status = true;
+
+		marketManagerSaveData = loadedsavegame->GetSavedMarketManagerData();
+	}
+
+	// -> Get all the Data
+
+	return status;
+}
+
+void ASaveGameManager::SetSaveGameName(FString _name)
+{
+	saveGameName = _name;
 }

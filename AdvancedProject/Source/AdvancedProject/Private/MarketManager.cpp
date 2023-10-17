@@ -19,6 +19,8 @@ bool AMarketManager::InitMarketManager(FMarketManagerSaveData _saveData)
 {
 	bool status = false;
 
+	UE_LOG(LogTemp, Warning, TEXT("SAVEDATA"));
+
 	world = GetWorld();
 
 	if (!NullcheckDependencies())
@@ -28,7 +30,7 @@ bool AMarketManager::InitMarketManager(FMarketManagerSaveData _saveData)
 	}
 	else
 		status = true;
-		
+
 	InitResources(_saveData);
 	InitMarketStalls();
 
@@ -41,6 +43,8 @@ bool AMarketManager::InitMarketManager(FMarketManagerSaveData _saveData)
 bool AMarketManager::InitMarketManager()
 {
 	bool status = false;
+
+	UE_LOG(LogTemp, Warning, TEXT("NO SAVEDATA"));
 
 	world = GetWorld();
 

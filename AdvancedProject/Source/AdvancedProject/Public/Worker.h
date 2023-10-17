@@ -23,10 +23,11 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
+	// Sollte in einer range von 0.005f bis 0.08f eingestellt werden (ERSTMAL), dieser wert wird nähmlich von der ResourceTick rate ABGEZOGEN
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerInfo, meta = (AllowPrivateAccess))
-		float economicOutput;
+		float productivity;
 
 public:
 	FORCEINLINE
-		float GetEconomicOutput() { return economicOutput; }
+		float GetProductivity() { return productivity; }
 };

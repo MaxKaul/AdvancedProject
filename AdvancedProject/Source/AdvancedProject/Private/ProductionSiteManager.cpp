@@ -12,15 +12,12 @@ AProductionSiteManager::AProductionSiteManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
-	TESTBUILDERCOMP = CreateDefaultSubobject<UBuilder>("DD");
 }
 
 // Called when the game starts or when spawned
 void AProductionSiteManager::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 // Called every frame
@@ -36,7 +33,7 @@ void AProductionSiteManager::Tick(float DeltaTime)
 }
 
 
-void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager, ABuildingSite* _TESTBSITE)
+void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager)
 {
 	world = GetWorld();
 	managerOwner = _managerOwner;
@@ -47,11 +44,6 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AM
 		UE_LOG(LogTemp,Warning,TEXT("AProductionSiteManager, !NullcheckDependencies()"))
 		return;
 	}
-
-
-	TESTBUILDERCOMP->InitBuilder(this, marketManager);
-
-	TESTBUILDERCOMP->BuildProductionSite(TESTMESHES[0], EProductionSiteType::PST_Furniture_Jewelry, _TESTBSITE, marketManager, 0);
 }
 
 

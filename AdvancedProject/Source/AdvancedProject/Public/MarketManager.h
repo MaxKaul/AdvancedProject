@@ -117,7 +117,7 @@ public:
 
 	FMarketManagerSaveData() {}
 
-	FMarketManagerSaveData(TMap<EResourceIdent, FIndividualResourceInfo> _resourceIdentInfoPair)
+	FMarketManagerSaveData(TMap<EResourceIdent, FIndividualResourceInfo> _resourceIdentInfoPair )
 	{
 		resourceIdentInfoPair = _resourceIdentInfoPair;
 	}

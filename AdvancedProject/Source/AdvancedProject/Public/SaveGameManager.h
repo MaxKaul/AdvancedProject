@@ -22,33 +22,40 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION()
+		bool SaveGameData();
+	UFUNCTION()
+		bool LoadGameData(FString _saveGameName, int _saveGameSlot);
+
+	UFUNCTION()
+		void SetSaveGameName(FString _name);
+
+
 private:
 	bool InitAllManager();
 
 	UFUNCTION()
 		bool NullcheckDependencies();
 
-	UFUNCTION()
-		bool SaveGameData();
+	FORCEINLINE
+		TArray<FString> GetSavedGamesByName() { return savedGames; }
 
 private:
 	UPROPERTY()
 		UWorld* world;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
-		ABuildingSite* TESTSITE;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
-		ABuildingSite* TESTSITE_1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
 		TSubclassOf<AMarketManager> marketManagerClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
-		TSubclassOf<class AProductionSiteManager> TESTPSManager;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
 		AMarketManager* spawnedMarketManager;
 
 	TOptional<FMarketManagerSaveData> marketManagerSaveData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SaveGameInfo, meta = (AllowPrivateAccess))
+		FString saveGameName;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
+	TArray<FString> savedGames;
 };
