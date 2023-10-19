@@ -3,6 +3,8 @@
 
 #include "Worker.h"
 
+#include "WorkerController.h"
+
 // Sets default values
 AWorker::AWorker()
 {
@@ -16,7 +18,6 @@ AWorker::AWorker()
 void AWorker::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -33,3 +34,35 @@ void AWorker::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
+
+void AWorker::InitWorker(FWorkerSaveData _saveData)
+{
+	skeletalMeshComponent = GetMesh();
+
+	skeletalMesh = _saveData.GetWorkerMesh();
+
+	skeletalMeshComponent->SetSkeletalMesh(skeletalMesh, true);
+	workerController = Cast<AWorkerController>(GetController());
+
+	SetActorLocation(_saveData.GetWorkerLocation());
+	SetActorRotation(_saveData.GetWorkerRotation());
+}
+
+FWorkerSaveData AWorker::GetWorkerSaveData()
+{
+	FWorkerSaveData savedata =
+	{
+		GetActorLocation(),
+		GetActorRotation(),
+		skeletalMesh
+	};
+
+	return savedata;
+}
+
+bool AWorker::NullcheckDependencies()
+{
+	bool status = true;
+
+	return status;
+}
