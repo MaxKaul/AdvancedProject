@@ -27,14 +27,6 @@ void AWorker::Tick(float DeltaTime)
 
 }
 
-// Called to bind functionality to input
-void AWorker::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
-
-
 void AWorker::InitWorker(FWorkerSaveData _saveData)
 {
 	skeletalMeshComponent = GetMesh();
@@ -43,9 +35,6 @@ void AWorker::InitWorker(FWorkerSaveData _saveData)
 
 	skeletalMeshComponent->SetSkeletalMesh(skeletalMesh, true);
 	workerController = Cast<AWorkerController>(GetController());
-
-	SetActorLocation(_saveData.GetWorkerLocation());
-	SetActorRotation(_saveData.GetWorkerRotation());
 }
 
 FWorkerSaveData AWorker::GetWorkerSaveData()

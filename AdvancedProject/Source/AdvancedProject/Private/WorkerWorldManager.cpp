@@ -2,6 +2,8 @@
 
 
 #include "WorkerWorldManager.h"
+#include "NavigationSystem.h"
+#include "WorkerController.h"
 
 // Sets default values
 AWorkerWorldManager::AWorkerWorldManager()
@@ -9,6 +11,7 @@ AWorkerWorldManager::AWorkerWorldManager()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	stdWorkerSpawnAmount = 10;
 }
 
 // Called when the game starts or when spawned
@@ -25,3 +28,118 @@ void AWorkerWorldManager::Tick(float DeltaTime)
 
 }
 
+void AWorkerWorldManager::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData)
+{
+	world = GetWorld();
+	navigationSystem = Cast<UNavigationSystemV1>(world->GetNavigationSystem());
+
+	if(!NullcheckDependencies())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !NullcheckDependencies()"));
+		return;
+	}
+
+	SpawnAllWorker(_saveData);
+}
+
+void AWorkerWorldManager::InitWorkerWorldManager()
+{
+	world = GetWorld();
+	navigationSystem = Cast<UNavigationSystemV1>(world->GetNavigationSystem());
+
+	if (!NullcheckDependencies())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !NullcheckDependencies()"));
+		return;
+	}
+
+	TArray<FWorkerSaveData> allworkersavedata;
+
+	for (size_t i = 0; i < stdWorkerSpawnAmount; i++)
+	{
+		FNavLocation spawnpos;
+		FRotator spawnrot;
+		USkeletalMesh* mesh;
+		float rndyaw; 
+
+		navigationSystem->GetRandomPoint(spawnpos);
+
+		rndyaw = FMath::RandRange(0, 360);
+		spawnrot = FRotator(0, 0, rndyaw);
+
+		mesh = possibleSkeletalMeshes[FMath::RandRange(0, possibleSkeletalMeshes.Num() - 1)];
+
+		FWorkerSaveData workersavedata =
+		{
+			spawnpos.Location,
+			spawnrot,
+			mesh
+		};
+
+		allworkersavedata.Add(workersavedata);
+	}
+
+	FWorkerWorldManagerSaveData newsavedata =
+	{
+		allworkersavedata
+	};
+
+	SpawnAllWorker(newsavedata);
+}
+
+FWorkerWorldManagerSaveData AWorkerWorldManager::GetWorkerManagerSaveData()
+{
+	TArray<FWorkerSaveData> allworkerdata;
+
+	for (AWorker* worker : allWorker)
+	{
+		allworkerdata.Add(worker->GetWorkerSaveData());
+	}
+
+	FWorkerWorldManagerSaveData savedata =
+	{
+		allworkerdata
+	};
+
+	return savedata;
+}
+
+void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
+{
+	for (FWorkerSaveData workerdata : _saveData.GetAllWorker())
+	{
+		FVector spawnpos = workerdata.GetWorkerLocation();
+		FRotator spawnrot = workerdata.GetWorkerRotation();
+
+		AWorker* tospawn = Cast<AWorker>(world->SpawnActor(workerClass, &spawnpos, &spawnrot));
+
+		tospawn->InitWorker(workerdata);
+
+		SubscribeNewWorker(tospawn);
+	}
+}
+
+bool AWorkerWorldManager::NullcheckDependencies()
+{
+	bool status = true;
+
+	if(!workerClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !workerClass"));
+		status = false;
+	}
+
+	return status;
+}
+
+void AWorkerWorldManager::SubscribeNewWorker(AWorker* _toSub)
+{
+	if (!allWorker.Contains(_toSub))
+		allWorker.Add(_toSub);
+}
+
+void AWorkerWorldManager::UnsubscribeWorker(AWorker* _toUnsub)
+{
+	if (allWorker.Contains(_toUnsub))
+		allWorker.Remove(_toUnsub);
+}

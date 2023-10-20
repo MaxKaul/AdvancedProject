@@ -79,7 +79,7 @@ void ASaveGameManager::Tick(float DeltaTime)
 
 bool ASaveGameManager::InitAllManager()
 {
-	bool status = false;
+	bool status = true;
 
 	FVector pos = FVector(0.f);
 
@@ -87,41 +87,35 @@ bool ASaveGameManager::InitAllManager()
 
 	if (!spawnedMarketManager)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !spawnedMarketManager"))
-			return false;
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !spawnedMarketManager"));
+		status = false;
 	}
-	else
-		status = true;
 
 	if (marketManagerSaveData.IsSet())
 		spawnedMarketManager->InitMarketManager(marketManagerSaveData.GetValue());
 	else
 		spawnedMarketManager->InitMarketManager();
 
+
+	spawnedWorkerWorldManager = Cast<AWorkerWorldManager>(world->SpawnActor(workerWorldManagerClass, &pos));
+
+	if (!spawnedMarketManager)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !spawnedMarketManager"));
+		return false;
+	}
+	else
+		status = true;
+
+	if (workerWorldManagerSaveData.IsSet())
+		spawnedWorkerWorldManager->InitWorkerWorldManager(workerWorldManagerSaveData.GetValue());
+	else
+		spawnedWorkerWorldManager->InitWorkerWorldManager();
+
+
 	return status;
 }
 
-
-bool ASaveGameManager::NullcheckDependencies()
-{
-	bool status = true;
-
-	if (!marketManagerClass)
-	{
-		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !marketStall"));
-	}
-
-	if (!world)
-	{
-		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !world"));
-	}
-
-	return status;
-}
-
-// Nur schonmal angelegt
 bool ASaveGameManager::SaveGameData()
 {
 	bool status = false;
@@ -140,10 +134,12 @@ bool ASaveGameManager::SaveGameData()
 	if (saveGameName == "")
 		saveGameName = FString("save_") + FString::FromInt(savedGames.Num());
 
+
 	FMarketManagerSaveData marketmanagersavedata = spawnedMarketManager->GetMarketManagerSaveData();
+	FWorkerWorldManagerSaveData workerworldmanagersavedata = spawnedWorkerWorldManager->GetWorkerManagerSaveData();
 
 	UASPSaveGame* newsave = Cast<UASPSaveGame>(UGameplayStatics::CreateSaveGameObject(UASPSaveGame::StaticClass()));
-	newsave->InitSaveGame(marketmanagersavedata);
+	newsave->InitSaveGame(marketmanagersavedata, workerworldmanagersavedata);
 
 	int saveslot = savedGames.Num() + 1;
 
@@ -164,6 +160,7 @@ bool ASaveGameManager::LoadGameData(FString _saveGameName, int _saveGameSlot)
 		status = true;
 
 		marketManagerSaveData = loadedsavegame->GetSavedMarketManagerData();
+		workerWorldManagerSaveData = loadedsavegame->GetSavedWorkerWorldManagerSaveData();
 	}
 
 	// -> Get all the Data
@@ -174,4 +171,29 @@ bool ASaveGameManager::LoadGameData(FString _saveGameName, int _saveGameSlot)
 void ASaveGameManager::SetSaveGameName(FString _name)
 {
 	saveGameName = _name;
+}
+
+bool ASaveGameManager::NullcheckDependencies()
+{
+	bool status = true;
+
+	if (!marketManagerClass)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !marketStall"));
+	}
+
+	if (!world)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !world"));
+	}
+
+	if (!workerWorldManagerClass)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !workerWorldManagerClass"));
+	}
+
+	return status;
 }

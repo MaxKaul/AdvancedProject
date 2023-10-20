@@ -9,7 +9,7 @@ void UWorkerAnimInstance::NativeBeginPlay()
 {
 	Super::NativeInitializeAnimation();
 
-	instanceOwner = Cast<AWorker>(TryGetPawnOwner()->GetController());
+	instanceOwner = Cast<AWorker>(TryGetPawnOwner());
 }
 
 void UWorkerAnimInstance::UpdateAnimationProperties()

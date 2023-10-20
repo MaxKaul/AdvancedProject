@@ -52,8 +52,6 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 private:
 	// Sollte in einer range von 0.005f bis 0.08f eingestellt werden (ERSTMAL), dieser wert wird nähmlich von der ResourceTick rate ABGEZOGEN
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerInfo, meta = (AllowPrivateAccess))
@@ -61,10 +59,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerInfo, meta = (AllowPrivateAccess))
 		class UWorkerMoodManager* moodManager;
-
-	// Muss vom WorkerWorldManager aus kommen
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
-	//	TArray<USkeletalMesh*> possibleSkeletalMeshes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		USkeletalMesh* skeletalMesh;
@@ -82,10 +76,6 @@ private:
 	UFUNCTION()
 		bool NullcheckDependencies();
 
-	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data 
-	UFUNCTION()
-		void InitWorker(FWorkerSaveData _saveData);
-
 public:
 	FORCEINLINE
 		float GetProductivity() { return productivity; }
@@ -95,5 +85,9 @@ public:
 
 	FORCEINLINE
 		bool GetIsWorking() { return bIsWorking; }
+
+	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data 
+	UFUNCTION()
+		void InitWorker(FWorkerSaveData _saveData);
 };
 

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "MarketManager.h"
 #include "ProductionSiteManager.h"
+#include "WorkerWorldManager.h"
 #include "GameFramework/Actor.h"
 #include "SaveGameManager.generated.h"
 
@@ -50,11 +51,18 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
 		AMarketManager* spawnedMarketManager;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
+		TSubclassOf<AWorkerWorldManager> workerWorldManagerClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
+		AWorkerWorldManager* spawnedWorkerWorldManager;
+
 	TOptional<FMarketManagerSaveData> marketManagerSaveData;
+	TOptional<FWorkerWorldManagerSaveData> workerWorldManagerSaveData;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SaveGameInfo, meta = (AllowPrivateAccess))
 		FString saveGameName;
-
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
 	TArray<FString> savedGames;

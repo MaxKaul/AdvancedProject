@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "MarketManager.h"
+#include "WorkerWorldManager.h"
 #include "GameFramework/SaveGame.h"
 #include "ASPSaveGame.generated.h"
 
@@ -20,10 +21,15 @@ class ADVANCEDPROJECT_API UASPSaveGame : public USaveGame
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SaveGameInfo, meta = (AllowPrivateAccess))
 		FMarketManagerSaveData marketManagerSaveData;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SaveGameInfo, meta = (AllowPrivateAccess))
+		FWorkerWorldManagerSaveData workerWorldManagerSaveData;
+
 public:
 	FORCEINLINE
 		FMarketManagerSaveData GetSavedMarketManagerData() { return marketManagerSaveData; }
+	FORCEINLINE
+		FWorkerWorldManagerSaveData GetSavedWorkerWorldManagerSaveData() { return workerWorldManagerSaveData; }
 
 	UFUNCTION()
-		void InitSaveGame(FMarketManagerSaveData _marketManagerSaveData);
+		void InitSaveGame(FMarketManagerSaveData _marketManagerSaveData, FWorkerWorldManagerSaveData _workerWorldManagerSaveData);
 };
