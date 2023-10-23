@@ -2,6 +2,8 @@
 
 
 #include "Worker.h"
+
+#include "NavigationSystem.h"
 #include "WorkerController.h"
 
 // Sets default values
@@ -26,7 +28,7 @@ void AWorker::Tick(float DeltaTime)
 
 }
 
-void AWorker::InitWorker(FWorkerSaveData _saveData)
+void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem)
 {
 	skeletalMeshComponent = GetMesh();
 
@@ -34,6 +36,13 @@ void AWorker::InitWorker(FWorkerSaveData _saveData)
 
 	skeletalMeshComponent->SetSkeletalMesh(skeletalMesh, true);
 	workerController = Cast<AWorkerController>(GetController());
+	navigationSystem = _navSystem;
+
+	FNavLocation testloc;
+
+	navigationSystem->GetRandomPoint(testloc);
+
+	workerController->MoveToLocation(testloc.Location);
 }
 
 FWorkerSaveData AWorker::GetWorkerSaveData()

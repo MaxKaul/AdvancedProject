@@ -73,6 +73,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		bool bIsWorking;
 
+	UPROPERTY()
+		class UNavigationSystemV1* navigationSystem;
+
 	UFUNCTION()
 		bool NullcheckDependencies();
 
@@ -88,6 +91,6 @@ public:
 
 	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data 
 	UFUNCTION()
-		void InitWorker(FWorkerSaveData _saveData);
+		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem);
 };
 

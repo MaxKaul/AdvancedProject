@@ -14,6 +14,8 @@ AWorkerWorldManager::AWorkerWorldManager()
 
 	stdWorkerSpawnAmount = 10;
 	capsuleHightValue = 100.f;
+
+	maxSpawnTries = 10;
 }
 
 // Called when the game starts or when spawned
@@ -110,6 +112,7 @@ FWorkerWorldManagerSaveData AWorkerWorldManager::GetWorkerManagerSaveData()
 	return savedata;
 }
 
+// Noch etwas besser machen
 void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 {
 	for (FWorkerSaveData workerdata : _saveData.GetAllWorker())
@@ -117,15 +120,20 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 		FVector spawnpos = workerdata.GetWorkerLocation();
 		FRotator spawnrot = workerdata.GetWorkerRotation();
 
-		AActor* tospawn = world->SpawnActor(workerClass, &spawnpos, &spawnrot);
-		AWorker* worker = Cast<AWorker>(tospawn);
+		for (size_t i = 0; i < maxSpawnTries; i++)
+		{
+			FActorSpawnParameters params;
+			params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+			
+			if (AActor* tospawn = world->SpawnActor(workerClass, &spawnpos, &spawnrot, params))
+			{
+				AWorker* worker = Cast<AWorker>(tospawn);
+				worker->InitWorker(workerdata, navigationSystem);
+				SubscribeNewWorker(worker);
 
-		if (!worker)
-			return;
-
-		worker->InitWorker(workerdata);
-		
-		SubscribeNewWorker(worker);
+				break;
+			}
+		}
 	}
 }
 
