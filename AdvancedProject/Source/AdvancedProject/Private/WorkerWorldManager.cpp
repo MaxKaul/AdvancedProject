@@ -2,6 +2,7 @@
 
 
 #include "WorkerWorldManager.h"
+#include "Worker.h"
 #include "NavigationSystem.h"
 #include "WorkerController.h"
 
@@ -12,6 +13,7 @@ AWorkerWorldManager::AWorkerWorldManager()
 	PrimaryActorTick.bCanEverTick = true;
 
 	stdWorkerSpawnAmount = 10;
+	capsuleHightValue = 100.f;
 }
 
 // Called when the game starts or when spawned
@@ -57,21 +59,25 @@ void AWorkerWorldManager::InitWorkerWorldManager()
 
 	for (size_t i = 0; i < stdWorkerSpawnAmount; i++)
 	{
-		FNavLocation spawnpos;
+		FNavLocation spawnnavpos;
+		FVector spawnpos;
 		FRotator spawnrot;
 		USkeletalMesh* mesh;
 		float rndyaw; 
 
-		navigationSystem->GetRandomPoint(spawnpos);
+		navigationSystem->GetRandomPoint(spawnnavpos);
 
-		rndyaw = FMath::RandRange(0, 360);
-		spawnrot = FRotator(0, 0, rndyaw);
+		spawnpos = spawnnavpos.Location;
+		spawnpos.Z += capsuleHightValue;
+
+		rndyaw = FMath::RandRange(-180, 180);
+		spawnrot = FRotator(0, 0, 0);
 
 		mesh = possibleSkeletalMeshes[FMath::RandRange(0, possibleSkeletalMeshes.Num() - 1)];
 
 		FWorkerSaveData workersavedata =
 		{
-			spawnpos.Location,
+			spawnpos,
 			spawnrot,
 			mesh
 		};
@@ -111,11 +117,15 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 		FVector spawnpos = workerdata.GetWorkerLocation();
 		FRotator spawnrot = workerdata.GetWorkerRotation();
 
-		AWorker* tospawn = Cast<AWorker>(world->SpawnActor(workerClass, &spawnpos, &spawnrot));
+		AActor* tospawn = world->SpawnActor(workerClass, &spawnpos, &spawnrot);
+		AWorker* worker = Cast<AWorker>(tospawn);
 
-		tospawn->InitWorker(workerdata);
+		if (!worker)
+			return;
 
-		SubscribeNewWorker(tospawn);
+		worker->InitWorker(workerdata);
+		
+		SubscribeNewWorker(worker);
 	}
 }
 

@@ -2,7 +2,6 @@
 
 
 #include "Worker.h"
-
 #include "WorkerController.h"
 
 // Sets default values

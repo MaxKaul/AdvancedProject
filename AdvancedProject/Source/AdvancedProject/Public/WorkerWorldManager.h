@@ -69,7 +69,10 @@ private:
 		TSubclassOf<AWorker> workerClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
-	TArray<USkeletalMesh*> possibleSkeletalMeshes;
+		TArray<USkeletalMesh*> possibleSkeletalMeshes;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+		float capsuleHightValue;
 
 	UPROPERTY()
 		UWorld* world;
