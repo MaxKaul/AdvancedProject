@@ -9,6 +9,15 @@
 #include "GameFramework/Actor.h"
 #include "SaveGameManager.generated.h"
 
+USTRUCT()
+struct FSaveManagerOptionals
+{
+	GENERATED_BODY()
+
+		TOptional<FMarketManagerSaveData> marketManagerSaveData;
+		TOptional<FWorkerWorldManagerSaveData> workerWorldManagerSaveData;
+};
+
 UCLASS()
 class ADVANCEDPROJECT_API ASaveGameManager : public AActor
 {
@@ -23,7 +32,7 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		bool SaveGameData();
 	UFUNCTION()
 		bool LoadGameData(FString _saveGameName, int _saveGameSlot);
@@ -57,13 +66,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
 		AWorkerWorldManager* spawnedWorkerWorldManager;
 
-	TOptional<FMarketManagerSaveData> marketManagerSaveData;
-	TOptional<FWorkerWorldManagerSaveData> workerWorldManagerSaveData;
-
+	UPROPERTY()
+		FSaveManagerOptionals saveManagerOptionals;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SaveGameInfo, meta = (AllowPrivateAccess))
 		FString saveGameName;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
-	TArray<FString> savedGames;
+		TArray<FString> savedGames;
 };

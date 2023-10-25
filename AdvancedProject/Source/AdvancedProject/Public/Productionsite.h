@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "EnumLibrary.h"
+#include "MarketManager.h"
 #include "Engine/DataTable.h"
 #include "GameFramework/Actor.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Productionsite.generated.h"
 
 // Resource Info für die resourcen welche in der productionsite produziert werden, FIndividualResourceInfo ist für den Markt
@@ -95,10 +97,10 @@ struct FProductionSiteSaveData
 	GENERATED_BODY()
 
 		UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
-		FString structName = FString("NONE");
+		FString structName_Saved = FString("NONE");
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
-		FString structID = FString("NONE");
+		FString productionSiteID_Saved = FString("NONE");
 
 public:
 	FORCEINLINE
@@ -116,54 +118,56 @@ public:
 	FORCEINLINE
 		bool Equals(const  FProductionSiteSaveData& _other) const
 	{
-		return structName == _other.structName && structID == _other.structID;
+		return structName_Saved == _other.structName_Saved && productionSiteID_Saved == _other.productionSiteID_Saved;
 	}
 
 private:
 	UPROPERTY()
-		UStaticMesh* siteMesh;
+		UStaticMesh* siteMesh_Saved;
 	UPROPERTY()
-		EProductionSiteType type;
+		EProductionSiteType type_Saved;
 	UPROPERTY()
-		class ABuildingSite* buildingSite;
+		class ABuildingSite* buildingSite_Saved;
 	UPROPERTY()
-		TMap<EResourceIdent, int> productionSiteResourcePool;
+		TMap<EResourceIdent, int> productionSiteResourcePool_Saved;
 
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
-		TMap<FProductionResources, FTimerHandle> productionResourceHandlePair;
+		TMap<FProductionResources, FTimerHandle> productionResourceHandlePair_Saved;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
-		float productionSiteProductivity;
+		float productionSiteProductivity_Saved;
 
 public:
 
 	FORCEINLINE
-		UStaticMesh* GetSavedMesh(){ return siteMesh; }
+		UStaticMesh* GetSavedMesh(){ return siteMesh_Saved; }
 	FORCEINLINE
-		EProductionSiteType GetSavedType(){ return type; }
+		EProductionSiteType GetSavedType(){ return type_Saved; }
 	FORCEINLINE
-		ABuildingSite* GetSavedBuildingSite(){ return buildingSite; }
+		ABuildingSite* GetSavedBuildingSite(){ return buildingSite_Saved; }
 	FORCEINLINE
-		TMap<EResourceIdent, int> GetSavedResourcePool() { return productionSiteResourcePool; }
+		int GetProductionsiteID(){ return  UKismetStringLibrary::Conv_StringToInt(productionSiteID_Saved); }
 	FORCEINLINE
-		TMap<FProductionResources, FTimerHandle> GetSavedResourceHandle() { return productionResourceHandlePair; }
+		TMap<EResourceIdent, int> GetSavedResourcePool() { return productionSiteResourcePool_Saved; }
+	FORCEINLINE
+		TMap<FProductionResources, FTimerHandle> GetSavedResourceHandle() { return productionResourceHandlePair_Saved; }
 
 
 
 	FProductionSiteSaveData() {}
 
-	FProductionSiteSaveData(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, FString _structName, FString _structID, 
+	FProductionSiteSaveData(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, FString _structName, FString _productionSiteID,
 							TMap<EResourceIdent, int> _productionSiteResourcePool, TMap<FProductionResources, FTimerHandle> _productionResourceHandlePair,
 							float _productivity)
 	{
-		siteMesh = _siteMesh;
-		type = _type;
-		buildingSite = _buildingSite;
-		structName = _structName;
-		structID = _structID;
-		productionSiteResourcePool = _productionSiteResourcePool;
-		productionResourceHandlePair = _productionResourceHandlePair;
-		productionSiteProductivity = _productivity;
+		siteMesh_Saved = _siteMesh;
+		type_Saved = _type;
+		buildingSite_Saved = _buildingSite;
+		structName_Saved = _structName;
+		productionSiteID_Saved = _productionSiteID;
+		productionSiteResourcePool_Saved = _productionSiteResourcePool;
+		productionResourceHandlePair_Saved = _productionResourceHandlePair;
+		productionSiteProductivity_Saved = _productivity;
 	}
 };
 
@@ -181,7 +185,7 @@ class ADVANCEDPROJECT_API AProductionsite : public AActor
 public:	
 	AProductionsite();
 
-public:	
+protected:
 	virtual void Tick(float DeltaTime) override;
 
 public:

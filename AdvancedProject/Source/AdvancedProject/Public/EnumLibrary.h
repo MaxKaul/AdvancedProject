@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 
-UENUM()
+UENUM(BlueprintType)
 enum class EResourceIdent : uint8
 {
 	ERI_DEFAULT,
@@ -31,4 +31,14 @@ enum class EProductionSiteType : uint8
 	PST_Furniture_Jewelry,
 	PST_Ambrosia,
 	PST_ENTRY_AMOUNT
+};
+
+UENUM(BlueprintType)
+enum class EWorkerStatus : uint8
+{
+	WS_DEFAULT,
+	WS_Unemployed,
+	WS_Employed_MainJob,
+	WS_Employed_SideJob,
+	WS_ENTRY_AMOUNT
 };

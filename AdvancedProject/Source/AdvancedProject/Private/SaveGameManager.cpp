@@ -91,8 +91,8 @@ bool ASaveGameManager::InitAllManager()
 		status = false;
 	}
 
-	if (marketManagerSaveData.IsSet())
-		spawnedMarketManager->InitMarketManager(marketManagerSaveData.GetValue());
+	if (saveManagerOptionals.marketManagerSaveData.IsSet())
+		spawnedMarketManager->InitMarketManager(saveManagerOptionals.marketManagerSaveData.GetValue());
 	else
 		spawnedMarketManager->InitMarketManager();
 
@@ -107,11 +107,15 @@ bool ASaveGameManager::InitAllManager()
 	else
 		status = true;
 
-	if (workerWorldManagerSaveData.IsSet())
-		spawnedWorkerWorldManager->InitWorkerWorldManager(workerWorldManagerSaveData.GetValue());
+	// Ich muss alle spawned productionssite manager abgreifen, diese sind im moment noch individuell -> Die KI u. Player vorbereiten? Diese sollen das eigentlich haltenund gespeicher
+	// Ich mach das jetzt erstmal pseudo damit ich das fertig hab undd implementier dass wenn ich bei dne playern bin
+
+	TArray<AProductionsite*> pseudosites;
+
+	if (saveManagerOptionals.workerWorldManagerSaveData.IsSet())
+		spawnedWorkerWorldManager->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), pseudosites);
 	else
 		spawnedWorkerWorldManager->InitWorkerWorldManager();
-
 
 	return status;
 }
@@ -159,8 +163,8 @@ bool ASaveGameManager::LoadGameData(FString _saveGameName, int _saveGameSlot)
 	{
 		status = true;
 
-		marketManagerSaveData = loadedsavegame->GetSavedMarketManagerData();
-		workerWorldManagerSaveData = loadedsavegame->GetSavedWorkerWorldManagerSaveData();
+		saveManagerOptionals.marketManagerSaveData = loadedsavegame->GetSavedMarketManagerData();
+		saveManagerOptionals.workerWorldManagerSaveData = loadedsavegame->GetSavedWorkerWorldManagerSaveData();
 	}
 
 	// -> Get all the Data

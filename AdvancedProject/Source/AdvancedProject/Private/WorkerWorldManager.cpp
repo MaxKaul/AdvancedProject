@@ -2,6 +2,8 @@
 
 
 #include "WorkerWorldManager.h"
+
+#include "EnumLibrary.h"
 #include "Worker.h"
 #include "NavigationSystem.h"
 #include "WorkerController.h"
@@ -32,10 +34,11 @@ void AWorkerWorldManager::Tick(float DeltaTime)
 
 }
 
-void AWorkerWorldManager::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData)
+void AWorkerWorldManager::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<AProductionsite*> _allProductionSites)
 {
 	world = GetWorld();
 	navigationSystem = Cast<UNavigationSystemV1>(world->GetNavigationSystem());
+	allProductionSites = _allProductionSites;
 
 	if(!NullcheckDependencies())
 	{
@@ -81,7 +84,10 @@ void AWorkerWorldManager::InitWorkerWorldManager()
 		{
 			spawnpos,
 			spawnrot,
-			mesh
+			mesh,
+			allWorker.Num(),
+			EWorkerStatus::WS_Unemployed,
+			-1
 		};
 
 		allworkersavedata.Add(workersavedata);
@@ -119,6 +125,8 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 	{
 		FVector spawnpos = workerdata.GetWorkerLocation();
 		FRotator spawnrot = workerdata.GetWorkerRotation();
+		int siteid = workerdata.GetProductionSiteID();
+		EWorkerStatus employementstatus = workerdata.GetEmploymentStatus();
 
 		for (size_t i = 0; i < maxSpawnTries; i++)
 		{
@@ -128,7 +136,7 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			if (AActor* tospawn = world->SpawnActor(workerClass, &spawnpos, &spawnrot, params))
 			{
 				AWorker* worker = Cast<AWorker>(tospawn);
-				worker->InitWorker(workerdata, navigationSystem);
+				worker->InitWorker(workerdata, navigationSystem, allWorker.Num(), employementstatus, siteid);
 				SubscribeNewWorker(worker);
 
 				break;

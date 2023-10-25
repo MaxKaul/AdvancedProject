@@ -90,7 +90,7 @@ TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResource
 		EResourceIdent currident = ticket.resourceIdent;
 		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
 
-		if(resourcelistinfo.GetLastResourcePrice() <= ticket.maxBuyPricePerResource.GetValue())
+		if(resourcelistinfo.GetLastResourcePrice() <= ticket.marketManagerOptionals.maxBuyPricePerResource.GetValue())
 		{
 			// !! NOCH EINE LÖSUNG FÜR CALLS FINDEN WELCHE ZEITGLEICH STATTFINDEN !! -> Waiting List?
 			resourceList.Find(ticket.resourceIdent)->SubtractResourceAmount(ticket.resourceAmount);
@@ -131,7 +131,7 @@ TArray<FResourceTransactionTicket> AMarketManager::SellResources(TArray<FResourc
 		EResourceIdent currident = ticket.resourceIdent;
 		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
 
-		if (resourcelistinfo.GetLastResourcePrice() >= ticket.minSellPricePricePerResource.GetValue())
+		if (resourcelistinfo.GetLastResourcePrice() >= ticket.marketManagerOptionals.minSellPricePerResource.GetValue())
 		{
 			resourceList.Find(ticket.resourceIdent)->AddResourceAmount(ticket.resourceAmount);
 			resourceList.Find(ticket.resourceIdent)->Add_K_Value(ticket.resourceAmount);

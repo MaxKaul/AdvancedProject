@@ -25,13 +25,16 @@ void AWorker::BeginPlay()
 void AWorker::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
-void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem)
+void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID)
 {
-	skeletalMeshComponent = GetMesh();
+	workerID = _workerID;
+	workerOptionals.productionSiteID  = _siteID;
+	employmentStatus = _employementStatus;
 
+	skeletalMeshComponent = GetMesh();
+	
 	skeletalMesh = _saveData.GetWorkerMesh();
 
 	skeletalMeshComponent->SetSkeletalMesh(skeletalMesh, true);
@@ -51,7 +54,10 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 	{
 		GetActorLocation(),
 		GetActorRotation(),
-		skeletalMesh
+		skeletalMesh,
+		workerID,
+		employmentStatus,
+		workerOptionals.productionSiteID.GetValue()
 	};
 
 	return savedata;

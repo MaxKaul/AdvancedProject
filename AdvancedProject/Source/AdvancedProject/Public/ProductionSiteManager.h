@@ -3,10 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EnumLibrary.h"
+#include "Productionsite.h"
 #include "GameFramework/Actor.h"
 #include "ProductionSiteManager.generated.h"
 
+USTRUCT()
+struct FProductionSiteManagerOptionals
+{
+	GENERATED_BODY()
+
+	TOptional<FProductionSiteSaveData> productionsiteSaveData;
+};
 
 struct FProductionSiteSaveData;
 USTRUCT(BlueprintType)
@@ -82,6 +89,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
 		TSubclassOf<AProductionsite> productionSiteClass;
 
-	TOptional<AProductionsite> productionsiteSaveData;
+	UPROPERTY()
+		FProductionSiteManagerOptionals productionsiteManagerOptionals;
 };
 

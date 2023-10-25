@@ -7,7 +7,6 @@
 #include "BuildingSite.h"
 #include "MarketManager.h"
 #include "ResourceTableBase.h"
-#include <Runtime/Engine/Classes/Kismet/KismetStringLibrary.h>
 
 #include "Worker.h"
 
@@ -44,7 +43,7 @@ void AProductionsite::InitProductionSite(FProductionSiteSaveData _saveData, AMar
 	actorMeshComponent->SetStaticMesh(actorMesh);
 	marketManager = _marketManager;
 	buildingSite = _saveData.GetSavedBuildingSite();
-	siteID = UKismetStringLibrary::Conv_StringToInt(_saveData.structID);
+	siteID = _saveData.GetProductionsiteID();
 
 	productionSiteResourcePool = _saveData.GetSavedResourcePool();
 	productionResourceHandlePair = _saveData.GetSavedResourceHandle();

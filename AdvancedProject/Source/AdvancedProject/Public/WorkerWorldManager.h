@@ -43,7 +43,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
-		void InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData); 
+		void InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<class AProductionsite*> _allProductionSites);
 		void InitWorkerWorldManager();
 
 	UFUNCTION()
@@ -62,8 +62,11 @@ private:
 		void UnsubscribeWorker(AWorker* _toUnsub);
 
 private:
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=SpawnInfos, meta = (AllowPrivateAccess))
 	TArray<AWorker*> allWorker;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SpawnInfos, meta = (AllowPrivateAccess))
+		TArray<class AProductionsite*> allProductionSites;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SpawnInfos, meta = (AllowPrivateAccess))
 		TSubclassOf<AWorker> workerClass;
