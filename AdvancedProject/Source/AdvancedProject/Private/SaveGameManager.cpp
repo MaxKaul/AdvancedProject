@@ -7,6 +7,7 @@
 #include "ProductionSiteManager.h"
 #include "MarketManager.h"
 #include "Productionsite.h"
+#include "AdvancedProject/AdvancedProjectCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
 ASaveGameManager::ASaveGameManager()
@@ -116,6 +117,10 @@ bool ASaveGameManager::InitAllManager()
 		spawnedWorkerWorldManager->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), pseudosites);
 	else
 		spawnedWorkerWorldManager->InitWorkerWorldManager();
+
+
+	Cast<AAdvancedProjectCharacter>(UGameplayStatics::GetPlayerControllerFromID(world, 0))->InitPlayer(spawnedMarketManager);
+
 
 	return status;
 }

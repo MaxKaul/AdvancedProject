@@ -86,6 +86,8 @@ void AAdvancedProjectPlayerController::RotateCamera()
 
 	controllerOwner->SetActorRotation(FRotator(controllerOwner->GetActorRotation().Pitch, newyaw, controllerOwner->GetActorRotation().Roll));
 	CameraBoom->SetRelativeRotation(FRotator(CameraBoom->GetComponentRotation().Pitch, newyaw, CameraBoom->GetComponentRotation().Roll), false);
+
+	UE_LOG(LogTemp,Warning,TEXT("FDDD"))
 }
 
 void AAdvancedProjectPlayerController::MoveRight(const FInputActionValue& _value)

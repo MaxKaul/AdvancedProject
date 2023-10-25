@@ -36,7 +36,7 @@ private:
 		bool NullcheckDependencies();
 
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Dependencies, meta = (AllowPrivateAccess))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Dependencies, meta = (AllowPrivateAccess))
 		 AProductionSiteManager* productionSiteManager;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ProductionSite, meta = (AllowPrivateAccess))

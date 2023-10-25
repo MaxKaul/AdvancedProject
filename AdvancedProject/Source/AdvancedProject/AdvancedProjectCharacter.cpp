@@ -3,15 +3,15 @@
 #include "AdvancedProjectCharacter.h"
 
 #include "AdvancedProjectPlayerController.h"
-#include "UObject/ConstructorHelpers.h"
+#include "Builder.h"
 #include "Camera/CameraComponent.h"
-#include "Components/DecalComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/PlayerController.h"
+#include "ProductionsiteManager.h"
+#include "MarketManager.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Materials/Material.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 
 AAdvancedProjectCharacter::AAdvancedProjectCharacter()
 {
@@ -39,6 +39,9 @@ AAdvancedProjectCharacter::AAdvancedProjectCharacter()
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
+
+	builder = CreateDefaultSubobject<UBuilder>("Builder");
+
 }
 
 void AAdvancedProjectCharacter::Tick(float DeltaSeconds)
@@ -49,6 +52,21 @@ void AAdvancedProjectCharacter::Tick(float DeltaSeconds)
 void AAdvancedProjectCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	Cast<AAdvancedProjectPlayerController>(GetController())->InitPlayerController(this);
+
+	ProductionSiteManager = CreateDefaultSubobject<AProductionSiteManager>("ProductionSiteManager");
+
+}
+
+void AAdvancedProjectCharacter::InitPlayer(AMarketManager* _marketManager)
+{
+	marketManager = _marketManager;
+
+	builder->InitBuilder(ProductionSiteManager, marketManager);
+}
+
+void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _choosenSite)
+{
+	builder->BuildProductionSite(testMesh,EProductionSiteType::PST_Hardwood_Resin, _choosenSite, marketManager, 0);
 }
