@@ -4,12 +4,14 @@
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "AdvancedProjectCharacter.h"
+#include "BuildingSite.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
 AAdvancedProjectPlayerController::AAdvancedProjectPlayerController()
@@ -61,6 +63,7 @@ void AAdvancedProjectPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCamera);
 		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::RotateCamera);
 
+		EnhancedInputComponent->BindAction(leftClickAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::BuildStructure);
 
 		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Completed , this, &AAdvancedProjectPlayerController::ZoomCamera);
 		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Completed, this, &AAdvancedProjectPlayerController::RotateCamera);
@@ -86,8 +89,6 @@ void AAdvancedProjectPlayerController::RotateCamera()
 
 	controllerOwner->SetActorRotation(FRotator(controllerOwner->GetActorRotation().Pitch, newyaw, controllerOwner->GetActorRotation().Roll));
 	CameraBoom->SetRelativeRotation(FRotator(CameraBoom->GetComponentRotation().Pitch, newyaw, CameraBoom->GetComponentRotation().Roll), false);
-
-	UE_LOG(LogTemp,Warning,TEXT("FDDD"))
 }
 
 void AAdvancedProjectPlayerController::MoveRight(const FInputActionValue& _value)
@@ -118,6 +119,27 @@ void AAdvancedProjectPlayerController::MoveForward(const FInputActionValue& _val
 
 		controllerOwner->AddMovementInput(forwarddirection, movemefloatforward);
 	}
+}
+
+void AAdvancedProjectPlayerController::BuildStructure(const FInputActionValue& _value)
+{
+	FVector2D mousepos;
+	GetMousePosition(mousepos.X, mousepos.Y);
+
+	FVector worldpos;
+	FVector ddd;
+	FVector worlddir = CameraBoom->GetForwardVector();
+
+	UGameplayStatics::DeprojectScreenToWorld(this, mousepos, worldpos, worlddir);
+
+	TArray<AActor*> emptyActor;
+
+	FHitResult hit;
+	UKismetSystemLibrary::LineTraceSingleByProfile(GetWorld(), worldpos, worldpos + worlddir * 5000.f, "BlockAll",
+		false, emptyActor, EDrawDebugTrace::None, hit, true, FColor::Transparent, FColor::Transparent, 0.f);
+
+	if (ABuildingSite* site = Cast<ABuildingSite>(hit.GetActor()))
+		controllerOwner->BuildTestProductionSite(site);
 }
 
 void AAdvancedProjectPlayerController::ZoomCamera(const FInputActionValue& _value)

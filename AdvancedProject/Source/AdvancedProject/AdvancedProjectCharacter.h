@@ -48,9 +48,5 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess ))
 		UStaticMesh* testMesh;
-
-private:
-	UFUNCTION()
-		void CheckUnderMouse();
 };
 

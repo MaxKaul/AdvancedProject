@@ -32,6 +32,8 @@ private:
 		void MoveRight(const FInputActionValue& _value);
 	UFUNCTION()
 		void MoveForward(const FInputActionValue& _value);
+	UFUNCTION()
+		void BuildStructure(const FInputActionValue& _value);
 
 	UFUNCTION()
 		bool NullcheckDependencies();
@@ -43,11 +45,14 @@ private:
 	UPROPERTY()
 		class USpringArmComponent* CameraBoom;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		class UInputMappingContext* DefaultMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		class UInputAction* rotateInputAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
+		UInputAction* leftClickAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		UInputAction* zoomInputAction;

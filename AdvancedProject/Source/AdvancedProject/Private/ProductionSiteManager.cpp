@@ -140,7 +140,7 @@ bool UProductionSiteManager::NullcheckDependencies()
 	if(!productionSiteClass)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager !marketStall"));
+		UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager !productionSiteClass"));
 	}
 
 	if (!world)

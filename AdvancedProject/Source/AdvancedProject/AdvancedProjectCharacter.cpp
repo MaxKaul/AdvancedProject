@@ -4,6 +4,7 @@
 
 #include "AdvancedProjectPlayerController.h"
 #include "Builder.h"
+#include "BuildingSite.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -47,8 +48,6 @@ AAdvancedProjectCharacter::AAdvancedProjectCharacter()
 void AAdvancedProjectCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-
-	CheckUnderMouse();
 }
 
 void AAdvancedProjectCharacter::BeginPlay()
@@ -71,26 +70,3 @@ void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSi
 {
 	builder->BuildProductionSite(testMesh,EProductionSiteType::PST_Hardwood_Resin, _chosenSite, marketManager, 0);
 }
-
-void AAdvancedProjectCharacter::CheckUnderMouse()
-{
-	FVector2D mousepos;
-	aspController->GetMousePosition(mousepos.X, mousepos.Y);
-
-	FVector worldpos;
-	FVector worlddir = CameraBoom->GetForwardVector();
-
-
-	UGameplayStatics::DeprojectScreenToWorld(aspController, mousepos, worldpos, worlddir);
-
-	TArray<AActor*> emptyActor;
-
-	FHitResult hit;
-	UKismetSystemLibrary::LineTraceSingleByProfile(GetWorld(), worldpos, worldpos + worlddir * 500.f, "BlockAll",
-		false, emptyActor, EDrawDebugTrace::None, hit, true, FColor::Transparent, FColor::Transparent, 0.f);
-
-	DrawDebugSphere(GetWorld(), hit.ImpactPoint, 16, 16, FColor::Blue, false, -1, 16,16);
-
-	
-}
-
