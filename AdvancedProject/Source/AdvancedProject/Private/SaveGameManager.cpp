@@ -118,9 +118,8 @@ bool ASaveGameManager::InitAllManager()
 	else
 		spawnedWorkerWorldManager->InitWorkerWorldManager();
 
-
-	Cast<AAdvancedProjectCharacter>(UGameplayStatics::GetPlayerControllerFromID(world, 0))->InitPlayer(spawnedMarketManager);
-
+	AAdvancedProjectCharacter* testplayer = Cast<AAdvancedProjectCharacter>(UGameplayStatics::GetPlayerCharacter(world, 0));
+	testplayer->InitPlayer(spawnedMarketManager);
 
 	return status;
 }

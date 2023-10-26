@@ -25,7 +25,7 @@ void UBuilder::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-bool UBuilder::InitBuilder(AProductionSiteManager* _manager, AMarketManager* _marketManager)
+bool UBuilder::InitBuilder(UProductionSiteManager* _manager, AMarketManager* _marketManager)
 {
 	bool status = false;
 

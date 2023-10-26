@@ -7,7 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "ProductionsiteManager.h"
+#include "ProductionSiteManager.h"
 #include "MarketManager.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Engine/World.h"
@@ -41,32 +41,56 @@ AAdvancedProjectCharacter::AAdvancedProjectCharacter()
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
 	builder = CreateDefaultSubobject<UBuilder>("Builder");
-
+	ProductionSiteManager = CreateDefaultSubobject<UProductionSiteManager>("ProductionSiteManager");
 }
 
 void AAdvancedProjectCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+
+	CheckUnderMouse();
 }
 
 void AAdvancedProjectCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	Cast<AAdvancedProjectPlayerController>(GetController())->InitPlayerController(this);
 
-	ProductionSiteManager = CreateDefaultSubobject<AProductionSiteManager>("ProductionSiteManager");
-
+	aspController = Cast<AAdvancedProjectPlayerController>(GetController());
+	aspController->InitPlayerController(this);
 }
 
 void AAdvancedProjectCharacter::InitPlayer(AMarketManager* _marketManager)
 {
 	marketManager = _marketManager;
-
+	
 	builder->InitBuilder(ProductionSiteManager, marketManager);
+	ProductionSiteManager->InitProductionSiteManager(this, marketManager);
 }
 
-void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _choosenSite)
+void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSite)
 {
-	builder->BuildProductionSite(testMesh,EProductionSiteType::PST_Hardwood_Resin, _choosenSite, marketManager, 0);
+	builder->BuildProductionSite(testMesh,EProductionSiteType::PST_Hardwood_Resin, _chosenSite, marketManager, 0);
 }
+
+void AAdvancedProjectCharacter::CheckUnderMouse()
+{
+	FVector2D mousepos;
+	aspController->GetMousePosition(mousepos.X, mousepos.Y);
+
+	FVector worldpos;
+	FVector worlddir = CameraBoom->GetForwardVector();
+
+
+	UGameplayStatics::DeprojectScreenToWorld(aspController, mousepos, worldpos, worlddir);
+
+	TArray<AActor*> emptyActor;
+
+	FHitResult hit;
+	UKismetSystemLibrary::LineTraceSingleByProfile(GetWorld(), worldpos, worldpos + worlddir * 500.f, "BlockAll",
+		false, emptyActor, EDrawDebugTrace::None, hit, true, FColor::Transparent, FColor::Transparent, 0.f);
+
+	DrawDebugSphere(GetWorld(), hit.ImpactPoint, 16, 16, FColor::Blue, false, -1, 16,16);
+
+	
+}
+

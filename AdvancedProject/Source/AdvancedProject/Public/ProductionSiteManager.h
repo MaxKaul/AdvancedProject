@@ -42,13 +42,13 @@ public:
 
 
 UCLASS()
-class ADVANCEDPROJECT_API AProductionSiteManager : public AActor
+class ADVANCEDPROJECT_API UProductionSiteManager : public UActorComponent
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AProductionSiteManager();
+	UProductionSiteManager();
 
 	UFUNCTION()
 	void InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData, class AMarketManager* _marketManager);
@@ -66,7 +66,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	virtual void Tick(float DeltaTime) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION()
 		void SubscribeProductionsite(class AProductionsite* _newProductionSite);

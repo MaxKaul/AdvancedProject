@@ -8,32 +8,30 @@
 #include "Builder.h"
 
 // Sets default values
-AProductionSiteManager::AProductionSiteManager()
+UProductionSiteManager::UProductionSiteManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
-void AProductionSiteManager::BeginPlay()
+void UProductionSiteManager::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-// Called every frame
-void AProductionSiteManager::Tick(float DeltaTime)
+void UProductionSiteManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::Tick(DeltaTime);
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (!NullcheckDependencies())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager, !NullcheckDependencies()"))
-		return;
+		UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager, !NullcheckDependencies()"))
+			return;
 	}
 }
 
-
-void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager)
+void UProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager)
 {
 	world = GetWorld();
 	managerOwner = _managerOwner;
@@ -41,13 +39,13 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AM
 
 	if(!NullcheckDependencies())
 	{
-		UE_LOG(LogTemp,Warning,TEXT("AProductionSiteManager, !NullcheckDependencies()"))
+		UE_LOG(LogTemp,Warning,TEXT("UProductionSiteManager, !NullcheckDependencies()"))
 		return;
 	}
 }
 
 
-void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData, AMarketManager* _marketManager)
+void UProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData, AMarketManager* _marketManager)
 {
 	world = GetWorld();
 	managerOwner = _managerOwner;
@@ -55,7 +53,7 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, FP
 
 	if (!NullcheckDependencies())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager, !NullcheckDependencies()"))
+		UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager, !NullcheckDependencies()"))
 			return;
 	}
 
@@ -63,7 +61,7 @@ void AProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, FP
 	InitAllProductionSites(_saveData);
 }
 
-void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveData _saveData)
+void UProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveData _saveData)
 {
 	// -> Hier nehme ich die save data entgegen nehmen
 
@@ -71,7 +69,7 @@ void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 	if (allsavedsites.Num() <= 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager, Init from save data was called, but no save data was found"))
+		UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager, Init from save data was called, but no save data was found"))
 		return;
 	}
 
@@ -96,18 +94,18 @@ void AProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 	}
 }
 
-void AProductionSiteManager::SubscribeProductionsite(AProductionsite* _newProductionSite)
+void UProductionSiteManager::SubscribeProductionsite(AProductionsite* _newProductionSite)
 {
 	if(!allProductionSites.IsEmpty() && allProductionSites.Contains(_newProductionSite))
 	{
-		UE_LOG(LogTemp,Warning,TEXT("AProductionSiteManager, allProductionSites.Contains(_newProductionSite)"))
+		UE_LOG(LogTemp,Warning,TEXT("UProductionSiteManager, allProductionSites.Contains(_newProductionSite)"))
 		return;
 	}
 	
 	allProductionSites.Add(_newProductionSite);
 }
 
-FProductionSiteManagerSaveData AProductionSiteManager::GetProductionSiteManagerSaveData()
+FProductionSiteManagerSaveData UProductionSiteManager::GetProductionSiteManagerSaveData()
 {
 	TArray<FProductionSiteSaveData> allpssavedata;
 	
@@ -123,7 +121,7 @@ FProductionSiteManagerSaveData AProductionSiteManager::GetProductionSiteManagerS
 		if (!allpssavedata.Contains(savedata))
 			allpssavedata.Add(savedata);
 		else
-			UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager, Production Site save data duplicate"))
+			UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager, Production Site save data duplicate"))
 	}
 	
 	FProductionSiteManagerSaveData savedata =
@@ -135,32 +133,32 @@ FProductionSiteManagerSaveData AProductionSiteManager::GetProductionSiteManagerS
 }
 
 
-bool AProductionSiteManager::NullcheckDependencies()
+bool UProductionSiteManager::NullcheckDependencies()
 {
 	bool status = true;
 
 	if(!productionSiteClass)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager !marketStall"));
+		UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager !marketStall"));
 	}
 
 	if (!world)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager !world"));
+		UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager !world"));
 	}
 
 	if (!managerOwner)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager !managerOwner"));
+		UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager !managerOwner"));
 	}
 
 	if (!marketManager)
 	{
 		status = false;
-		UE_LOG(LogTemp, Warning, TEXT("AProductionSiteManager !marketManager"));
+		UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager !marketManager"));
 	}
 
 	return status;

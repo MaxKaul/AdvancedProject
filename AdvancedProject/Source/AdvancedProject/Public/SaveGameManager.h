@@ -40,7 +40,6 @@ public:
 	UFUNCTION()
 		void SetSaveGameName(FString _name);
 
-
 private:
 	bool InitAllManager();
 
