@@ -6,6 +6,7 @@
 
 #include "BuildingSite.h"
 #include "MarketManager.h"
+#include "PlayerBase.h"
 #include "ResourceTableBase.h"
 
 #include "Worker.h"
@@ -35,7 +36,7 @@ void AProductionsite::Tick(float DeltaTime)
 	}
 }
 
-void AProductionsite::InitProductionSite(FProductionSiteSaveData _saveData, AMarketManager* _marketManager)
+void AProductionsite::InitProductionSite(FProductionSiteSaveData _saveData, AMarketManager* _marketManager, APlayerBase* _siteOwner)
 {
 	world = GetWorld();
 	productionSiteType = _saveData.GetSavedType();
@@ -44,6 +45,7 @@ void AProductionsite::InitProductionSite(FProductionSiteSaveData _saveData, AMar
 	marketManager = _marketManager;
 	buildingSite = _saveData.GetSavedBuildingSite();
 	siteID = _saveData.GetProductionsiteID();
+	siteOwner = _siteOwner;
 
 	productionSiteResourcePool = _saveData.GetSavedResourcePool();
 	productionResourceHandlePair = _saveData.GetSavedResourceHandle();
@@ -57,7 +59,7 @@ void AProductionsite::InitProductionSite(FProductionSiteSaveData _saveData, AMar
 	}
 }
 
-void AProductionsite::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, AMarketManager* _marketManager, int _siteID)
+void AProductionsite::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, AMarketManager* _marketManager, int _siteID, APlayerBase* _siteOwner)
 {
 	world = GetWorld();
 	productionSiteType = _type;
@@ -66,6 +68,7 @@ void AProductionsite::InitProductionSite(UStaticMesh* _siteMesh, EProductionSite
 	marketManager = _marketManager;
 	buildingSite = _buildingSite;
 	siteID = _siteID;
+	siteOwner = _siteOwner;
 
 	InitResources();
 }
@@ -133,32 +136,28 @@ TArray<FProductionResources> AProductionsite::GetCurrentResources()
 	return productionresources;
 }
 
-// In beide ticks müssen die arbeietr mit einfaktoriert werden
-// Resourcen sollen immer nuck ticken solange ihr arbeiter zugewiesen wurden
+// Resourcen sollen immer nur ticken solange ihr arbeiter zugewiesen wurden
 
-// Wir looen durch alle resourcespairs und checken on die callende resource in der lokalen map ist
+// Wir loopen durch alle resourcespairs und checken on die callende resource in der lokalen map ist
 // Dies mach ich damit ich eine refferenz auf die callende resource habe, welche ich dann über deren TickResource auf den neuen wert erhöhe
 // Danach resette ich den timer der resource
 void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
 {
-	if (subscribedWorker.Num() <= 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Num() <= 0"));
-		return;
-	}
-
 	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
 	{
 		if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
 		{
-			//resourcehandlepair.Key.TickResource(resourcehandlepair.Key.GetResourceTickRate());
-	
 			FTimerDelegate  currdelegate;
 			currdelegate.BindUFunction(this, FName("TickResourceProduction"), resourcehandlepair.Key.GetResourceIdent());
 
 			float tickrate = resourcehandlepair.Key.GetResourceTickRate() - productionSiteProductivity;
-
 			world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
+
+			if (subscribedWorker.Num() > 0)
+			{
+				EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
+				productionSiteResourcePool.Add(ident, productionSiteResourcePool.FindRef(ident) + resourceStdTickValue);
+			}
 
 			break;
 		}
@@ -169,11 +168,7 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
 // Das ist mit abfrage für den ident um es generisch zu halten
 void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost)
 {
-	if (subscribedWorker.Num() <= 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Num() <= 0"));
-		return;
-	}
+	UE_LOG(LogTemp, Warning, TEXT("sdfsd"));
 
 	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
 	{
@@ -193,13 +188,16 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent, TMap
 
 			if(bcanafford)
 			{
-				for (TTuple<EResourceIdent, int> item : _resourceCost)
+				if (subscribedWorker.Num() > 0)
 				{
-					productionSiteResourcePool.Add(item.Key, productionSiteResourcePool.FindRef(item.Key) - item.Value);
-				}
+					for (TTuple<EResourceIdent, int> item : _resourceCost)
+					{
+						productionSiteResourcePool.Add(item.Key, productionSiteResourcePool.FindRef(item.Key) - item.Value);
+					}
 
-				EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
-				productionSiteResourcePool.Add(ident, productionSiteResourcePool.FindRef(ident) + resourceStdTickValue);
+					EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
+					productionSiteResourcePool.Add(ident, productionSiteResourcePool.FindRef(ident) + resourceStdTickValue);
+				}
 			}
 			else
 				UE_LOG(LogTemp, Warning, TEXT("AProductionsite, Not enough resources to tick resource with cost"));

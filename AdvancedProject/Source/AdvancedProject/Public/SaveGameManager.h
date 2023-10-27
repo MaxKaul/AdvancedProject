@@ -16,6 +16,8 @@ struct FSaveManagerOptionals
 
 		TOptional<FMarketManagerSaveData> marketManagerSaveData;
 		TOptional<FWorkerWorldManagerSaveData> workerWorldManagerSaveData;
+
+		TOptional<TArray<FPlayerSaveData>> allPlayerSaveData;
 };
 
 UCLASS()
@@ -49,6 +51,12 @@ private:
 	FORCEINLINE
 		TArray<FString> GetSavedGamesByName() { return savedGames; }
 
+public:
+	UFUNCTION()
+	void SubscribePlayer(class APlayerBase* _toSub);
+	UFUNCTION()
+	void UnsubscribePlayer(APlayerBase* _toUnsub);
+
 private:
 	UPROPERTY()
 		UWorld* world;
@@ -73,4 +81,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
 		TArray<FString> savedGames;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
+		TArray<class APlayerBase*> allPlayer;
 };

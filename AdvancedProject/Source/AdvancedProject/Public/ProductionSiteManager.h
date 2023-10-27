@@ -50,9 +50,9 @@ public:
 	// Sets default values for this actor's properties
 	UProductionSiteManager();
 
+	// Ich gehe im moment davon aus das ich immer savedata habe -> Habe ich keine erstell ich leere
 	UFUNCTION()
-	void InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData, class AMarketManager* _marketManager);
-	void InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager);
+	void InitProductionSiteManager(class APlayerBase* _managerOwner, FProductionSiteManagerSaveData _saveData, class AMarketManager* _marketManager);
 
 private:
 	UFUNCTION()
@@ -74,6 +74,9 @@ public:
 	UFUNCTION()
 		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData();
 
+	FORCEINLINE
+		TArray<AProductionsite*> GetAllProductionSites() { return allProductionSites; }
+
 private:
 	UPROPERTY()
 		TArray<AProductionsite*> allProductionSites;
@@ -81,7 +84,7 @@ private:
 		UWorld* world;
 
 	UPROPERTY()
-		AActor* managerOwner;
+		APlayerBase* managerOwner;
 
 	UPROPERTY()
 		AMarketManager* marketManager;

@@ -31,21 +31,7 @@ void UProductionSiteManager::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 }
 
-void UProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, AMarketManager* _marketManager)
-{
-	world = GetWorld();
-	managerOwner = _managerOwner;
-	marketManager = _marketManager;
-
-	if(!NullcheckDependencies())
-	{
-		UE_LOG(LogTemp,Warning,TEXT("UProductionSiteManager, !NullcheckDependencies()"))
-		return;
-	}
-}
-
-
-void UProductionSiteManager::InitProductionSiteManager(AActor* _managerOwner, FProductionSiteManagerSaveData _saveData, AMarketManager* _marketManager)
+void UProductionSiteManager::InitProductionSiteManager(APlayerBase* _managerOwner, FProductionSiteManagerSaveData _saveData, AMarketManager* _marketManager)
 {
 	world = GetWorld();
 	managerOwner = _managerOwner;
@@ -86,7 +72,7 @@ void UProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 		AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
 
-		spawnedsite->InitProductionSite(sitedata, marketManager);
+		spawnedsite->InitProductionSite(sitedata, marketManager, managerOwner);
 
 		allProductionSites.Add(spawnedsite);
 		
@@ -115,13 +101,12 @@ FProductionSiteManagerSaveData UProductionSiteManager::GetProductionSiteManagerS
 
 		allpssavedata.Add(savedata);
 
-		// OPERAND MACHEN
 
 		// 	Geht net weril kein linksseiter == operand für das struct geht (nehm ich an)
-		if (!allpssavedata.Contains(savedata))
+		//if (!allpssavedata.Contains(savedata))
 			allpssavedata.Add(savedata);
-		else
-			UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager, Production Site save data duplicate"))
+		//else
+		//	UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager, Production Site save data duplicate"))
 	}
 	
 	FProductionSiteManagerSaveData savedata =

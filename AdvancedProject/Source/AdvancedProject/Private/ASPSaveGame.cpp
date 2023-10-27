@@ -2,17 +2,17 @@
 
 
 #include "ASPSaveGame.h"
-
 #include "MarketManager.h"
-#include "Kismet/GameplayStatics.h"
+#include "PlayerBase.h"
 
 UASPSaveGame::UASPSaveGame()
 {
 
 }
 
-void UASPSaveGame::InitSaveGame(FMarketManagerSaveData _marketManagerSaveData, FWorkerWorldManagerSaveData _workerWorldManagerSaveData)
+void UASPSaveGame::InitSaveGame(FMarketManagerSaveData _marketManagerSaveData, FWorkerWorldManagerSaveData _workerWorldManagerSaveData, TArray<FPlayerSaveData> _allPlayerSaveData)
 {
 	marketManagerSaveData = _marketManagerSaveData;
 	workerWorldManagerSaveData = _workerWorldManagerSaveData;
+	allPlayerSaveData = _allPlayerSaveData;
 }

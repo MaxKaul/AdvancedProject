@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "PlayerBase.h"
 #include "AIPlayer.generated.h"
 
 UCLASS()
-class ADVANCEDPROJECT_API AAIPlayer : public ACharacter
+class ADVANCEDPROJECT_API AAIPlayer : public APlayerBase
 {
 	GENERATED_BODY()
 

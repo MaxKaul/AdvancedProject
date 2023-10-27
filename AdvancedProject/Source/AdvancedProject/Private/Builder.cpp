@@ -5,8 +5,8 @@
 
 #include "BuildingSite.h"
 #include "Productionsite.h"
+#include "PlayerBase.h"
 #include "ProductionSiteManager.h"
-#include "Kismet/KismetStringLibrary.h"
 
 UBuilder::UBuilder()
 {
@@ -25,13 +25,14 @@ void UBuilder::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-bool UBuilder::InitBuilder(UProductionSiteManager* _manager, AMarketManager* _marketManager)
+bool UBuilder::InitBuilder(UProductionSiteManager* _manager, AMarketManager* _marketManager, APlayerBase* _builderOwner)
 {
 	bool status = false;
 
 	world = GetWorld();
 	marketManager = _marketManager;
 	productionSiteManager = _manager;
+	builderOwner = _builderOwner;
 
 	if (!NullcheckDependencies())
 	{
@@ -68,7 +69,7 @@ bool UBuilder::BuildProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _
 
 			AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
 
-			spawnedsite->InitProductionSite(_siteMesh,_type,_buildingSite, marketManager, _siteID);
+			spawnedsite->InitProductionSite(_siteMesh,_type,_buildingSite, marketManager, _siteID, builderOwner);
 
 			productionSiteManager->SubscribeProductionsite(spawnedsite);
 			_buildingSite->SetBuildStatus(true);

@@ -11,7 +11,6 @@
 #include "ProductionSiteManager.h"
 #include "MarketManager.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 
 AAdvancedProjectCharacter::AAdvancedProjectCharacter()
@@ -42,7 +41,7 @@ AAdvancedProjectCharacter::AAdvancedProjectCharacter()
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
 	builder = CreateDefaultSubobject<UBuilder>("Builder");
-	ProductionSiteManager = CreateDefaultSubobject<UProductionSiteManager>("ProductionSiteManager");
+	productionSiteManager = CreateDefaultSubobject<UProductionSiteManager>("ProductionSiteManager");
 }
 
 void AAdvancedProjectCharacter::Tick(float DeltaSeconds)
@@ -58,15 +57,40 @@ void AAdvancedProjectCharacter::BeginPlay()
 	aspController->InitPlayerController(this);
 }
 
-void AAdvancedProjectCharacter::InitPlayer(AMarketManager* _marketManager)
+// Das meiste an Implementation könnte in die base rein
+void AAdvancedProjectCharacter::InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager)
 {
 	marketManager = _marketManager;
-	
-	builder->InitBuilder(ProductionSiteManager, marketManager);
-	ProductionSiteManager->InitProductionSiteManager(this, marketManager);
+
+	SetActorLocation(_saveData.GetLoaction());
+	SetActorRotation(_saveData.GetRotation());
+
+	builder->InitBuilder(productionSiteManager, marketManager, this);
+	productionSiteManager->InitProductionSiteManager(this, _saveData.GetProductionSiteManagerSaveData() ,marketManager);
 }
 
 void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSite)
 {
 	builder->BuildProductionSite(testMesh,EProductionSiteType::PST_Hardwood_Resin, _chosenSite, marketManager, 0);
 }
+
+void AAdvancedProjectCharacter::SetDisplayProductionSiteInfo(bool _status)
+{
+	UE_LOG(LogTemp,Warning,TEXT("DDD"))
+	bCanOpenProductionSiteInfo = _status;
+}
+
+bool AAdvancedProjectCharacter::GetDisplayProductionSiteInfo()
+{
+	return bCanOpenProductionSiteInfo;
+}
+
+FPlayerSaveData AAdvancedProjectCharacter::GetPlayerSaveData()
+{
+	FPlayerSaveData savedata;
+
+	savedata.InitSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData());
+
+	return savedata;
+}
+

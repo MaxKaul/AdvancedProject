@@ -61,12 +61,11 @@ void AAdvancedProjectPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(zoomMoveRightInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::MoveRight);
 		EnhancedInputComponent->BindAction(zoomMoveForwardInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::MoveForward);
 		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCamera);
+
 		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::RotateCamera);
+		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Canceled, this, &AAdvancedProjectPlayerController::ResetMouseRiotateAction);
 
-		EnhancedInputComponent->BindAction(leftClickAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::BuildStructure);
-
-		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Completed , this, &AAdvancedProjectPlayerController::ZoomCamera);
-		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Completed, this, &AAdvancedProjectPlayerController::RotateCamera);
+		EnhancedInputComponent->BindAction(leftClickAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::LookForClickInfo);
 	}
 }
 
@@ -89,6 +88,11 @@ void AAdvancedProjectPlayerController::RotateCamera()
 
 	controllerOwner->SetActorRotation(FRotator(controllerOwner->GetActorRotation().Pitch, newyaw, controllerOwner->GetActorRotation().Roll));
 	CameraBoom->SetRelativeRotation(FRotator(CameraBoom->GetComponentRotation().Pitch, newyaw, CameraBoom->GetComponentRotation().Roll), false);
+}
+
+void AAdvancedProjectPlayerController::ResetMouseRiotateAction()
+{
+	UWidgetBlueprintLibrary::SetInputMode_GameOnly(this);
 }
 
 void AAdvancedProjectPlayerController::MoveRight(const FInputActionValue& _value)
@@ -121,7 +125,7 @@ void AAdvancedProjectPlayerController::MoveForward(const FInputActionValue& _val
 	}
 }
 
-void AAdvancedProjectPlayerController::BuildStructure(const FInputActionValue& _value)
+void AAdvancedProjectPlayerController::LookForClickInfo(const FInputActionValue& _value)
 {
 	FVector2D mousepos;
 	GetMousePosition(mousepos.X, mousepos.Y);
@@ -138,8 +142,10 @@ void AAdvancedProjectPlayerController::BuildStructure(const FInputActionValue& _
 	UKismetSystemLibrary::LineTraceSingleByProfile(GetWorld(), worldpos, worldpos + worlddir * 5000.f, "BlockAll",
 		false, emptyActor, EDrawDebugTrace::None, hit, true, FColor::Transparent, FColor::Transparent, 0.f);
 
-	if (ABuildingSite* site = Cast<ABuildingSite>(hit.GetActor()))
-		controllerOwner->BuildTestProductionSite(site);
+	if (ABuildingSite* buildsite = Cast<ABuildingSite>(hit.GetActor()))
+		controllerOwner->BuildTestProductionSite(buildsite);
+	else if (AProductionsite* productionsite = Cast<AProductionsite>(hit.GetActor()))
+		controllerOwner->SetDisplayProductionSiteInfo(true);
 }
 
 void AAdvancedProjectPlayerController::ZoomCamera(const FInputActionValue& _value)

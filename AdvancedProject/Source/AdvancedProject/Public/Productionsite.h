@@ -191,9 +191,9 @@ protected:
 public:
 	// Init mit savedata, wird vom ProductionSiteManager aus gecalled
 	UFUNCTION()
-		void InitProductionSite(FProductionSiteSaveData _saveData, class AMarketManager* marketManager);
+		void InitProductionSite(FProductionSiteSaveData _saveData, class AMarketManager* _marketManager, class APlayerBase* _siteOwner);
 	// Init ohne save data, bedeutet die productionsite wurde frisch gebaut
-		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID);
+		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID, APlayerBase* _siteOwner);
 
 	// Sollte eign alles theoretisch klappen, ist getestet
 	UFUNCTION()
@@ -239,9 +239,6 @@ private:
 	UPROPERTY()
 		 AMarketManager* marketManager;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
-		UDataTable* resourceDataTable;
-
 	// Dieser wert ist in abhängigkeit zu der von den subscribedWorker mitgeteilten productivity, welche gelesen wird wenn diese auf die productionsite subscriben
 	// Unter umständen kann ich noch eine seperate function zum updaten der productivity machen sollte sich ddiese bei einem der subscribedWorker ändern
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
@@ -257,6 +254,9 @@ private:
 	// Speichert alle resourcen welche sich in dieser prodductionsite befinden, wird mit allen resourcen welche sich auf dem markt befinden initialisiert
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		TMap<EResourceIdent, int> productionSiteResourcePool;
+
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
+		APlayerBase* siteOwner;
 
 	UPROPERTY()
 		int siteID;

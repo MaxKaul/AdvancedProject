@@ -1,10 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ // Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SaveGameManager.h"
 
 #include "ASPSaveGame.h"
-#include "ProductionSiteManager.h"
+#include "PlayerBase.h"
 #include "MarketManager.h"
 #include "Productionsite.h"
 #include "AdvancedProject/AdvancedProjectCharacter.h"
@@ -80,11 +80,16 @@ void ASaveGameManager::Tick(float DeltaTime)
 
 bool ASaveGameManager::InitAllManager()
 {
+	LoadGameData("save_0", 0);
+
 	bool status = true;
 
 	FVector pos = FVector(0.f);
 
 	spawnedMarketManager = Cast<AMarketManager>(world->SpawnActor(marketManagerClass, &pos));
+
+	APlayerBase* testplayer = Cast<APlayerBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	SubscribePlayer(testplayer);
 
 	if (!spawnedMarketManager)
 	{
@@ -97,9 +102,6 @@ bool ASaveGameManager::InitAllManager()
 	else
 		spawnedMarketManager->InitMarketManager();
 
-
-	spawnedWorkerWorldManager = Cast<AWorkerWorldManager>(world->SpawnActor(workerWorldManagerClass, &pos));
-
 	if (!spawnedMarketManager)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !spawnedMarketManager"));
@@ -108,18 +110,38 @@ bool ASaveGameManager::InitAllManager()
 	else
 		status = true;
 
-	// Ich muss alle spawned productionssite manager abgreifen, diese sind im moment noch individuell -> Die KI u. Player vorbereiten? Diese sollen das eigentlich haltenund gespeicher
-	// Ich mach das jetzt erstmal pseudo damit ich das fertig hab undd implementier dass wenn ich bei dne playern bin
+	// Muss noch etwas geändert werden -> Manueller Spawn + der spieler braucht ein flag um ihn zu unterscheiden für den spawn
+	if (saveManagerOptionals.allPlayerSaveData.IsSet())
+		allPlayer[0]->InitPlayer(saveManagerOptionals.allPlayerSaveData.GetValue()[0], spawnedMarketManager);
+	else
+	{
+		// Könnte soweit geändert werden das dies zum beispiel default start werte sein können
+		FPlayerSaveData emptysave;
 
-	TArray<AProductionsite*> pseudosites;
+		FVector ttt = { -9264.f, 4692.f, -727.f };
+		FRotator ddd = {  };
+
+		emptysave.InitSaveData(ttt, ddd, FProductionSiteManagerSaveData());
+
+		allPlayer[0]->InitPlayer(emptysave, spawnedMarketManager);
+	}
+
+	TArray<AProductionsite*> allproductionsites;
+
+	for(APlayerBase* player : allPlayer)
+	{
+		for (AProductionsite* site : player->GetProductionSiteManager()->GetAllProductionSites())
+		{
+			allproductionsites.Add(site);
+		}
+	}
+
+	spawnedWorkerWorldManager = Cast<AWorkerWorldManager>(world->SpawnActor(workerWorldManagerClass, &pos));
 
 	if (saveManagerOptionals.workerWorldManagerSaveData.IsSet())
-		spawnedWorkerWorldManager->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), pseudosites);
+		spawnedWorkerWorldManager->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), allproductionsites);
 	else
 		spawnedWorkerWorldManager->InitWorkerWorldManager();
-
-	AAdvancedProjectCharacter* testplayer = Cast<AAdvancedProjectCharacter>(UGameplayStatics::GetPlayerCharacter(world, 0));
-	testplayer->InitPlayer(spawnedMarketManager);
 
 	return status;
 }
@@ -145,9 +167,19 @@ bool ASaveGameManager::SaveGameData()
 
 	FMarketManagerSaveData marketmanagersavedata = spawnedMarketManager->GetMarketManagerSaveData();
 	FWorkerWorldManagerSaveData workerworldmanagersavedata = spawnedWorkerWorldManager->GetWorkerManagerSaveData();
+	TArray<FPlayerSaveData> allplayersavedata;
+
+	for(APlayerBase* player : allPlayer)
+	{
+		FPlayerSaveData newplayer;
+		
+		newplayer = player->GetPlayerSaveData();
+
+		allplayersavedata.Add(newplayer);
+	}
 
 	UASPSaveGame* newsave = Cast<UASPSaveGame>(UGameplayStatics::CreateSaveGameObject(UASPSaveGame::StaticClass()));
-	newsave->InitSaveGame(marketmanagersavedata, workerworldmanagersavedata);
+	newsave->InitSaveGame(marketmanagersavedata, workerworldmanagersavedata, allplayersavedata);
 
 	int saveslot = savedGames.Num() + 1;
 
@@ -169,6 +201,7 @@ bool ASaveGameManager::LoadGameData(FString _saveGameName, int _saveGameSlot)
 
 		saveManagerOptionals.marketManagerSaveData = loadedsavegame->GetSavedMarketManagerData();
 		saveManagerOptionals.workerWorldManagerSaveData = loadedsavegame->GetSavedWorkerWorldManagerSaveData();
+		saveManagerOptionals.allPlayerSaveData = loadedsavegame->GetAllPlayerSaveData();
 	}
 
 	// -> Get all the Data
@@ -204,4 +237,16 @@ bool ASaveGameManager::NullcheckDependencies()
 	}
 
 	return status;
+}
+
+void ASaveGameManager::SubscribePlayer(APlayerBase* _toSub)
+{
+	if (!allPlayer.Contains(_toSub))
+		allPlayer.Add(_toSub);
+}
+
+void ASaveGameManager::UnsubscribePlayer(APlayerBase* _toUnsub)
+{
+	if (allPlayer.Contains(_toUnsub))
+		allPlayer.Remove(_toUnsub);
 }

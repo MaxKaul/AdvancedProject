@@ -26,6 +26,9 @@ protected:
 private:
 	UFUNCTION()
 		void RotateCamera();
+	// Kp warum, aber aus irgendeinem grund muss der input mode neu gesetzte werden weil die action nicht finished sondern canceled
+	UFUNCTION()
+		void ResetMouseRiotateAction();
 	UFUNCTION()
 		void ZoomCamera(const FInputActionValue& _value);
 	UFUNCTION()
@@ -33,7 +36,7 @@ private:
 	UFUNCTION()
 		void MoveForward(const FInputActionValue& _value);
 	UFUNCTION()
-		void BuildStructure(const FInputActionValue& _value);
+		void LookForClickInfo(const FInputActionValue& _value);
 
 	UFUNCTION()
 		bool NullcheckDependencies();
@@ -53,6 +56,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		UInputAction* leftClickAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
+		UInputAction* hoverAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess))
 		UInputAction* zoomInputAction;
