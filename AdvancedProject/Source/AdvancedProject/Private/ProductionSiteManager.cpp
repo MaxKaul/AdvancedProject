@@ -43,7 +43,6 @@ void UProductionSiteManager::InitProductionSiteManager(APlayerBase* _managerOwne
 			return;
 	}
 
-	// Raus um zu testen
 	InitAllProductionSites(_saveData);
 }
 
@@ -107,7 +106,7 @@ FProductionSiteManagerSaveData UProductionSiteManager::GetProductionSiteManagerS
 
 		// 	Geht net weril kein linksseiter == operand für das struct geht (nehm ich an)
 		//if (!allpssavedata.Contains(savedata))
-			allpssavedata.Add(savedata);
+		//	allpssavedata.Add(savedata);
 		//else
 		//	UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager, Production Site save data duplicate"))
 	}
