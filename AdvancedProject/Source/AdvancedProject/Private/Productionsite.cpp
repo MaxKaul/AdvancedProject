@@ -147,31 +147,31 @@ void FPS_OverloadFuncs::TickResourceProduction(EResourceIdent _resourceIdent)
 {
 	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : overloadOwner->productionResourceHandlePair)
 	{
-		if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
+		if (_resourceIdent != resourcehandlepair.Key.GetResourceIdent())
+			continue;
+
+		EResourceIdent timerident = resourcehandlepair.Key.GetResourceIdent();
+
+		auto ticklambda = [this, timerident]()
 		{
-			EResourceIdent timerident = resourcehandlepair.Key.GetResourceIdent();
+			TickResourceProduction(timerident);
+		};
 
-			auto ticklambda = [this, timerident]()
-			{
-				TickResourceProduction(timerident);
-			};
+		FTimerDelegate  currdelegate;
+		currdelegate.BindLambda(ticklambda);
 
-			FTimerDelegate  currdelegate;
-			currdelegate.BindLambda(ticklambda);
+		float tickrate = resourcehandlepair.Key.GetResourceTickRate() - overloadOwner->productionSiteProductivity;
 
-			float tickrate = resourcehandlepair.Key.GetResourceTickRate() - overloadOwner->productionSiteProductivity;
-
-			overloadOwner->world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
+		overloadOwner->world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
 
 
-			if (overloadOwner->subscribedWorker.Num() > 0)
-			{
-				EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
-				overloadOwner->productionSiteResourcePool.Add(ident, overloadOwner->productionSiteResourcePool.FindRef(ident) + overloadOwner->resourceStdTickValue);
-			}
+		//if (overloadOwner->subscribedWorker.Num() <= 0)
+		//	return;
 
-			break;
-		}
+		EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
+		overloadOwner->productionSiteResourcePool.Add(ident, overloadOwner->productionSiteResourcePool.FindRef(ident) + overloadOwner->resourceStdTickValue);
+
+		break;
 	}
 }
 
@@ -181,51 +181,50 @@ void FPS_OverloadFuncs::TickResourceProduction(EResourceIdent _resourceIdent, TM
 {
 	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : overloadOwner->productionResourceHandlePair)
 	{
-		if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
+		if (_resourceIdent != resourcehandlepair.Key.GetResourceIdent())
+			continue;
+			
+		bool bcanafford = false;
+		int index = 0;
+
+		for (TTuple<EResourceIdent, int> item : _resourceCost)
 		{
-			bool bcanafford = false;
-			int index = 0;
+			index++;
 
-			for (TTuple<EResourceIdent, int> item : _resourceCost)
-			{
-				index++;
+			if (overloadOwner->productionSiteResourcePool.FindRef(item.Key) < item.Value)
+				return;
 
-				if (overloadOwner->productionSiteResourcePool.FindRef(item.Key) >= item.Value)
-					if (index >= _resourceCost.Num())
-						bcanafford = true;
-			}
-
-			if(bcanafford)
-			{
-				if (overloadOwner->subscribedWorker.Num() > 0)
-				{
-					for (TTuple<EResourceIdent, int> item : _resourceCost)
-					{
-						overloadOwner->productionSiteResourcePool.Add(item.Key, overloadOwner->productionSiteResourcePool.FindRef(item.Key) - item.Value);
-					}
-
-					EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
-					overloadOwner->productionSiteResourcePool.Add(ident, overloadOwner->productionSiteResourcePool.FindRef(ident) + overloadOwner->resourceStdTickValue);
-				}
-			}
-			else
-				UE_LOG(LogTemp, Warning, TEXT("AProductionsite, Not enough resources to tick resource with cost"));
-
-			EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
-			TMap<EResourceIdent, int> resourcecost = resourcehandlepair.Key.GetResourceCost();
-
-			auto ticklambda = [this, ident, resourcecost]()
-			{
-				TickResourceProduction(ident, resourcecost);
-			};
-
-			FTimerDelegate  currdelegate;
-			currdelegate.BindLambda(ticklambda);
-
-			float tickrate = resourcehandlepair.Key.GetResourceTickRate() - overloadOwner->productionSiteProductivity;
-
-			overloadOwner->world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
+			if (index >= _resourceCost.Num())
+				bcanafford = true;
 		}
+
+		if (!bcanafford)
+			return;
+
+		//if (overloadOwner->subscribedWorker.Num() <= 0)
+		//	return;
+
+		for (TTuple<EResourceIdent, int> item : _resourceCost)
+		{
+			overloadOwner->productionSiteResourcePool.Add(item.Key, overloadOwner->productionSiteResourcePool.FindRef(item.Key) - item.Value);
+		}
+
+		EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
+		overloadOwner->productionSiteResourcePool.Add(ident, overloadOwner->productionSiteResourcePool.FindRef(ident) + overloadOwner->resourceStdTickValue);
+
+		TMap<EResourceIdent, int> resourcecost = resourcehandlepair.Key.GetResourceCost();
+
+		auto ticklambda = [this, ident, resourcecost]()
+		{
+			TickResourceProduction(ident, resourcecost);
+		};
+
+		FTimerDelegate  currdelegate;
+		currdelegate.BindLambda(ticklambda);
+
+		float tickrate = resourcehandlepair.Key.GetResourceTickRate() - overloadOwner->productionSiteProductivity;
+
+		overloadOwner->world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
 	}
 }
 
