@@ -171,9 +171,6 @@ class ADVANCEDPROJECT_API AMarketManager : public AActor
 public:	
 	AMarketManager();
 
-	bool InitMarketManager(FMarketManagerSaveData _saveData);
-	bool InitMarketManager();
-
 	UFUNCTION()
 		FMarketManagerSaveData GetMarketManagerSaveData();
 
@@ -225,4 +222,23 @@ private:
 
 	UPROPERTY()
 		UWorld* world;
+
+	friend struct FMM_OverloadFuncs;
+};
+
+USTRUCT(BlueprintType)
+struct FMM_OverloadFuncs
+{
+	GENERATED_BODY()
+
+private:
+	UPROPERTY()
+		AMarketManager* overloadOwner;
+
+public:
+	FMM_OverloadFuncs() {}
+	FMM_OverloadFuncs(AMarketManager* _friend) : overloadOwner(_friend) {}
+
+	void InitMarketManager(FMarketManagerSaveData _saveData);
+	void InitMarketManager();
 };

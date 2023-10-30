@@ -14,67 +14,60 @@ AMarketManager::AMarketManager()
 	resourceMinValue = 1.f;
 }
 
-
-bool AMarketManager::InitMarketManager(FMarketManagerSaveData _saveData)
+void FMM_OverloadFuncs::InitMarketManager(FMarketManagerSaveData _saveData)
 {
-	bool status = false;
-
 	UE_LOG(LogTemp, Warning, TEXT("SAVEDATA"));
 
-	world = GetWorld();
+	overloadOwner->world = overloadOwner->GetWorld();
 
-	if (!NullcheckDependencies())
+	if (!overloadOwner->NullcheckDependencies())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AMarketManager, !NullcheckDependencies"));
-		return false;
+		return;
 	}
-	else
-		status = true;
 
-	InitResources(_saveData);
-	InitMarketStalls();
+	overloadOwner->InitResources(_saveData);
+	overloadOwner->InitMarketStalls();
 
-	FTimerHandle handle;
-	world->GetTimerManager().SetTimer(handle, this, &AMarketManager::UpdateResourcePrices, resourcePriceTick, false);
+	FTimerHandle timerhandle;
+	FTimerDelegate timerdelegate;
+	timerdelegate.BindUFunction(overloadOwner, FName("UpdateResourcePrices"));
 
-	return status;
+	overloadOwner->world->GetTimerManager().SetTimer(timerhandle, timerdelegate, overloadOwner->resourcePriceTick, false);
 }
 
-bool AMarketManager::InitMarketManager()
+void FMM_OverloadFuncs::InitMarketManager()
 {
-	bool status = false;
-
 	UE_LOG(LogTemp, Warning, TEXT("NO SAVEDATA"));
 
-	world = GetWorld();
+	overloadOwner->world = overloadOwner->GetWorld();
 
-	if (!NullcheckDependencies())
+	if (!overloadOwner->NullcheckDependencies())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AMarketManager, !NullcheckDependencies"));
-		return false;
+		return;
 	}
-	else
-		status = true;
 
 	TArray<FResourceTableBase*> resourcebasevalues;
 
-	for(TTuple<FName, unsigned char*> rowitem : resourceDefaultTable->GetRowMap())
+	for (TTuple<FName, unsigned char*> rowitem : overloadOwner->resourceDefaultTable->GetRowMap())
 	{
 		resourcebasevalues.Add(reinterpret_cast<FResourceTableBase*>(rowitem.Value));
 	}
 
 	for (size_t i = 0; i < resourcebasevalues.Num(); i++)
 	{
-		InitIndividualResource(resourcebasevalues[i]->Resource.GetLastResourcePrice(), resourcebasevalues[i]->Resource.GetResourceAmount(), resourcebasevalues[i]->Resource.GetResourceIdent(), resourcebasevalues[i]->Resource.GetAllowedProductionSites(), resourcebasevalues[i]->Resource.GetResourceTickRate(),
+		overloadOwner->InitIndividualResource(resourcebasevalues[i]->Resource.GetLastResourcePrice(), resourcebasevalues[i]->Resource.GetResourceAmount(), resourcebasevalues[i]->Resource.GetResourceIdent(), resourcebasevalues[i]->Resource.GetAllowedProductionSites(), resourcebasevalues[i]->Resource.GetResourceTickRate(),
 			resourcebasevalues[i]->Resource.GetHasCost(), resourcebasevalues[i]->Resource.GetResourceCost());
 	}
 
-	InitMarketStalls();
+	overloadOwner->InitMarketStalls();
 
-	FTimerHandle handle;
-	world->GetTimerManager().SetTimer(handle, this, &AMarketManager::UpdateResourcePrices, resourcePriceTick, false);
+	FTimerHandle timerhandle;
+	FTimerDelegate timerdelegate;
+	timerdelegate.BindUFunction(overloadOwner, FName("UpdateResourcePrices"));
 
-	return status;
+	overloadOwner->world->GetTimerManager().SetTimer(timerhandle, timerdelegate, overloadOwner->resourcePriceTick, false);
 }
 
 // Noch resourcen auf dem markt auf 0 checken

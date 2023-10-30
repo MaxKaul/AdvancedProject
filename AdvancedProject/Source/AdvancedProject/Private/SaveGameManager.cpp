@@ -83,32 +83,37 @@ bool ASaveGameManager::InitAllManager()
 	LoadGameData("save_0", 0);
 
 	bool status = true;
-
 	FVector pos = FVector(0.f);
+
+
+	//----------------------------------------------------------------------------------------------------------------------------//
+	//Spawning and Init of the MarketManager and Test Player//
+	//----------------------------------------------------------------------------------------------------------------------------//
 
 	spawnedMarketManager = Cast<AMarketManager>(world->SpawnActor(marketManagerClass, &pos));
 
+	if (!spawnedMarketManager)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !spawnedMarketManager"));
+		return status = false;
+	}
+
+	FMM_OverloadFuncs* mm_overloadfuncs;
+	mm_overloadfuncs = new FMM_OverloadFuncs(spawnedMarketManager);
+
+	// Nur zum testen, der player hat manuel gespawned zu werden
 	APlayerBase* testplayer = Cast<APlayerBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	SubscribePlayer(testplayer);
 
-	if (!spawnedMarketManager)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !spawnedMarketManager"));
-		status = false;
-	}
-
 	if (saveManagerOptionals.marketManagerSaveData.IsSet())
-		spawnedMarketManager->InitMarketManager(saveManagerOptionals.marketManagerSaveData.GetValue());
+		mm_overloadfuncs->InitMarketManager(saveManagerOptionals.marketManagerSaveData.GetValue());
 	else
-		spawnedMarketManager->InitMarketManager();
+		mm_overloadfuncs->InitMarketManager();
 
-	if (!spawnedMarketManager)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager, !spawnedMarketManager"));
-		return false;
-	}
-	else
-		status = true;
+
+	//----------------------------------------------------------------------------------------------------------------------------//
+	//Spawning and Init of all Player Entities//
+	//----------------------------------------------------------------------------------------------------------------------------//
 
 	// Muss noch etwas geändert werden -> Manueller Spawn + der spieler braucht ein flag um ihn zu unterscheiden für den spawn
 	if (saveManagerOptionals.allPlayerSaveData.IsSet())
@@ -126,6 +131,11 @@ bool ASaveGameManager::InitAllManager()
 		allPlayer[0]->InitPlayer(emptysave, spawnedMarketManager);
 	}
 
+
+	//----------------------------------------------------------------------------------------------------------------------------//
+	//Spawning and Init of all Productionsites (will onloy spawn with savedata)//
+	//----------------------------------------------------------------------------------------------------------------------------//
+
 	TArray<AProductionsite*> allproductionsites;
 
 	for(APlayerBase* player : allPlayer)
@@ -136,12 +146,20 @@ bool ASaveGameManager::InitAllManager()
 		}
 	}
 
+
+	//----------------------------------------------------------------------------------------------------------------------------//
+	//Spawning and Init of the WorkerWorldManager//
+	//----------------------------------------------------------------------------------------------------------------------------//
+
 	spawnedWorkerWorldManager = Cast<AWorkerWorldManager>(world->SpawnActor(workerWorldManagerClass, &pos));
 
+	FWWM_OverloadFuncs* wwm_overloadfuncs;
+	wwm_overloadfuncs = new FWWM_OverloadFuncs(spawnedWorkerWorldManager);
+
 	if (saveManagerOptionals.workerWorldManagerSaveData.IsSet())
-		spawnedWorkerWorldManager->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), allproductionsites);
+		wwm_overloadfuncs->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), allproductionsites);
 	else
-		spawnedWorkerWorldManager->InitWorkerWorldManager();
+		wwm_overloadfuncs->InitWorkerWorldManager();
 
 	return status;
 }

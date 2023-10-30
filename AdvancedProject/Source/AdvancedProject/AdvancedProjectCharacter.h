@@ -18,8 +18,10 @@ public:
 
 	virtual void BeginPlay() override;
 
-	FORCEINLINE class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE
+	class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
+	FORCEINLINE
+	class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
 	virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager) override;
 

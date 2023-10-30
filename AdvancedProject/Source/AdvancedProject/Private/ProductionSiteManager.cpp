@@ -72,7 +72,10 @@ void UProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 		AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
 
-		spawnedsite->InitProductionSite(sitedata, marketManager, managerOwner);
+		FPS_OverloadFuncs* ps_overloadfuncs;
+		ps_overloadfuncs = new FPS_OverloadFuncs(spawnedsite);
+
+		ps_overloadfuncs->InitProductionSite(sitedata, marketManager, managerOwner, ps_overloadfuncs);
 
 		allProductionSites.Add(spawnedsite);
 		

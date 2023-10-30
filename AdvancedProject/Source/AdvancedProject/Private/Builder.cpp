@@ -69,7 +69,10 @@ bool UBuilder::BuildProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _
 
 			AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
 
-			spawnedsite->InitProductionSite(_siteMesh,_type,_buildingSite, marketManager, _siteID, builderOwner);
+			FPS_OverloadFuncs* ps_overloadfuncs;
+			ps_overloadfuncs = new FPS_OverloadFuncs(spawnedsite);
+
+			ps_overloadfuncs->InitProductionSite(_siteMesh,_type,_buildingSite, marketManager, _siteID, builderOwner, ps_overloadfuncs);
 
 			productionSiteManager->SubscribeProductionsite(spawnedsite);
 			_buildingSite->SetBuildStatus(true);

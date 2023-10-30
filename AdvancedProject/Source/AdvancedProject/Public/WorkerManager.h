@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WorkerWorldManager.h"
 #include "Components/ActorComponent.h"
 #include "WorkerManager.generated.h"
 

@@ -189,11 +189,7 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	// Init mit savedata, wird vom ProductionSiteManager aus gecalled
-	UFUNCTION()
-		void InitProductionSite(FProductionSiteSaveData _saveData, class AMarketManager* _marketManager, class APlayerBase* _siteOwner);
-	// Init ohne save data, bedeutet die productionsite wurde frisch gebaut
-		void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID, APlayerBase* _siteOwner);
+
 
 	// Sollte eign alles theoretisch klappen, ist getestet
 	UFUNCTION()
@@ -205,10 +201,6 @@ public:
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();
-
-	UFUNCTION()
-		void TickResourceProduction(EResourceIdent _resourceIdent);
-		void TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost);
 
 	UFUNCTION()
 		void SubscribeWorker(class AWorker* _toSub);
@@ -239,6 +231,9 @@ private:
 	UPROPERTY()
 		 AMarketManager* marketManager;
 
+	friend struct FPS_OverloadFuncs;
+	FPS_OverloadFuncs* overloadFuncs;
+
 	// Dieser wert ist in abhängigkeit zu der von den subscribedWorker mitgeteilten productivity, welche gelesen wird wenn diese auf die productionsite subscriben
 	// Unter umständen kann ich noch eine seperate function zum updaten der productivity machen sollte sich ddiese bei einem der subscribedWorker ändern
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
@@ -256,7 +251,7 @@ private:
 		TMap<EResourceIdent, int> productionSiteResourcePool;
 
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
-		APlayerBase* siteOwner;
+		class APlayerBase* siteOwner;
 
 	UPROPERTY()
 		int siteID;
@@ -264,4 +259,26 @@ private:
 	// Value by which the resource gets added per tick
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
 		float resourceStdTickValue;
+};
+
+USTRUCT(BlueprintType)
+struct FPS_OverloadFuncs
+{
+	GENERATED_BODY()
+
+private:
+	UPROPERTY()
+		AProductionsite* overloadOwner;
+
+public:
+	FPS_OverloadFuncs() {}
+	FPS_OverloadFuncs(AProductionsite* _friend) : overloadOwner(_friend) {}
+
+	// Init mit savedata, wird vom ProductionSiteManager aus gecalled
+	void InitProductionSite(FProductionSiteSaveData _saveData, class AMarketManager* _marketManager, class APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs);
+	// Init ohne save data, bedeutet die productionsite wurde frisch gebaut
+	void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID, APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs);
+
+	void TickResourceProduction(EResourceIdent _resourceIdent);
+	void TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost);
 };

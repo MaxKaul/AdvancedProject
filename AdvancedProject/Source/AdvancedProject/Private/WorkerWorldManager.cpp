@@ -24,81 +24,79 @@ AWorkerWorldManager::AWorkerWorldManager()
 void AWorkerWorldManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
 void AWorkerWorldManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
-void AWorkerWorldManager::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<AProductionsite*> _allProductionSites)
+void FWWM_OverloadFuncs::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<AProductionsite*> _allProductionSites)
 {
-	world = GetWorld();
-	navigationSystem = Cast<UNavigationSystemV1>(world->GetNavigationSystem());
-	allProductionSites = _allProductionSites;
+	overloadOwner->world = overloadOwner->GetWorld();
+	overloadOwner->navigationSystem = Cast<UNavigationSystemV1>(overloadOwner->world->GetNavigationSystem());
+	overloadOwner->allProductionSites = _allProductionSites;
 
-	if(!NullcheckDependencies())
+	if(!overloadOwner->NullcheckDependencies())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !NullcheckDependencies()"));
 		return;
 	}
-
-	SpawnAllWorker(_saveData);
+	
+	overloadOwner->SpawnAllWorker(_saveData);
 }
 
-void AWorkerWorldManager::InitWorkerWorldManager()
+void FWWM_OverloadFuncs::InitWorkerWorldManager()
 {
-	world = GetWorld();
-	navigationSystem = Cast<UNavigationSystemV1>(world->GetNavigationSystem());
-
-	if (!NullcheckDependencies())
+	overloadOwner->world = overloadOwner->GetWorld();
+	overloadOwner->navigationSystem = Cast<UNavigationSystemV1>(overloadOwner->world->GetNavigationSystem());
+	
+	if (!overloadOwner->NullcheckDependencies())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !NullcheckDependencies()"));
 		return;
 	}
-
+	
 	TArray<FWorkerSaveData> allworkersavedata;
-
-	for (size_t i = 0; i < stdWorkerSpawnAmount; i++)
+	
+	for (size_t i = 0; i < overloadOwner->stdWorkerSpawnAmount; i++)
 	{
 		FNavLocation spawnnavpos;
 		FVector spawnpos;
 		FRotator spawnrot;
 		USkeletalMesh* mesh;
 		float rndyaw; 
-
-		navigationSystem->GetRandomPoint(spawnnavpos);
-
+	
+		overloadOwner->navigationSystem->GetRandomPoint(spawnnavpos);
+	
 		spawnpos = spawnnavpos.Location;
-		spawnpos.Z += capsuleHightValue;
-
+		spawnpos.Z += overloadOwner->capsuleHightValue;
+	
 		rndyaw = FMath::RandRange(-180, 180);
 		spawnrot = FRotator(0, 0, 0);
-
-		mesh = possibleSkeletalMeshes[FMath::RandRange(0, possibleSkeletalMeshes.Num() - 1)];
-
+	
+		mesh = overloadOwner->possibleSkeletalMeshes[FMath::RandRange(0, overloadOwner->possibleSkeletalMeshes.Num() - 1)];
+	
 		FWorkerSaveData workersavedata =
 		{
 			spawnpos,
 			spawnrot,
 			mesh,
-			allWorker.Num(),
+			overloadOwner->allWorker.Num(),
 			EWorkerStatus::WS_Unemployed,
 			-1
 		};
-
+	
 		allworkersavedata.Add(workersavedata);
 	}
-
+	
 	FWorkerWorldManagerSaveData newsavedata =
 	{
 		allworkersavedata
 	};
 
-	SpawnAllWorker(newsavedata);
+	overloadOwner->SpawnAllWorker(newsavedata);
 }
 
 FWorkerWorldManagerSaveData AWorkerWorldManager::GetWorkerManagerSaveData()

@@ -36,21 +36,22 @@ void AProductionsite::Tick(float DeltaTime)
 	}
 }
 
-void AProductionsite::InitProductionSite(FProductionSiteSaveData _saveData, AMarketManager* _marketManager, APlayerBase* _siteOwner)
+void FPS_OverloadFuncs::InitProductionSite(FProductionSiteSaveData _saveData, AMarketManager* _marketManager, APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs)
 {
-	world = GetWorld();
-	productionSiteType = _saveData.GetSavedType();
-	actorMesh = _saveData.GetSavedMesh();
-	actorMeshComponent->SetStaticMesh(actorMesh);
-	marketManager = _marketManager;
-	buildingSite = _saveData.GetSavedBuildingSite();
-	siteID = _saveData.GetProductionsiteID();
-	siteOwner = _siteOwner;
+	overloadOwner->world = overloadOwner->GetWorld();
+	overloadOwner->productionSiteType = _saveData.GetSavedType();
+	overloadOwner->actorMesh = _saveData.GetSavedMesh();
+	overloadOwner->actorMeshComponent->SetStaticMesh(overloadOwner->actorMesh);
+	overloadOwner->marketManager = _marketManager;
+	overloadOwner->buildingSite = _saveData.GetSavedBuildingSite();
+	overloadOwner->siteID = _saveData.GetProductionsiteID();
+	overloadOwner->siteOwner = _siteOwner;
+	overloadOwner->overloadFuncs = _overloadFuncs;
 
-	productionSiteResourcePool = _saveData.GetSavedResourcePool();
-	productionResourceHandlePair = _saveData.GetSavedResourceHandle();
+	overloadOwner->productionSiteResourcePool = _saveData.GetSavedResourcePool();
+	overloadOwner->productionResourceHandlePair = _saveData.GetSavedResourceHandle();
 
-	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
+	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : overloadOwner->productionResourceHandlePair)
 	{
 		if (resourcehandlepair.Key.GetHasCost())
 			TickResourceProduction(resourcehandlepair.Key.GetResourceIdent(), resourcehandlepair.Key.GetResourceCost());
@@ -59,18 +60,19 @@ void AProductionsite::InitProductionSite(FProductionSiteSaveData _saveData, AMar
 	}
 }
 
-void AProductionsite::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, AMarketManager* _marketManager, int _siteID, APlayerBase* _siteOwner)
+void FPS_OverloadFuncs::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, AMarketManager* _marketManager, int _siteID, APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs)
 {
-	world = GetWorld();
-	productionSiteType = _type;
-	actorMesh = _siteMesh;
-	actorMeshComponent->SetStaticMesh(actorMesh);
-	marketManager = _marketManager;
-	buildingSite = _buildingSite;
-	siteID = _siteID;
-	siteOwner = _siteOwner;
+	overloadOwner->world = overloadOwner->GetWorld();
+	overloadOwner->productionSiteType = _type;
+	overloadOwner->actorMesh = _siteMesh;
+	overloadOwner->actorMeshComponent->SetStaticMesh(overloadOwner->actorMesh);
+	overloadOwner->marketManager = _marketManager;
+	overloadOwner->buildingSite = _buildingSite;
+	overloadOwner->siteID = _siteID;
+	overloadOwner->siteOwner = _siteOwner;
+	overloadOwner->overloadFuncs = _overloadFuncs;
 
-	InitResources();
+	overloadOwner->InitResources();
 }
 
 FProductionSiteSaveData AProductionsite::GetProductionSiteSaveData()
@@ -141,22 +143,31 @@ TArray<FProductionResources> AProductionsite::GetCurrentResources()
 // Wir loopen durch alle resourcespairs und checken on die callende resource in der lokalen map ist
 // Dies mach ich damit ich eine refferenz auf die callende resource habe, welche ich dann über deren TickResource auf den neuen wert erhöhe
 // Danach resette ich den timer der resource
-void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
+void FPS_OverloadFuncs::TickResourceProduction(EResourceIdent _resourceIdent)
 {
-	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
+	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : overloadOwner->productionResourceHandlePair)
 	{
 		if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
 		{
+			EResourceIdent timerident = resourcehandlepair.Key.GetResourceIdent();
+
+			auto ticklambda = [this, timerident]()
+			{
+				TickResourceProduction(timerident);
+			};
+
 			FTimerDelegate  currdelegate;
-			currdelegate.BindUFunction(this, FName("TickResourceProduction"), resourcehandlepair.Key.GetResourceIdent());
+			currdelegate.BindLambda(ticklambda);
 
-			float tickrate = resourcehandlepair.Key.GetResourceTickRate() - productionSiteProductivity;
-			world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
+			float tickrate = resourcehandlepair.Key.GetResourceTickRate() - overloadOwner->productionSiteProductivity;
 
-			if (subscribedWorker.Num() > 0)
+			overloadOwner->world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
+
+
+			if (overloadOwner->subscribedWorker.Num() > 0)
 			{
 				EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
-				productionSiteResourcePool.Add(ident, productionSiteResourcePool.FindRef(ident) + resourceStdTickValue);
+				overloadOwner->productionSiteResourcePool.Add(ident, overloadOwner->productionSiteResourcePool.FindRef(ident) + overloadOwner->resourceStdTickValue);
 			}
 
 			break;
@@ -166,11 +177,9 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent)
 
 // _resourceIdent ist die welche produziert wird, _resourceCost representiert die kosten einer einheit
 // Das ist mit abfrage für den ident um es generisch zu halten
-void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost)
+void FPS_OverloadFuncs::TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost)
 {
-	UE_LOG(LogTemp, Warning, TEXT("sdfsd"));
-
-	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
+	for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : overloadOwner->productionResourceHandlePair)
 	{
 		if (_resourceIdent == resourcehandlepair.Key.GetResourceIdent())
 		{
@@ -181,22 +190,22 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent, TMap
 			{
 				index++;
 
-				if (productionSiteResourcePool.FindRef(item.Key) >= item.Value)
+				if (overloadOwner->productionSiteResourcePool.FindRef(item.Key) >= item.Value)
 					if (index >= _resourceCost.Num())
 						bcanafford = true;
 			}
 
 			if(bcanafford)
 			{
-				if (subscribedWorker.Num() > 0)
+				if (overloadOwner->subscribedWorker.Num() > 0)
 				{
 					for (TTuple<EResourceIdent, int> item : _resourceCost)
 					{
-						productionSiteResourcePool.Add(item.Key, productionSiteResourcePool.FindRef(item.Key) - item.Value);
+						overloadOwner->productionSiteResourcePool.Add(item.Key, overloadOwner->productionSiteResourcePool.FindRef(item.Key) - item.Value);
 					}
 
 					EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
-					productionSiteResourcePool.Add(ident, productionSiteResourcePool.FindRef(ident) + resourceStdTickValue);
+					overloadOwner->productionSiteResourcePool.Add(ident, overloadOwner->productionSiteResourcePool.FindRef(ident) + overloadOwner->resourceStdTickValue);
 				}
 			}
 			else
@@ -213,9 +222,9 @@ void AProductionsite::TickResourceProduction(EResourceIdent _resourceIdent, TMap
 			FTimerDelegate  currdelegate;
 			currdelegate.BindLambda(ticklambda);
 
-			float tickrate = resourcehandlepair.Key.GetResourceTickRate() - productionSiteProductivity;
+			float tickrate = resourcehandlepair.Key.GetResourceTickRate() - overloadOwner->productionSiteProductivity;
 
-			world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
+			overloadOwner->world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
 		}
 	}
 }
@@ -277,9 +286,9 @@ void AProductionsite::InitResources()
 		for (TTuple<FProductionResources, FTimerHandle> resourcehandlepair : productionResourceHandlePair)
 		{
 			if (resourcehandlepair.Key.GetHasCost())
-				TickResourceProduction(resourcehandlepair.Key.GetResourceIdent(), resourcehandlepair.Key.GetResourceCost());
+				overloadFuncs->TickResourceProduction(resourcehandlepair.Key.GetResourceIdent(), resourcehandlepair.Key.GetResourceCost());
 			else
-				TickResourceProduction(resourcehandlepair.Key.GetResourceIdent());
+				overloadFuncs->TickResourceProduction(resourcehandlepair.Key.GetResourceIdent());
 		}
 	}
 	else

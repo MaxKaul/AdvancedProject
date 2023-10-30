@@ -7,12 +7,13 @@
 #include "GameFramework/Actor.h"
 #include "WorkerWorldManager.generated.h"
 
+
 USTRUCT(BlueprintType)
 struct FWorkerWorldManagerSaveData
 {
 	GENERATED_BODY()
 
-	FWorkerWorldManagerSaveData(){}
+		FWorkerWorldManagerSaveData() {}
 
 	FWorkerWorldManagerSaveData(TArray<FWorkerSaveData> _allWorker)
 	{
@@ -32,7 +33,7 @@ UCLASS()
 class ADVANCEDPROJECT_API AWorkerWorldManager : public AActor
 {
 	GENERATED_BODY()
-	
+
 public:	
 	AWorkerWorldManager();
 
@@ -41,10 +42,6 @@ protected:
 
 public:	
 	virtual void Tick(float DeltaTime) override;
-
-	UFUNCTION()
-		void InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<class AProductionsite*> _allProductionSites);
-		void InitWorkerWorldManager();
 
 	UFUNCTION()
 		FWorkerWorldManagerSaveData GetWorkerManagerSaveData();
@@ -60,6 +57,8 @@ private:
 		void SubscribeNewWorker(AWorker* _toSub);
 	UFUNCTION()
 		void UnsubscribeWorker(AWorker* _toUnsub);
+
+	friend struct FWWM_OverloadFuncs;
 
 private:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=SpawnInfos, meta = (AllowPrivateAccess))
@@ -79,7 +78,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		int maxSpawnTries;
-
+protected:
 	UPROPERTY()
 		UWorld* world;
 
@@ -88,4 +87,21 @@ private:
 
 	UPROPERTY()
 	class UNavigationSystemV1* navigationSystem;
+};
+
+USTRUCT(BlueprintType)
+struct FWWM_OverloadFuncs
+{
+	GENERATED_BODY()
+
+private:
+	UPROPERTY()
+	AWorkerWorldManager* overloadOwner;
+
+public:
+	FWWM_OverloadFuncs() {}
+	FWWM_OverloadFuncs(AWorkerWorldManager* _friend) : overloadOwner(_friend){}
+
+	void InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<class AProductionsite*> _allProductionSites);
+	void InitWorkerWorldManager();
 };
