@@ -32,10 +32,9 @@ void AAdvancedProjectPlayerController::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	if (!NullcheckDependencies())
-	{
 		UE_LOG(LogTemp, Warning, TEXT("AAdvancedProjectPlayerController, !NullcheckDependencies"));
-		return;
-	}
+
+	//UWidgetBlueprintLibrary::SetInputMode_GameOnly(this, false);
 }
 
 void AAdvancedProjectPlayerController::InitPlayerController(AAdvancedProjectCharacter* _controllerOwner)
@@ -43,33 +42,28 @@ void AAdvancedProjectPlayerController::InitPlayerController(AAdvancedProjectChar
 	controllerOwner = _controllerOwner;
 	CameraBoom = controllerOwner->GetCameraBoom();
 
-	UWidgetBlueprintLibrary::SetInputMode_GameOnly(this, false);
-
-
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-	{
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
-	}
 }
 
 void AAdvancedProjectPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
-
+	
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
 	{
+		EnhancedInputComponent->bAllowConcurrentTick = true;
 		EnhancedInputComponent->BindAction(zoomMoveRightInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::MoveRight);
 		EnhancedInputComponent->BindAction(zoomMoveForwardInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::MoveForward);
 		EnhancedInputComponent->BindAction(zoomInputAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::ZoomCamera);
 
 		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Ongoing, this, &AAdvancedProjectPlayerController::RotateCamera);
-		EnhancedInputComponent->BindAction(rotateInputAction, ETriggerEvent::Canceled, this, &AAdvancedProjectPlayerController::ResetMouseRiotateAction);
 
 		EnhancedInputComponent->BindAction(leftClickAction, ETriggerEvent::Triggered, this, &AAdvancedProjectPlayerController::LookForClickInfo);
 	}
 }
 
-void AAdvancedProjectPlayerController::RotateCamera()
+void AAdvancedProjectPlayerController::RotateCamera(const FInputActionValue& _value)
 {
 	float deltaX;
 	float deltaY;
@@ -88,11 +82,6 @@ void AAdvancedProjectPlayerController::RotateCamera()
 
 	controllerOwner->SetActorRotation(FRotator(controllerOwner->GetActorRotation().Pitch, newyaw, controllerOwner->GetActorRotation().Roll));
 	CameraBoom->SetRelativeRotation(FRotator(CameraBoom->GetComponentRotation().Pitch, newyaw, CameraBoom->GetComponentRotation().Roll), false);
-}
-
-void AAdvancedProjectPlayerController::ResetMouseRiotateAction()
-{
-	UWidgetBlueprintLibrary::SetInputMode_GameOnly(this);
 }
 
 void AAdvancedProjectPlayerController::MoveRight(const FInputActionValue& _value)
@@ -127,6 +116,9 @@ void AAdvancedProjectPlayerController::MoveForward(const FInputActionValue& _val
 
 void AAdvancedProjectPlayerController::LookForClickInfo(const FInputActionValue& _value)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Click"));
+
+
 	FVector2D mousepos;
 	GetMousePosition(mousepos.X, mousepos.Y);
 

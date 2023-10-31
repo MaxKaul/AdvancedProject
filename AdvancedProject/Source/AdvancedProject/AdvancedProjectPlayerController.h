@@ -25,10 +25,8 @@ protected:
 
 private:
 	UFUNCTION()
-		void RotateCamera();
+		void RotateCamera(const FInputActionValue& _value);
 	// Kp warum, aber aus irgendeinem grund muss der input mode neu gesetzte werden weil die action nicht finished sondern canceled
-	UFUNCTION()
-		void ResetMouseRiotateAction();
 	UFUNCTION()
 		void ZoomCamera(const FInputActionValue& _value);
 	UFUNCTION()
@@ -37,7 +35,6 @@ private:
 		void MoveForward(const FInputActionValue& _value);
 	UFUNCTION()
 		void LookForClickInfo(const FInputActionValue& _value);
-
 	UFUNCTION()
 		bool NullcheckDependencies();
 
