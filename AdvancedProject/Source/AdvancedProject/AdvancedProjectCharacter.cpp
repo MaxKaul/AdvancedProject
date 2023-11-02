@@ -74,15 +74,26 @@ void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSi
 	builder->BuildProductionSite(testMesh,EProductionSiteType::PST_Hardwood_Resin, _chosenSite, marketManager, 0);
 }
 
-void AAdvancedProjectCharacter::SetDisplayProductionSiteInfo(bool _status)
+void AAdvancedProjectCharacter::SetDisplayProductionSiteInfo(bool _status, AProductionsite* _hoverProdSite)
 {
-	UE_LOG(LogTemp,Warning,TEXT("DDD"))
 	bCanOpenProductionSiteInfo = _status;
+	viewProductionSite = _hoverProdSite;
 }
 
-bool AAdvancedProjectCharacter::GetDisplayProductionSiteInfo()
+bool AAdvancedProjectCharacter::GetDisplayProductionSiteStatus()
 {
 	return bCanOpenProductionSiteInfo;
+}
+
+FProductionSiteDisplayInfos AAdvancedProjectCharacter::GetDisplayProductionSiteInfo()
+{
+	if (!viewProductionSite)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("FProductionSiteDisplayInfos, !viewProductionSite"))
+		return FProductionSiteDisplayInfos();
+	}
+
+	return viewProductionSite->GetDisplayInfo();
 }
 
 FPlayerSaveData AAdvancedProjectCharacter::GetPlayerSaveData()

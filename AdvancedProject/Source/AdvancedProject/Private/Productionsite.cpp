@@ -138,6 +138,34 @@ TArray<FProductionResources> AProductionsite::GetCurrentResources()
 	return productionresources;
 }
 
+FProductionSiteDisplayInfos AProductionsite::GetDisplayInfo()
+{
+	TArray<EResourceIdent> allprodresidents;
+	TArray<EResourceIdent> allneededresidents;
+
+	float resourcetickmp = 10.f;
+
+	for(FProductionResources resource : GetCurrentResources())
+	{
+		allprodresidents.Add(resource.GetResourceIdent());
+	}
+
+	// Nur Test
+	allneededresidents.Add(EResourceIdent::ERI_Hardwood);
+	allneededresidents.Add(EResourceIdent::ERI_Ambrosia);
+
+	FProductionSiteDisplayInfos displayinfo =
+	{
+		productionSiteType,
+		allprodresidents,
+		allneededresidents,
+		subscribedWorker.Num(),
+		resourcetickmp
+	};
+
+	return displayinfo;
+}
+
 // Resourcen sollen immer nur ticken solange ihr arbeiter zugewiesen wurden
 
 // Wir loopen durch alle resourcespairs und checken on die callende resource in der lokalen map ist
@@ -163,7 +191,6 @@ void FPS_OverloadFuncs::TickResourceProduction(EResourceIdent _resourceIdent)
 		float tickrate = resourcehandlepair.Key.GetResourceTickRate() - overloadOwner->productionSiteProductivity;
 
 		overloadOwner->world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
-
 
 		//if (overloadOwner->subscribedWorker.Num() <= 0)
 		//	return;

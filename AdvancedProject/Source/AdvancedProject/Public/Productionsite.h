@@ -177,6 +177,37 @@ FORCEINLINE uint32 GetTypeHash(const  FProductionSiteSaveData& _this)
 	return Hash;
 }
 
+USTRUCT(BlueprintType)
+struct FProductionSiteDisplayInfos
+{
+	GENERATED_BODY()
+
+	FProductionSiteDisplayInfos(){}
+
+	FProductionSiteDisplayInfos(EProductionSiteType _type, TArray<EResourceIdent> _resourcesToProduce, TArray<EResourceIdent> _resourcesNeeded, int _workerAmount, float _resourceOutput)
+	{
+		type = _type;
+		resourcesToProduce = _resourcesToProduce;
+		resourcesNeeded = _resourcesNeeded;
+		workerAmount = _workerAmount;
+		resourceOutput = _resourceOutput;
+	}
+
+
+public:
+	UPROPERTY(BlueprintReadOnly)
+		EProductionSiteType type;
+	UPROPERTY(BlueprintReadWrite)
+		TArray<EResourceIdent> resourcesToProduce;
+	UPROPERTY(BlueprintReadWrite)
+		TArray<EResourceIdent> resourcesNeeded;
+	UPROPERTY(BlueprintReadOnly)
+		int workerAmount;
+	UPROPERTY(BlueprintReadOnly)
+		float resourceOutput;
+};
+
+
 UCLASS()
 class ADVANCEDPROJECT_API AProductionsite : public AActor
 {
@@ -189,14 +220,14 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-
-
-	// Sollte eign alles theoretisch klappen, ist getestet
 	UFUNCTION()
 		FProductionSiteSaveData GetProductionSiteSaveData();
 
 	UFUNCTION()
 		TArray<FProductionResources> GetCurrentResources();
+
+	UFUNCTION()
+		FProductionSiteDisplayInfos GetDisplayInfo();
 
 private:
 	UFUNCTION()

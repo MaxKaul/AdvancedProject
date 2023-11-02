@@ -116,9 +116,6 @@ void AAdvancedProjectPlayerController::MoveForward(const FInputActionValue& _val
 
 void AAdvancedProjectPlayerController::LookForClickInfo(const FInputActionValue& _value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Click"));
-
-
 	FVector2D mousepos;
 	GetMousePosition(mousepos.X, mousepos.Y);
 
@@ -137,7 +134,7 @@ void AAdvancedProjectPlayerController::LookForClickInfo(const FInputActionValue&
 	if (ABuildingSite* buildsite = Cast<ABuildingSite>(hit.GetActor()))
 		controllerOwner->BuildTestProductionSite(buildsite);
 	else if (AProductionsite* productionsite = Cast<AProductionsite>(hit.GetActor()))
-		controllerOwner->SetDisplayProductionSiteInfo(true);
+		controllerOwner->SetDisplayProductionSiteInfo(true, productionsite);
 }
 
 void AAdvancedProjectPlayerController::ZoomCamera(const FInputActionValue& _value)

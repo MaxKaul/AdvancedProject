@@ -28,9 +28,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void BuildTestProductionSite(class ABuildingSite* _chosenSite);
 	UFUNCTION(BlueprintCallable)
-		void SetDisplayProductionSiteInfo(bool _status);
+		void SetDisplayProductionSiteInfo(bool _status, AProductionsite* _hoverProdSite);
+
 	UFUNCTION(BlueprintCallable)
-		bool GetDisplayProductionSiteInfo();
+		bool GetDisplayProductionSiteStatus();
+	UFUNCTION(BlueprintCallable)
+		FProductionSiteDisplayInfos GetDisplayProductionSiteInfo();
 
 protected:
 		virtual FPlayerSaveData GetPlayerSaveData() override;
@@ -53,6 +56,10 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess ))
 		UStaticMesh* testMesh;
+
+	// Muss noch auf hover umgestellt werden
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Info, meta = (AllowPrivateAccess))
+	AProductionsite* viewProductionSite;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess))
 		bool bCanOpenProductionSiteInfo;
