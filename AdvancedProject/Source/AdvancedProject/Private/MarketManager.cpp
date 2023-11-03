@@ -1,7 +1,7 @@
 
 #include "MarketManager.h"
 #include "MarketStall.h"
-#include "ResourceTableBase.h"
+#include "..\Public\TableBaseLibrary.h"
 #include "Engine/DataTable.h"
 
 

@@ -18,7 +18,7 @@ struct FMarketManagerOptionals
 };
 
 
-// Resource Info für den Markt, FProduktionResources ist für die individuellen Produktionsites
+// Resource Info für den Markt, FProduktionResources ist für die individuellen Produktionsites, muss eventuell noch eine bessere lösung her um encapsulation ein wenig zu verbessern
 USTRUCT(BlueprintType)
 struct FIndividualResourceInfo
 {

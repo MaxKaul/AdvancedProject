@@ -7,7 +7,7 @@
 #include "BuildingSite.h"
 #include "MarketManager.h"
 #include "PlayerBase.h"
-#include "ResourceTableBase.h"
+#include "..\Public\TableBaseLibrary.h"
 
 #include "Worker.h"
 
@@ -138,32 +138,33 @@ TArray<FProductionResources> AProductionsite::GetCurrentResources()
 	return productionresources;
 }
 
-FProductionSiteDisplayInfos AProductionsite::GetDisplayInfo()
+// Ich setzte von hier aus gleichzeitig die daten im data table und schicke eine ref vom ident zum UI, muss noch nagepasst werden
+void AProductionsite::GetDisplayInfo( FProductionSiteDisplayInfos& _displayInfo)
 {
-	TArray<EResourceIdent> allprodresidents;
-	TArray<EResourceIdent> allneededresidents;
+	TMap<EProductionSiteType, UDataTable*> newdisplayinfo;
 
-	float resourcetickmp = 10.f;
+	TArray<FProductionSiteInfoBase*> displaybase;
 
-	for(FProductionResources resource : GetCurrentResources())
+	for (TTuple<FName, unsigned char*> rowitem : productionSideDisplayTable->GetRowMap())
 	{
-		allprodresidents.Add(resource.GetResourceIdent());
+		displaybase.Add(reinterpret_cast<FProductionSiteInfoBase*>(rowitem.Value));
 	}
 
-	// Nur Test
-	allneededresidents.Add(EResourceIdent::ERI_Hardwood);
-	allneededresidents.Add(EResourceIdent::ERI_Ambrosia);
-
-	FProductionSiteDisplayInfos displayinfo =
+	for (FProductionSiteInfoBase* base : displaybase)
 	{
-		productionSiteType,
-		allprodresidents,
-		allneededresidents,
-		subscribedWorker.Num(),
-		resourcetickmp
-	};
-
-	return displayinfo;
+		if (base->productionSiteDisplayInfos.productionSiteType == productionSiteType)
+		{
+			FProductionSiteDisplayInfos sitedisplayinfo;
+		
+			sitedisplayinfo = base->productionSiteDisplayInfos;
+			sitedisplayinfo.workerAmount = subscribedWorker.Num();
+			sitedisplayinfo.resourceOutput = resourceStdTickValue;
+			
+			_displayInfo = sitedisplayinfo;
+		
+			break;
+		}
+	}
 }
 
 // Resourcen sollen immer nur ticken solange ihr arbeiter zugewiesen wurden

@@ -85,15 +85,12 @@ bool AAdvancedProjectCharacter::GetDisplayProductionSiteStatus()
 	return bCanOpenProductionSiteInfo;
 }
 
-FProductionSiteDisplayInfos AAdvancedProjectCharacter::GetDisplayProductionSiteInfo()
+void AAdvancedProjectCharacter::GetDisplayProductionSiteInfo(FProductionSiteDisplayInfos& _displayInfo)
 {
 	if (!viewProductionSite)
-	{
 		UE_LOG(LogTemp,Warning,TEXT("FProductionSiteDisplayInfos, !viewProductionSite"))
-		return FProductionSiteDisplayInfos();
-	}
 
-	return viewProductionSite->GetDisplayInfo();
+	 viewProductionSite->GetDisplayInfo( _displayInfo);
 }
 
 FPlayerSaveData AAdvancedProjectCharacter::GetPlayerSaveData()

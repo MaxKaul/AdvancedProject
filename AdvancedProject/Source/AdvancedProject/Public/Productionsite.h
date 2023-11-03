@@ -182,28 +182,34 @@ struct FProductionSiteDisplayInfos
 {
 	GENERATED_BODY()
 
-	FProductionSiteDisplayInfos(){}
-
-	FProductionSiteDisplayInfos(EProductionSiteType _type, TArray<EResourceIdent> _resourcesToProduce, TArray<EResourceIdent> _resourcesNeeded, int _workerAmount, float _resourceOutput)
-	{
-		type = _type;
-		resourcesToProduce = _resourcesToProduce;
-		resourcesNeeded = _resourcesNeeded;
-		workerAmount = _workerAmount;
-		resourceOutput = _resourceOutput;
-	}
+		FProductionSiteDisplayInfos() {}
 
 
 public:
-	UPROPERTY(BlueprintReadOnly)
-		EProductionSiteType type;
-	UPROPERTY(BlueprintReadWrite)
-		TArray<EResourceIdent> resourcesToProduce;
-	UPROPERTY(BlueprintReadWrite)
-		TArray<EResourceIdent> resourcesNeeded;
-	UPROPERTY(BlueprintReadOnly)
+	FORCEINLINE
+		void SetWorkerAmount(int _amount) { workerAmount = _amount; }
+	FORCEINLINE
+		void SetResourceOutput(float _resourceOutput) { resourceOutput = _resourceOutput; }
+
+
+public:
+	//--> Static Infos
+	// Type of the Site, used as key
+	UPROPERTY(BlueprintReadOnly ,EditAnywhere, meta = (AllowPrivateAccess))
+		EProductionSiteType productionSiteType;
+	// Resources Produced by the site
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess))
+		FName priductionSiteName;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess))
+		FName resourcesToProduce;
+	// Resources needed by the site
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess))
+		FName resourcesNeeded;
+
+	// --> Dynamic values
+	UPROPERTY(BlueprintReadOnly ,meta = (AllowPrivateAccess))
 		int workerAmount;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess))
 		float resourceOutput;
 };
 
@@ -227,7 +233,7 @@ public:
 		TArray<FProductionResources> GetCurrentResources();
 
 	UFUNCTION()
-		FProductionSiteDisplayInfos GetDisplayInfo();
+		void GetDisplayInfo(FProductionSiteDisplayInfos& _displayInfo);
 
 private:
 	UFUNCTION()
@@ -255,6 +261,9 @@ private:
 
 	UPROPERTY()
 		EProductionSiteType productionSiteType;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category=Comps, meta=(AllowPrivateAccess))
+		UDataTable* productionSideDisplayTable;
 
 	UPROPERTY()
 		UWorld* world;
