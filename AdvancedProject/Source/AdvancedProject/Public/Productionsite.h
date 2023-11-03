@@ -201,6 +201,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess))
 		FName priductionSiteName;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess))
+		FName priductionSiteInfo;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess))
 		FName resourcesToProduce;
 	// Resources needed by the site
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess))
