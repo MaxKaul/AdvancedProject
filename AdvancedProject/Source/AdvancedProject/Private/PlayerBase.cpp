@@ -37,7 +37,7 @@ FPlayerSaveData APlayerBase::GetPlayerSaveData()
 	return FPlayerSaveData();
 }
 
-void APlayerBase::InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager)
+void APlayerBase::InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager)
 {
 
 }

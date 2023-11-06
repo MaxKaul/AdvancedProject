@@ -36,7 +36,7 @@ void AProductionsite::Tick(float DeltaTime)
 	}
 }
 
-void FPS_OverloadFuncs::InitProductionSite(FProductionSiteSaveData _saveData, AMarketManager* _marketManager, APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs)
+void FPS_OverloadFuncs::InitProductionSite(FProductionSiteSaveData _saveData, AMarketManager* _marketManager, APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs, UProductionSiteManager* _productionSiteManager)
 {
 	overloadOwner->world = overloadOwner->GetWorld();
 	overloadOwner->productionSiteType = _saveData.GetSavedType();
@@ -47,6 +47,7 @@ void FPS_OverloadFuncs::InitProductionSite(FProductionSiteSaveData _saveData, AM
 	overloadOwner->siteID = _saveData.GetProductionsiteID();
 	overloadOwner->siteOwner = _siteOwner;
 	overloadOwner->overloadFuncs = _overloadFuncs;
+	overloadOwner->productionSiteManager = _productionSiteManager;
 
 	overloadOwner->productionSiteResourcePool = _saveData.GetSavedResourcePool();
 	overloadOwner->productionResourceHandlePair = _saveData.GetSavedResourceHandle();
@@ -60,7 +61,8 @@ void FPS_OverloadFuncs::InitProductionSite(FProductionSiteSaveData _saveData, AM
 	}
 }
 
-void FPS_OverloadFuncs::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, AMarketManager* _marketManager, int _siteID, APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs)
+void FPS_OverloadFuncs::InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, AMarketManager* _marketManager, int _siteID, APlayerBase* _siteOwner, 
+										   FPS_OverloadFuncs* _overloadFuncs, UProductionSiteManager* _productionSiteManager)
 {
 	overloadOwner->world = overloadOwner->GetWorld();
 	overloadOwner->productionSiteType = _type;
@@ -71,6 +73,7 @@ void FPS_OverloadFuncs::InitProductionSite(UStaticMesh* _siteMesh, EProductionSi
 	overloadOwner->siteID = _siteID;
 	overloadOwner->siteOwner = _siteOwner;
 	overloadOwner->overloadFuncs = _overloadFuncs;
+	overloadOwner->productionSiteManager = _productionSiteManager;
 
 	overloadOwner->InitResources();
 }
@@ -258,9 +261,26 @@ void FPS_OverloadFuncs::TickResourceProduction(EResourceIdent _resourceIdent, TM
 
 void AProductionsite::SubscribeWorker(AWorker* _toSub)
 {
+	if (!_toSub)
+	{
+		if (productionSiteManager->GetAllLocalWorker().Num() <= 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AProductionsite, productionSiteManager->GetAllLocalWorker().Num() <= 0"))
+				return;
+		}
+
+		TArray<AWorker*> availableworker = productionSiteManager->GetAllLocalWorker();
+		int32 workerid = FMath::RandRange(0, availableworker.Num());
+
+		if(availableworker.Contains(availableworker[workerid]))
+			_toSub = availableworker[workerid];
+	}
+
+
 	if (!subscribedWorker.Contains(_toSub))
 	{
 		subscribedWorker.Add(_toSub);
+		productionSiteManager->UnsubscribeWorkerToProductionSite(_toSub);
 
 		productionSiteProductivity += _toSub->GetProductivity();
 	}
@@ -270,9 +290,24 @@ void AProductionsite::SubscribeWorker(AWorker* _toSub)
 
 void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub)
 {
+	if(!_toUnsub)
+	{
+		if(subscribedWorker.Num() <= 0)
+		{
+			UE_LOG(LogTemp,Warning,TEXT("AProductionsite, subscribedWorker.Num() <= 0"))
+			return;
+		}
+
+		int32 workerid = FMath::RandRange(0, subscribedWorker.Num());
+
+		if(subscribedWorker.Contains(subscribedWorker[workerid]))
+			_toUnsub = subscribedWorker[workerid];
+	}
+
 	if (subscribedWorker.Contains(_toUnsub))
 	{
 		subscribedWorker.Remove(_toUnsub);
+		productionSiteManager->SubscribeWorkerToLocalPool(_toUnsub);
 
 		productionSiteProductivity -= _toUnsub->GetProductivity();
 	}

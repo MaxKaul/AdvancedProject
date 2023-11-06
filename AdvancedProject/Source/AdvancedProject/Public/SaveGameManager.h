@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "MarketManager.h"
+#include "PlayerBase.h"
 #include "ProductionSiteManager.h"
 #include "WorkerWorldManager.h"
 #include "GameFramework/Actor.h"

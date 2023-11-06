@@ -13,7 +13,7 @@ struct FWorkerWorldManagerSaveData
 {
 	GENERATED_BODY()
 
-		FWorkerWorldManagerSaveData() {}
+	FWorkerWorldManagerSaveData() {}
 
 	FWorkerWorldManagerSaveData(TArray<FWorkerSaveData> _allWorker)
 	{
@@ -23,7 +23,7 @@ struct FWorkerWorldManagerSaveData
 public:
 	FORCEINLINE
 		TArray<FWorkerSaveData> GetAllWorker() { return allWorker; }
-
+	
 private:
 	UPROPERTY()
 		TArray<FWorkerSaveData> allWorker;
@@ -46,6 +46,17 @@ public:
 	UFUNCTION()
 		FWorkerWorldManagerSaveData GetWorkerManagerSaveData();
 
+	// Subscribes worker to the worker world pool -> this is to hold all worker in the world to manage their status and for saving, workers should only be added at Init
+	UFUNCTION()
+		void SubscribeNewWorker(AWorker* _toSub);
+	// Function to unsub worker from the global Unemployment pool, does not remove them from the World Pool
+	// Wird im moment auch noch gecalled wenn ein worker von der productionside auf den productionsidemanager subscribed wird
+	UFUNCTION()
+		void UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub);
+	// Subs the worker to the global Unemployment pool
+	UFUNCTION()
+		void SubWorkerToUnemploymentPool(AWorker* _toSub);
+
 private:
 	UFUNCTION()
 		void SpawnAllWorker(FWorkerWorldManagerSaveData _saveData);
@@ -53,21 +64,19 @@ private:
 	UFUNCTION()
 		bool NullcheckDependencies(); 
 
-	UFUNCTION()
-		void SubscribeNewWorker(AWorker* _toSub);
-	UFUNCTION()
-		void UnsubscribeWorker(AWorker* _toUnsub);
-
 	friend struct FWWM_OverloadFuncs;
 
 private:
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=SpawnInfos, meta = (AllowPrivateAccess))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
+		TArray<AWorker*> allUnemploymentWorker;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category= WorldInfos, meta = (AllowPrivateAccess))
 	TArray<AWorker*> allWorker;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SpawnInfos, meta = (AllowPrivateAccess))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
 		TArray<class AProductionsite*> allProductionSites;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SpawnInfos, meta = (AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		TSubclassOf<AWorker> workerClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))

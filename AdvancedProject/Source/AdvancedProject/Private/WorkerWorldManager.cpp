@@ -160,10 +160,19 @@ void AWorkerWorldManager::SubscribeNewWorker(AWorker* _toSub)
 {
 	if (!allWorker.Contains(_toSub))
 		allWorker.Add(_toSub);
+
+	if (!allUnemploymentWorker.Contains(_toSub))
+		allUnemploymentWorker.Add(_toSub);
 }
 
-void AWorkerWorldManager::UnsubscribeWorker(AWorker* _toUnsub)
+void AWorkerWorldManager::UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub)
 {
-	if (allWorker.Contains(_toUnsub))
-		allWorker.Remove(_toUnsub);
+	if (allUnemploymentWorker.Contains(_toUnsub))
+		allUnemploymentWorker.Remove(_toUnsub);
+}
+
+void AWorkerWorldManager::SubWorkerToUnemploymentPool(AWorker* _toSub)
+{
+	if (!allUnemploymentWorker.Contains(_toSub))
+		allUnemploymentWorker.Add(_toSub);
 }

@@ -58,15 +58,16 @@ void AAdvancedProjectCharacter::BeginPlay()
 }
 
 // Das meiste an Implementation könnte in die base rein
-void AAdvancedProjectCharacter::InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager)
+void AAdvancedProjectCharacter::InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager)
 {
 	marketManager = _marketManager;
+	workerWorldManager = _workerWorldManager;
 
 	SetActorLocation(_saveData.GetLoaction());
 	SetActorRotation(_saveData.GetRotation());
 
 	builder->InitBuilder(productionSiteManager, marketManager, this);
-	productionSiteManager->InitProductionSiteManager(this, _saveData.GetProductionSiteManagerSaveData() ,marketManager);
+	productionSiteManager->InitProductionSiteManager(this, _saveData.GetProductionSiteManagerSaveData() ,marketManager, workerWorldManager);
 }
 
 void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSite)
@@ -88,9 +89,20 @@ bool AAdvancedProjectCharacter::GetDisplayProductionSiteStatus()
 void AAdvancedProjectCharacter::GetDisplayProductionSiteInfo(FProductionSiteDisplayInfos& _displayInfo)
 {
 	if (!viewProductionSite)
-		UE_LOG(LogTemp,Warning,TEXT("FProductionSiteDisplayInfos, !viewProductionSite"))
+		UE_LOG(LogTemp, Warning, TEXT("FProductionSiteDisplayInfos, !viewProductionSite"));
 
 	 viewProductionSite->GetDisplayInfo( _displayInfo);
+}
+
+AProductionsite* AAdvancedProjectCharacter::GetViewProductionSite()
+{
+	if(!viewProductionSite)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !viewProductionSite"));
+		return nullptr;
+	}
+
+	return viewProductionSite;
 }
 
 FPlayerSaveData AAdvancedProjectCharacter::GetPlayerSaveData()

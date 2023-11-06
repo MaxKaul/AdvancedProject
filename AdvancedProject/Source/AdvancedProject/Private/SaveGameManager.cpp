@@ -117,7 +117,7 @@ bool ASaveGameManager::InitAllManager()
 
 	// Muss noch etwas geändert werden -> Manueller Spawn + der spieler braucht ein flag um ihn zu unterscheiden für den spawn
 	if (saveManagerOptionals.allPlayerSaveData.IsSet())
-		allPlayer[0]->InitPlayer(saveManagerOptionals.allPlayerSaveData.GetValue()[0], spawnedMarketManager);
+		allPlayer[0]->InitPlayer(saveManagerOptionals.allPlayerSaveData.GetValue()[0], spawnedMarketManager, spawnedWorkerWorldManager);
 	else
 	{
 		// Könnte soweit geändert werden das dies zum beispiel default start werte sein können
@@ -128,7 +128,7 @@ bool ASaveGameManager::InitAllManager()
 
 		emptysave.InitSaveData(ttt, ddd, FProductionSiteManagerSaveData());
 
-		allPlayer[0]->InitPlayer(emptysave, spawnedMarketManager);
+		allPlayer[0]->InitPlayer(emptysave, spawnedMarketManager, spawnedWorkerWorldManager);
 	}
 
 

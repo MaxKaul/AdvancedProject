@@ -191,7 +191,6 @@ public:
 	FORCEINLINE
 		void SetResourceOutput(float _resourceOutput) { resourceOutput = _resourceOutput; }
 
-
 public:
 	//--> Static Infos
 	// Type of the Site, used as key
@@ -237,14 +236,15 @@ public:
 	UFUNCTION()
 		void GetDisplayInfo(FProductionSiteDisplayInfos& _displayInfo);
 
+	// Optionals gehen nicht mit UFunctions, wenn ich einen worker random selecten will muss ich den parameter einfach leer lassen
+	UFUNCTION(BlueprintCallable)
+		void SubscribeWorker(class AWorker* _toSub = nullptr);
+	UFUNCTION(BlueprintCallable)
+		void UnsubscribeWorker(AWorker* _toUnsub = nullptr);
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();
-
-	UFUNCTION()
-		void SubscribeWorker(class AWorker* _toSub);
-	UFUNCTION()
-		void UnsubscribeWorker(AWorker* _toUnsub);
 
 	// Diese function wird nur gecalled wenn eine productionsite frisch gebaut wurde und nicht aus den save daten herraus erstellt wurde
 	UFUNCTION()
@@ -270,6 +270,9 @@ private:
 	UPROPERTY()
 		UWorld* world;
 
+	UPROPERTY()
+	class UProductionSiteManager* productionSiteManager;
+		
 	UPROPERTY()
 		 AMarketManager* marketManager;
 
@@ -317,9 +320,9 @@ public:
 	FPS_OverloadFuncs(AProductionsite* _friend) : overloadOwner(_friend) {}
 
 	// Init mit savedata, wird vom ProductionSiteManager aus gecalled
-	void InitProductionSite(FProductionSiteSaveData _saveData, class AMarketManager* _marketManager, class APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs);
+	void InitProductionSite(FProductionSiteSaveData _saveData, class AMarketManager* _marketManager, class APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs, UProductionSiteManager* _productionSiteManager);
 	// Init ohne save data, bedeutet die productionsite wurde frisch gebaut
-	void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID, APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs);
+	void InitProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _type, ABuildingSite* _buildingSite, class AMarketManager* _marketManager, int _siteID, APlayerBase* _siteOwner, FPS_OverloadFuncs* _overloadFuncs, UProductionSiteManager* _productionSiteManager);
 
 	void TickResourceProduction(EResourceIdent _resourceIdent);
 	void TickResourceProduction(EResourceIdent _resourceIdent, TMap<EResourceIdent, int> _resourceCost);

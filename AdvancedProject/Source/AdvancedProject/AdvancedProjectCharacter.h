@@ -23,7 +23,7 @@ public:
 	FORCEINLINE
 	class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
-	virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager) override;
+	virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager, class AWorkerWorldManager* _workerWorldManager) override;
 
 	UFUNCTION(BlueprintCallable)
 		void BuildTestProductionSite(class ABuildingSite* _chosenSite);
@@ -35,6 +35,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void GetDisplayProductionSiteInfo( FProductionSiteDisplayInfos& _displayInfo);
 
+	UFUNCTION(BlueprintCallable)
+		AProductionsite* GetViewProductionSite();
+
 protected:
 		virtual FPlayerSaveData GetPlayerSaveData() override;
 
@@ -45,14 +48,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess ))
 	class USpringArmComponent* CameraBoom;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess ))
-		class AMarketManager* marketManager;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
 		class AAdvancedProjectPlayerController* aspController;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess ))
-		class UBuilder* builder;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess ))
 		UStaticMesh* testMesh;

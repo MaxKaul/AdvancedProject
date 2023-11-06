@@ -40,6 +40,7 @@ public:
 		void AddProductionSiteSaveData(FProductionSiteSaveData _newSaveData) { productionSiteData.Add(_newSaveData); }
 };
 
+// Hällt auch alle arbeiter welche nicht auf productionsides verteilt sind
 
 UCLASS()
 class ADVANCEDPROJECT_API UProductionSiteManager : public UActorComponent
@@ -52,7 +53,7 @@ public:
 
 	// Ich gehe im moment davon aus das ich immer savedata habe -> Habe ich keine erstell ich leere
 	UFUNCTION()
-	void InitProductionSiteManager(class APlayerBase* _managerOwner, FProductionSiteManagerSaveData _saveData, class AMarketManager* _marketManager);
+	void InitProductionSiteManager(class APlayerBase* _managerOwner, FProductionSiteManagerSaveData _saveData, class AMarketManager* _marketManager, class AWorkerWorldManager* _workerWorldManager);
 
 private:
 	UFUNCTION()
@@ -71,11 +72,30 @@ public:
 	UFUNCTION()
 		void SubscribeProductionsite(class AProductionsite* _newProductionSite);
 
+	FORCEINLINE
+		TArray<AWorker*> GetAllLocalWorker() { return subscribedWorker_LocalPool; }
+
 	UFUNCTION()
 		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData();
 
 	FORCEINLINE
 		TArray<AProductionsite*> GetAllProductionSites() { return allProductionSites; }
+
+	// Sub und Unsub für worker in den lokalen pool
+	// Nicht vergessen -> Die save data wird imemrnoch über den WorkerWorldManager geregelt
+	// Function to Subscribe a worker to the local pool i.e employed by a player and Unsubscribes him from the global unemployement pool
+	UFUNCTION()
+		void SubscribeWorkerToLocalPool(class AWorker* _toSub);
+	// Unsubscribe worker from local pool and subscribes him to a productionsite
+	UFUNCTION()
+		void UnsubscribeWorkerToProductionSite(AWorker* _toUnsub);
+	// Unsubscribe worker from local pool and subscribes him to the global unemployement pool
+	UFUNCTION()
+		void UnsubscribeWorkerToWorldPool(AWorker* _toUnsub);
+
+	// EditAnywhere zum testen 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = PoolInfo, meta = (AllowPrivateAccess))
+		TArray<AWorker*> subscribedWorker_LocalPool;
 
 private:
 	UPROPERTY()
@@ -85,6 +105,9 @@ private:
 
 	UPROPERTY()
 		APlayerBase* managerOwner;
+
+	UPROPERTY()
+		AWorkerWorldManager* workerWorldManager;
 
 	UPROPERTY()
 		AMarketManager* marketManager;

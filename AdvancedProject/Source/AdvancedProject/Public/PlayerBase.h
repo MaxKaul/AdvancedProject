@@ -49,13 +49,20 @@ public:
 	UFUNCTION()
 		virtual FPlayerSaveData GetPlayerSaveData();
 	UFUNCTION()
-		virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager);
+		virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager);
 	FORCEINLINE
 		virtual UProductionSiteManager* GetProductionSiteManager() { return productionSiteManager; }
 
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
+		AWorkerWorldManager* workerWorldManager;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
+		class UBuilder* builder;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
+		class AMarketManager* marketManager;
 
 public:	
 	virtual void Tick(float DeltaTime) override;

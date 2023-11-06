@@ -6,6 +6,7 @@
 #include "Productionsite.h"
 #include "BuildingSite.h"
 #include "Builder.h"
+#include "WorkerWorldManager.h"
 
 // Sets default values
 UProductionSiteManager::UProductionSiteManager()
@@ -31,11 +32,12 @@ void UProductionSiteManager::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 }
 
-void UProductionSiteManager::InitProductionSiteManager(APlayerBase* _managerOwner, FProductionSiteManagerSaveData _saveData, AMarketManager* _marketManager)
+void UProductionSiteManager::InitProductionSiteManager(APlayerBase* _managerOwner, FProductionSiteManagerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager)
 {
 	world = GetWorld();
 	managerOwner = _managerOwner;
 	marketManager = _marketManager;
+	workerWorldManager = _workerWorldManager;
 
 	if (!NullcheckDependencies())
 	{
@@ -74,7 +76,7 @@ void UProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 		FPS_OverloadFuncs* ps_overloadfuncs;
 		ps_overloadfuncs = new FPS_OverloadFuncs(spawnedsite);
 
-		ps_overloadfuncs->InitProductionSite(sitedata, marketManager, managerOwner, ps_overloadfuncs);
+		ps_overloadfuncs->InitProductionSite(sitedata, marketManager, managerOwner, ps_overloadfuncs, this);
 
 		allProductionSites.Add(spawnedsite);
 		
@@ -117,6 +119,37 @@ FProductionSiteManagerSaveData UProductionSiteManager::GetProductionSiteManagerS
 	};
 
 	return savedata;
+}
+
+void UProductionSiteManager::SubscribeWorkerToLocalPool(AWorker* _toSub)
+{
+	if (!subscribedWorker_LocalPool.Contains(_toSub))
+	{
+		subscribedWorker_LocalPool.Add(_toSub);
+
+		workerWorldManager->UnsubWorkerFromUnemploymentPool(_toSub);
+	}
+	else
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Contains(_toSub)"))
+}
+
+void UProductionSiteManager::UnsubscribeWorkerToProductionSite(AWorker* _toUnsub)
+{
+	if (subscribedWorker_LocalPool.Contains(_toUnsub))
+		subscribedWorker_LocalPool.Remove(_toUnsub);
+	else
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))
+}
+
+void UProductionSiteManager::UnsubscribeWorkerToWorldPool(AWorker* _toUnsub)
+{
+	if (subscribedWorker_LocalPool.Contains(_toUnsub))
+	{
+		workerWorldManager->SubWorkerToUnemploymentPool(_toUnsub);
+		subscribedWorker_LocalPool.Remove(_toUnsub);
+	}
+	else
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))
 }
 
 
