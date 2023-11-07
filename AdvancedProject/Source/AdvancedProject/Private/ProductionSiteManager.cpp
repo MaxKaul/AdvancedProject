@@ -121,32 +121,36 @@ FProductionSiteManagerSaveData UProductionSiteManager::GetProductionSiteManagerS
 	return savedata;
 }
 
-void UProductionSiteManager::SubscribeWorkerToLocalPool(AWorker* _toSub)
+void UProductionSiteManager::SubscribeWorkerToLocalPool(AWorker* _toSub, bool _subFromSite)
 {
-	if (!subscribedWorker_LocalPool.Contains(_toSub))
+	if (!subscribedWorker_UnasignedPool.Contains(_toSub))
 	{
-		subscribedWorker_LocalPool.Add(_toSub);
+		subscribedWorker_UnasignedPool.Add(_toSub);
 
-		workerWorldManager->UnsubWorkerFromUnemploymentPool(_toSub);
+		if (!_subFromSite)
+			workerWorldManager->UnsubWorkerFromUnemploymentPool(_toSub);
 	}
 	else
-		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Contains(_toSub)"))
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Contains(_toSub)"));
+
+	if (!subscribedWorker_HiredPool.Contains(_toSub))
+		subscribedWorker_HiredPool.Add(_toSub);
 }
 
 void UProductionSiteManager::UnsubscribeWorkerToProductionSite(AWorker* _toUnsub)
 {
-	if (subscribedWorker_LocalPool.Contains(_toUnsub))
-		subscribedWorker_LocalPool.Remove(_toUnsub);
+	if (subscribedWorker_UnasignedPool.Contains(_toUnsub))
+		subscribedWorker_UnasignedPool.Remove(_toUnsub);
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))
 }
 
 void UProductionSiteManager::UnsubscribeWorkerToWorldPool(AWorker* _toUnsub)
 {
-	if (subscribedWorker_LocalPool.Contains(_toUnsub))
+	if (subscribedWorker_HiredPool.Contains(_toUnsub))
 	{
 		workerWorldManager->SubWorkerToUnemploymentPool(_toUnsub);
-		subscribedWorker_LocalPool.Remove(_toUnsub);
+		subscribedWorker_HiredPool.Remove(_toUnsub);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))

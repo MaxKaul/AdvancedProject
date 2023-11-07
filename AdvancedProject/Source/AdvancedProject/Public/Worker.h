@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EnumLibrary.h"
 #include "GameFramework/Character.h"
 #include "Worker.generated.h"
 
@@ -76,6 +77,9 @@ protected:
 
 public:	
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable)
+		int GetWorkerID();
 
 private:
 	// Sollte in einer range von 0.005f bis 0.08f eingestellt werden (ERSTMAL), dieser wert wird nähmlich von der ResourceTick rate ABGEZOGEN

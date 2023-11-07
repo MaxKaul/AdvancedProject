@@ -196,8 +196,8 @@ void FPS_OverloadFuncs::TickResourceProduction(EResourceIdent _resourceIdent)
 
 		overloadOwner->world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
 
-		//if (overloadOwner->subscribedWorker.Num() <= 0)
-		//	return;
+		if (overloadOwner->subscribedWorker.Num() <= 0)
+			return;
 
 		EResourceIdent ident = resourcehandlepair.Key.GetResourceIdent();
 		overloadOwner->productionSiteResourcePool.Add(ident, overloadOwner->productionSiteResourcePool.FindRef(ident) + overloadOwner->resourceStdTickValue);
@@ -232,8 +232,8 @@ void FPS_OverloadFuncs::TickResourceProduction(EResourceIdent _resourceIdent, TM
 		if (!bcanafford)
 			return;
 
-		//if (overloadOwner->subscribedWorker.Num() <= 0)
-		//	return;
+		if (overloadOwner->subscribedWorker.Num() <= 0)
+			return;
 
 		for (TTuple<EResourceIdent, int> item : _resourceCost)
 		{
@@ -263,16 +263,16 @@ void AProductionsite::SubscribeWorker(AWorker* _toSub)
 {
 	if (!_toSub)
 	{
-		if (productionSiteManager->GetAllLocalWorker().Num() <= 0)
+		if (productionSiteManager->GetAllUnasignedWorker().Num() <= 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("AProductionsite, productionSiteManager->GetAllLocalWorker().Num() <= 0"))
 				return;
 		}
 
-		TArray<AWorker*> availableworker = productionSiteManager->GetAllLocalWorker();
-		int32 workerid = FMath::RandRange(0, availableworker.Num());
-
-		if(availableworker.Contains(availableworker[workerid]))
+		TArray<AWorker*> availableworker = productionSiteManager->GetAllUnasignedWorker();
+		int32 workerid = FMath::RandRange(0,availableworker.Num() - 1);
+		
+		if(availableworker[workerid] && availableworker.Contains(availableworker[workerid]))
 			_toSub = availableworker[workerid];
 	}
 
@@ -298,16 +298,16 @@ void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub)
 			return;
 		}
 
-		int32 workerid = FMath::RandRange(0, subscribedWorker.Num());
+		int32 workerid = FMath::RandRange(0, subscribedWorker.Num() -1);
 
-		if(subscribedWorker.Contains(subscribedWorker[workerid]))
+		if (subscribedWorker[workerid] && subscribedWorker.Contains(subscribedWorker[workerid]))
 			_toUnsub = subscribedWorker[workerid];
 	}
 
 	if (subscribedWorker.Contains(_toUnsub))
 	{
 		subscribedWorker.Remove(_toUnsub);
-		productionSiteManager->SubscribeWorkerToLocalPool(_toUnsub);
+		productionSiteManager->SubscribeWorkerToLocalPool(_toUnsub, true);
 
 		productionSiteProductivity -= _toUnsub->GetProductivity();
 	}

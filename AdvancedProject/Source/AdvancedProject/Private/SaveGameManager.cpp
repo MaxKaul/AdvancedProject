@@ -110,28 +110,6 @@ bool ASaveGameManager::InitAllManager()
 	else
 		mm_overloadfuncs->InitMarketManager();
 
-
-	//----------------------------------------------------------------------------------------------------------------------------//
-	//Spawning and Init of all Player Entities//
-	//----------------------------------------------------------------------------------------------------------------------------//
-
-	// Muss noch etwas geändert werden -> Manueller Spawn + der spieler braucht ein flag um ihn zu unterscheiden für den spawn
-	if (saveManagerOptionals.allPlayerSaveData.IsSet())
-		allPlayer[0]->InitPlayer(saveManagerOptionals.allPlayerSaveData.GetValue()[0], spawnedMarketManager, spawnedWorkerWorldManager);
-	else
-	{
-		// Könnte soweit geändert werden das dies zum beispiel default start werte sein können
-		FPlayerSaveData emptysave;
-
-		FVector ttt = { -9264.f, 4692.f, -727.f };
-		FRotator ddd = {  };
-
-		emptysave.InitSaveData(ttt, ddd, FProductionSiteManagerSaveData());
-
-		allPlayer[0]->InitPlayer(emptysave, spawnedMarketManager, spawnedWorkerWorldManager);
-	}
-
-
 	//----------------------------------------------------------------------------------------------------------------------------//
 	//Spawning and Init of all Productionsites (will onloy spawn with savedata)//
 	//----------------------------------------------------------------------------------------------------------------------------//
@@ -160,6 +138,27 @@ bool ASaveGameManager::InitAllManager()
 		wwm_overloadfuncs->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), allproductionsites);
 	else
 		wwm_overloadfuncs->InitWorkerWorldManager();
+
+
+	//----------------------------------------------------------------------------------------------------------------------------//
+	//Spawning and Init of all Player Entities//
+	//----------------------------------------------------------------------------------------------------------------------------//
+
+	// Muss noch etwas geändert werden -> Manueller Spawn + der spieler braucht ein flag um ihn zu unterscheiden für den spawn
+	if (saveManagerOptionals.allPlayerSaveData.IsSet())
+		allPlayer[0]->InitPlayer(saveManagerOptionals.allPlayerSaveData.GetValue()[0], spawnedMarketManager, spawnedWorkerWorldManager);
+	else
+	{
+		// Könnte soweit geändert werden das dies zum beispiel default start werte sein können
+		FPlayerSaveData emptysave;
+
+		FVector ttt = { -9264.f, 4692.f, -727.f };
+		FRotator ddd = {  };
+
+		emptysave.InitSaveData(ttt, ddd, FProductionSiteManagerSaveData());
+
+		allPlayer[0]->InitPlayer(emptysave, spawnedMarketManager, spawnedWorkerWorldManager);
+	}
 
 	return status;
 }

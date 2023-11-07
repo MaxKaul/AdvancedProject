@@ -50,8 +50,10 @@ public:
 		virtual FPlayerSaveData GetPlayerSaveData();
 	UFUNCTION()
 		virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager);
-	FORCEINLINE
-		virtual UProductionSiteManager* GetProductionSiteManager() { return productionSiteManager; }
+	UFUNCTION(BlueprintCallable)
+		virtual UProductionSiteManager* GetProductionSiteManager();
+	UFUNCTION(BlueprintCallable)
+		virtual AWorkerWorldManager* GetWorkerWorldManager();
 
 protected:
 	virtual void BeginPlay() override;

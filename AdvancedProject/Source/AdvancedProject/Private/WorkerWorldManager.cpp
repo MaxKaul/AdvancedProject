@@ -30,6 +30,9 @@ void AWorkerWorldManager::BeginPlay()
 void AWorkerWorldManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (allUnemploymentWorker.Num() >= 9)
+		SubWorkerToUnemploymentPool(nullptr);
 }
 
 void FWWM_OverloadFuncs::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<AProductionsite*> _allProductionSites)

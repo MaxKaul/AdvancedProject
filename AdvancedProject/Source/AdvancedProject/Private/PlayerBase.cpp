@@ -42,3 +42,12 @@ void APlayerBase::InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketM
 
 }
 
+UProductionSiteManager* APlayerBase::GetProductionSiteManager()
+{
+	return productionSiteManager;
+}
+
+AWorkerWorldManager* APlayerBase::GetWorkerWorldManager()
+{
+	return workerWorldManager;
+}

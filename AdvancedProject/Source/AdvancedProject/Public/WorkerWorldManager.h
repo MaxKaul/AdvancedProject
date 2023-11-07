@@ -57,6 +57,9 @@ public:
 	UFUNCTION()
 		void SubWorkerToUnemploymentPool(AWorker* _toSub);
 
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		TArray<AWorker*> GetAllUnemploymentWorker() { return allUnemploymentWorker; }
+
 private:
 	UFUNCTION()
 		void SpawnAllWorker(FWorkerWorldManagerSaveData _saveData);
@@ -71,7 +74,7 @@ private:
 		TArray<AWorker*> allUnemploymentWorker;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category= WorldInfos, meta = (AllowPrivateAccess))
-	TArray<AWorker*> allWorker;
+		TArray<AWorker*> allWorker;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
 		TArray<class AProductionsite*> allProductionSites;

@@ -27,6 +27,11 @@ void AWorker::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+int AWorker::GetWorkerID()
+{
+	return workerID;
+}
+
 void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID)
 {
 	workerID = _workerID;

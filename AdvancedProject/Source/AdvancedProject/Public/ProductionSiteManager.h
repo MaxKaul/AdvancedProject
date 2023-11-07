@@ -73,7 +73,10 @@ public:
 		void SubscribeProductionsite(class AProductionsite* _newProductionSite);
 
 	FORCEINLINE
-		TArray<AWorker*> GetAllLocalWorker() { return subscribedWorker_LocalPool; }
+		TArray<AWorker*> GetAllUnasignedWorker() { return subscribedWorker_UnasignedPool; }
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		TArray<AWorker*> GetAllHiredWorker(){ return subscribedWorker_HiredPool;};
+
 
 	UFUNCTION()
 		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData();
@@ -84,18 +87,14 @@ public:
 	// Sub und Unsub für worker in den lokalen pool
 	// Nicht vergessen -> Die save data wird imemrnoch über den WorkerWorldManager geregelt
 	// Function to Subscribe a worker to the local pool i.e employed by a player and Unsubscribes him from the global unemployement pool
-	UFUNCTION()
-		void SubscribeWorkerToLocalPool(class AWorker* _toSub);
+	UFUNCTION(BlueprintCallable)
+		void SubscribeWorkerToLocalPool(class AWorker* _toSub, bool _subFromSite);
 	// Unsubscribe worker from local pool and subscribes him to a productionsite
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		void UnsubscribeWorkerToProductionSite(AWorker* _toUnsub);
 	// Unsubscribe worker from local pool and subscribes him to the global unemployement pool
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		void UnsubscribeWorkerToWorldPool(AWorker* _toUnsub);
-
-	// EditAnywhere zum testen 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = PoolInfo, meta = (AllowPrivateAccess))
-		TArray<AWorker*> subscribedWorker_LocalPool;
 
 private:
 	UPROPERTY()
@@ -114,6 +113,12 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteClasses, meta = (AllowPrivateAccess))
 		TSubclassOf<AProductionsite> productionSiteClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = PoolInfo, meta = (AllowPrivateAccess))
+		TArray<AWorker*> subscribedWorker_UnasignedPool;
+	// Alle angestellten worker
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = PoolInfo, meta = (AllowPrivateAccess))
+		TArray<AWorker*> subscribedWorker_HiredPool;
 
 	UPROPERTY()
 		FProductionSiteManagerOptionals productionsiteManagerOptionals;
