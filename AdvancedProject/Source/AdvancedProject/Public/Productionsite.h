@@ -242,6 +242,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void UnsubscribeWorker(AWorker* _toUnsub = nullptr);
 
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		int GetLocalProdSiteID() { return siteID; }
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();

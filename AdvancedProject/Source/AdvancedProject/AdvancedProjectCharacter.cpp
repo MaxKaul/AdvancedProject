@@ -72,7 +72,7 @@ void AAdvancedProjectCharacter::InitPlayer(FPlayerSaveData _saveData, AMarketMan
 
 void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSite)
 {
-	builder->BuildProductionSite(testMesh,EProductionSiteType::PST_Hardwood_Resin, _chosenSite, marketManager, 0);
+	builder->BuildProductionSite(testMesh,EProductionSiteType::PST_Hardwood_Resin, _chosenSite, marketManager, productionSiteManager->GetAllProductionSites().Num() + 1);
 }
 
 void AAdvancedProjectCharacter::SetDisplayProductionSiteInfo(bool _status, AProductionsite* _hoverProdSite)

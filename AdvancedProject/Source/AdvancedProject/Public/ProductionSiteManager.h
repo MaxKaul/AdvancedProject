@@ -81,7 +81,7 @@ public:
 	UFUNCTION()
 		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData();
 
-	FORCEINLINE
+	UFUNCTION(BlueprintCallable) FORCEINLINE
 		TArray<AProductionsite*> GetAllProductionSites() { return allProductionSites; }
 
 	// Sub und Unsub für worker in den lokalen pool

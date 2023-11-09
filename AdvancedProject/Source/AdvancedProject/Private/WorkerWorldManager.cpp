@@ -30,9 +30,7 @@ void AWorkerWorldManager::BeginPlay()
 void AWorkerWorldManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (allUnemploymentWorker.Num() >= 9)
-		SubWorkerToUnemploymentPool(nullptr);
+	
 }
 
 void FWWM_OverloadFuncs::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<AProductionsite*> _allProductionSites)
@@ -119,18 +117,18 @@ FWorkerWorldManagerSaveData AWorkerWorldManager::GetWorkerManagerSaveData()
 	return savedata;
 }
 
-// Noch etwas besser machen
+
 void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 {
 	for (FWorkerSaveData workerdata : _saveData.GetAllWorker())
 	{
-		FVector spawnpos = workerdata.GetWorkerLocation();
-		FRotator spawnrot = workerdata.GetWorkerRotation();
-		int siteid = workerdata.GetProductionSiteID();
-		EWorkerStatus employementstatus = workerdata.GetEmploymentStatus();
-
 		for (size_t i = 0; i < maxSpawnTries; i++)
 		{
+			FVector spawnpos = workerdata.GetWorkerLocation();
+			FRotator spawnrot = workerdata.GetWorkerRotation();
+			int siteid = workerdata.GetProductionSiteID();
+			EWorkerStatus employementstatus = workerdata.GetEmploymentStatus();
+
 			FActorSpawnParameters params;
 			params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 			
@@ -161,6 +159,9 @@ bool AWorkerWorldManager::NullcheckDependencies()
 
 void AWorkerWorldManager::SubscribeNewWorker(AWorker* _toSub)
 {
+	if(!_toSub)
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !workerClass"));
+
 	if (!allWorker.Contains(_toSub))
 		allWorker.Add(_toSub);
 
