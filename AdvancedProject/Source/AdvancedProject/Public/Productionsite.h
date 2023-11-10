@@ -233,7 +233,7 @@ public:
 	UFUNCTION()
 		TArray<FProductionResources> GetCurrentResources();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		void GetDisplayInfo(FProductionSiteDisplayInfos& _displayInfo);
 
 	// Optionals gehen nicht mit UFunctions, wenn ich einen worker random selecten will muss ich den parameter einfach leer lassen
