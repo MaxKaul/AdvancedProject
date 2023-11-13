@@ -280,6 +280,7 @@ void AProductionsite::SubscribeWorker(AWorker* _toSub)
 	if (!subscribedWorker.Contains(_toSub))
 	{
 		subscribedWorker.Add(_toSub);
+		_toSub->SetEmployementStatus(EWorkerStatus::WS_Employed_MainJob);
 		productionSiteManager->UnsubscribeWorkerToProductionSite(_toSub);
 
 		productionSiteProductivity += _toSub->GetProductivity();
@@ -307,6 +308,7 @@ void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub)
 	if (subscribedWorker.Contains(_toUnsub))
 	{
 		subscribedWorker.Remove(_toUnsub);
+		_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Unemployed);
 		productionSiteManager->SubscribeWorkerToLocalPool(_toUnsub, true);
 
 		productionSiteProductivity -= _toUnsub->GetProductivity();

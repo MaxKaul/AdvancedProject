@@ -89,7 +89,7 @@ public:
 	// Function to Subscribe a worker to the local pool i.e employed by a player and Unsubscribes him from the global unemployement pool
 	UFUNCTION(BlueprintCallable)
 		void SubscribeWorkerToLocalPool(class AWorker* _toSub, bool _subFromSite);
-	// Unsubscribe worker from local pool and subscribes him to a productionsite
+	// Unsubscribe worker from local pool and subscribes him to a productionsite, wird von der Productionsite aus gecalled
 	UFUNCTION(BlueprintCallable)
 		void UnsubscribeWorkerToProductionSite(AWorker* _toUnsub);
 	// Unsubscribe worker from local pool and subscribes him to the global unemployement pool
