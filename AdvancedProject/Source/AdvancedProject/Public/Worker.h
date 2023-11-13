@@ -126,10 +126,10 @@ public:
 		FWorkerSaveData GetWorkerSaveData();
 
 	FORCEINLINE
-		bool GetIsWorking() { return bIsWorking; }
-
-	FORCEINLINE
 		void SetEmployementStatus(EWorkerStatus _employmentStatus) { employmentStatus = _employmentStatus; }
+
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		EWorkerStatus GetEmployementStatus() { return employmentStatus; }
 
 	FORCEINLINE
 		void SetProductionSiteID(int _siteID) { workerOptionals.productionSiteID = _siteID; }

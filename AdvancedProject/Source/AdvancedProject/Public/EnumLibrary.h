@@ -38,6 +38,7 @@ enum class EWorkerStatus : uint8
 {
 	WS_DEFAULT,
 	WS_Unemployed,
+	WS_Unassigned,
 	WS_Employed_MainJob,
 	WS_Employed_SideJob,
 	WS_ENTRY_AMOUNT

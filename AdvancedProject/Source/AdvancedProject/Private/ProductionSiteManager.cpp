@@ -126,6 +126,7 @@ void UProductionSiteManager::SubscribeWorkerToLocalPool(AWorker* _toSub, bool _s
 	if (!subscribedWorker_UnasignedPool.Contains(_toSub))
 	{
 		subscribedWorker_UnasignedPool.Add(_toSub);
+		_toSub->SetEmployementStatus(EWorkerStatus::WS_Unassigned);
 
 		if (!_subFromSite)
 			workerWorldManager->UnsubWorkerFromUnemploymentPool(_toSub);
@@ -150,7 +151,9 @@ void UProductionSiteManager::UnsubscribeWorkerToWorldPool(AWorker* _toUnsub)
 	if (subscribedWorker_HiredPool.Contains(_toUnsub))
 	{
 		workerWorldManager->SubWorkerToUnemploymentPool(_toUnsub);
+		_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Unemployed);
 		subscribedWorker_HiredPool.Remove(_toUnsub);
+		subscribedWorker_UnasignedPool.Remove(_toUnsub);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))
