@@ -240,7 +240,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void SubscribeWorker(class AWorker* _toSub = nullptr);
 	UFUNCTION(BlueprintCallable)
-		void UnsubscribeWorker(AWorker* _toUnsub = nullptr);
+		void UnsubscribeWorker(AWorker* _toUnsub , bool _fireWorkerToSiteManager);
 
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		int GetLocalProdSiteID() { return siteID; }

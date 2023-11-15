@@ -134,6 +134,9 @@ public:
 	FORCEINLINE
 		void SetProductionSiteID(int _siteID) { workerOptionals.productionSiteID = _siteID; }
 
+	FORCEINLINE
+		int GetAssignedProdSiteID() { return workerOptionals.productionSiteID.GetValue(); }
+
 	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data 
 	UFUNCTION()
 		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID);

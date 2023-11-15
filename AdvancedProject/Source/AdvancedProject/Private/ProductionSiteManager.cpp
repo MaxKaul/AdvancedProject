@@ -154,6 +154,12 @@ void UProductionSiteManager::UnsubscribeWorkerToWorldPool(AWorker* _toUnsub)
 		_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Unemployed);
 		subscribedWorker_HiredPool.Remove(_toUnsub);
 		subscribedWorker_UnasignedPool.Remove(_toUnsub);
+
+		for(AProductionsite* site : allProductionSites)
+		{
+			if (site->GetLocalProdSiteID() == _toUnsub->GetAssignedProdSiteID())
+				site->UnsubscribeWorker(_toUnsub, false);
+		}
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))
