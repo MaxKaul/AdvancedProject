@@ -129,8 +129,6 @@ public:
 	{
 		resourceIdentInfoPair = _resourceIdentInfoPair;
 	}
-
-	
 };
 
 
