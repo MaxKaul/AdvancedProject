@@ -239,8 +239,9 @@ public:
 	// Optionals gehen nicht mit UFunctions, wenn ich einen worker random selecten will muss ich den parameter einfach leer lassen
 	UFUNCTION(BlueprintCallable)
 		void SubscribeWorker(class AWorker* _toSub = nullptr);
+	// _fromManager ist dafür da das wenn ein worker vom manager aus unsubbed, der manager bereits weiß das diese worker unsubbed ist und wir den nicht noch callen müssen
 	UFUNCTION(BlueprintCallable)
-		void UnsubscribeWorker(AWorker* _toUnsub);
+		void UnsubscribeWorker(AWorker* _toUnsub, bool _fromManager);
 
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		int GetLocalProdSiteID() { return siteID; }

@@ -54,12 +54,6 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	workerController->MoveToLocation(testloc.Location);
 }
 
-AProductionsite* AWorker::GetSubbedProdSite()
-{
-	return subbedSite;
-}
-
-
 FWorkerSaveData AWorker::GetWorkerSaveData()
 {
 	FWorkerSaveData savedata =
@@ -79,9 +73,7 @@ void AWorker::SetEmployementStatus(EWorkerStatus _employmentStatus, AProductions
 {
 	employmentStatus = _employmentStatus;
 
-	if (!_site)
-		subbedSite = nullptr;
-	else
+	if (_site)
 		subbedSite = _site;
 }
 

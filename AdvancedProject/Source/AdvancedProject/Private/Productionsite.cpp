@@ -277,18 +277,15 @@ void AProductionsite::SubscribeWorker(AWorker* _toSub)
 	if (!subscribedWorker.Contains(_toSub))
 	{
 		subscribedWorker.Add(_toSub);
-		UE_LOG(LogTemp, Warning, TEXT("SubscribeWorker"))
-
-		_toSub->SetEmployementStatus(EWorkerStatus::WS_Employed_MainJob, this);
-		productionSiteManager->UnsubscribeWorkerToProductionSite(_toSub);
-
 		productionSiteProductivity += _toSub->GetProductivity();
+
+		productionSiteManager->UnsubscribeWorkerToProductionSite(_toSub, this);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Contains(_toSub)"));
 }
 
-void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub)
+void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub, bool _fromManager)
 {
 	if(!_toUnsub)
 	{
@@ -307,12 +304,10 @@ void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub)
 	if (subscribedWorker.Contains(_toUnsub))
 	{
 		subscribedWorker.Remove(_toUnsub);
-		UE_LOG(LogTemp, Warning, TEXT("UnsubscribeWorker"))
-
-		_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Unemployed, this);
-		productionSiteManager->SubscribeWorkerToLocalPool(_toUnsub, true);
-
 		productionSiteProductivity -= _toUnsub->GetProductivity();
+
+		if(!_fromManager)
+			productionSiteManager->SubscribeWorkerToLocalPool(_toUnsub, this, true);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))

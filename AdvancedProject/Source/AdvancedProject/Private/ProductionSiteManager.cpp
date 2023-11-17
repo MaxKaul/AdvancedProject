@@ -121,21 +121,16 @@ FProductionSiteManagerSaveData UProductionSiteManager::GetProductionSiteManagerS
 	return savedata;
 }
 
-void UProductionSiteManager::SubscribeWorkerToLocalPool(AWorker* _toSub, bool _subFromSite)
+void UProductionSiteManager::SubscribeWorkerToLocalPool(AWorker* _toSub, AProductionsite* _siteRef, bool _fromWorld)
 {
 	if (!subscribedWorker_UnasignedPool.Contains(_toSub))
 	{
 		subscribedWorker_UnasignedPool.Add(_toSub);
-		UE_LOG(LogTemp, Warning, TEXT("SubscribeWorkerToLocalPool"))
 
-		if (!_subFromSite)
-			workerWorldManager->UnsubWorkerFromUnemploymentPool(_toSub);
-		else
-		{
-			_toSub->GetSubbedProdSite()->UnsubscribeWorker(_toSub);
-		}
+		if(!_fromWorld)
+			_siteRef->UnsubscribeWorker(_toSub, true);
 
-		//_toSub->SetEmployementStatus(EWorkerStatus::WS_Unassigned);
+		_toSub->SetEmployementStatus(EWorkerStatus::WS_Unassigned);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Contains(_toSub)"));
@@ -144,23 +139,26 @@ void UProductionSiteManager::SubscribeWorkerToLocalPool(AWorker* _toSub, bool _s
 		subscribedWorker_HiredPool.Add(_toSub);
 }
 
-void UProductionSiteManager::UnsubscribeWorkerToProductionSite(AWorker* _toUnsub)
+void UProductionSiteManager::UnsubscribeWorkerToProductionSite(AWorker* _toUnsub, AProductionsite* _siteRef)
 {
 	if (subscribedWorker_UnasignedPool.Contains(_toUnsub))
 		subscribedWorker_UnasignedPool.Remove(_toUnsub);
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))
+
+	_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Employed_MainJob, _siteRef);
 }
 
 void UProductionSiteManager::UnsubscribeWorkerToWorldPool(AWorker* _toUnsub)
 {
 	if (subscribedWorker_HiredPool.Contains(_toUnsub))
 	{
-		UE_LOG(LogTemp,Warning,TEXT("UnsubscribeWorkerToWorldPool"))
 		workerWorldManager->SubWorkerToUnemploymentPool(_toUnsub);
-		_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Unemployed);
+
 		subscribedWorker_HiredPool.Remove(_toUnsub);
 		subscribedWorker_UnasignedPool.Remove(_toUnsub);
+
+		_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Unemployed);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))

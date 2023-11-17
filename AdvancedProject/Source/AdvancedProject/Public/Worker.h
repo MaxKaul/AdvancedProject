@@ -126,9 +126,6 @@ public:
 	FORCEINLINE
 		float GetProductivity() { return productivity; }
 
-	UFUNCTION(BlueprintCallable)
-		AProductionsite* GetSubbedProdSite();
-
 	UFUNCTION()
 		FWorkerSaveData GetWorkerSaveData();
 
