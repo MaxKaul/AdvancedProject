@@ -4,6 +4,7 @@
 #include "Worker.h"
 
 #include "NavigationSystem.h"
+#include "Productionsite.h"
 #include "WorkerController.h"
 
 // Sets default values
@@ -53,6 +54,12 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	workerController->MoveToLocation(testloc.Location);
 }
 
+AProductionsite* AWorker::GetSubbedProdSite()
+{
+	return subbedSite;
+}
+
+
 FWorkerSaveData AWorker::GetWorkerSaveData()
 {
 	FWorkerSaveData savedata =
@@ -66,6 +73,16 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 	};
 
 	return savedata;
+}
+
+void AWorker::SetEmployementStatus(EWorkerStatus _employmentStatus, AProductionsite* _site)
+{
+	employmentStatus = _employmentStatus;
+
+	if (!_site)
+		subbedSite = nullptr;
+	else
+		subbedSite = _site;
 }
 
 bool AWorker::NullcheckDependencies()

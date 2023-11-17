@@ -2,14 +2,11 @@
 
 #include "Productionsite.h"
 
-#include <string>
-
 #include "BuildingSite.h"
 #include "MarketManager.h"
+#include "Worker.h"
 #include "PlayerBase.h"
 #include "..\Public\TableBaseLibrary.h"
-
-#include "Worker.h"
 
 AProductionsite::AProductionsite()
 {
@@ -280,13 +277,15 @@ void AProductionsite::SubscribeWorker(AWorker* _toSub)
 	if (!subscribedWorker.Contains(_toSub))
 	{
 		subscribedWorker.Add(_toSub);
-		_toSub->SetEmployementStatus(EWorkerStatus::WS_Employed_MainJob);
+		UE_LOG(LogTemp, Warning, TEXT("SubscribeWorker"))
+
+		_toSub->SetEmployementStatus(EWorkerStatus::WS_Employed_MainJob, this);
 		productionSiteManager->UnsubscribeWorkerToProductionSite(_toSub);
 
 		productionSiteProductivity += _toSub->GetProductivity();
 	}
 	else
-		UE_LOG(LogTemp,Warning,TEXT("AProductionsite, subscribedWorker.Contains(_toSub)"))
+		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Contains(_toSub)"));
 }
 
 void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub)
@@ -308,7 +307,9 @@ void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub)
 	if (subscribedWorker.Contains(_toUnsub))
 	{
 		subscribedWorker.Remove(_toUnsub);
-		_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Unemployed);
+		UE_LOG(LogTemp, Warning, TEXT("UnsubscribeWorker"))
+
+		_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Unemployed, this);
 		productionSiteManager->SubscribeWorkerToLocalPool(_toUnsub, true);
 
 		productionSiteProductivity -= _toUnsub->GetProductivity();

@@ -114,6 +114,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Category = Status, meta=(AllowPrivateAccess))
 		EWorkerStatus employmentStatus;
 
+	UPROPERTY()
+	class AProductionsite* subbedSite;
+
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();
@@ -122,11 +126,14 @@ public:
 	FORCEINLINE
 		float GetProductivity() { return productivity; }
 
+	UFUNCTION(BlueprintCallable)
+		AProductionsite* GetSubbedProdSite();
+
 	UFUNCTION()
 		FWorkerSaveData GetWorkerSaveData();
 
-	FORCEINLINE
-		void SetEmployementStatus(EWorkerStatus _employmentStatus) { employmentStatus = _employmentStatus; }
+	UFUNCTION()
+		void SetEmployementStatus(EWorkerStatus _employmentStatus, AProductionsite* _site = nullptr);
 
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		EWorkerStatus GetEmployementStatus() { return employmentStatus; }
