@@ -31,12 +31,7 @@ public:
 		void SetDisplayProductionSiteInfo(bool _status, AProductionsite* _hoverProdSite);
 
 	UFUNCTION(BlueprintCallable)
-		bool GetDisplayProductionSiteStatus();
-	UFUNCTION(BlueprintCallable)
-		void GetDisplayProductionSiteInfo( FProductionSiteDisplayInfos& _displayInfo);
-
-	UFUNCTION(BlueprintCallable)
-		AProductionsite* GetViewProductionSite();
+		AProductionsite* GetViewProductionSiteInfo();
 
 protected:
 		virtual FPlayerSaveData GetPlayerSaveData() override;
@@ -62,8 +57,5 @@ private:
 	// Muss noch auf hover umgestellt werden
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Info, meta = (AllowPrivateAccess))
 	AProductionsite* viewProductionSite;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess))
-		bool bCanOpenProductionSiteInfo;
 };
 

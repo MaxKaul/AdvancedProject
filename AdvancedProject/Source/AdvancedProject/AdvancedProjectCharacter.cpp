@@ -77,28 +77,14 @@ void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSi
 
 void AAdvancedProjectCharacter::SetDisplayProductionSiteInfo(bool _status, AProductionsite* _hoverProdSite)
 {
-	bCanOpenProductionSiteInfo = _status;
 	viewProductionSite = _hoverProdSite;
 }
 
-bool AAdvancedProjectCharacter::GetDisplayProductionSiteStatus()
-{
-	return bCanOpenProductionSiteInfo;
-}
-
-void AAdvancedProjectCharacter::GetDisplayProductionSiteInfo(FProductionSiteDisplayInfos& _displayInfo)
+AProductionsite* AAdvancedProjectCharacter::GetViewProductionSiteInfo()
 {
 	if (!viewProductionSite)
-		UE_LOG(LogTemp, Warning, TEXT("FProductionSiteDisplayInfos, !viewProductionSite"));
-
-	 viewProductionSite->GetDisplayInfo( _displayInfo);
-}
-
-AProductionsite* AAdvancedProjectCharacter::GetViewProductionSite()
-{
-	if(!viewProductionSite)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !viewProductionSite"));
+		UE_LOG(LogTemp, Warning, TEXT("FProductionSiteDisplayInfos, !viewProductionSite"));
 		return nullptr;
 	}
 

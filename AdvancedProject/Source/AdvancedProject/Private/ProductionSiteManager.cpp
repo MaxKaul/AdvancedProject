@@ -127,8 +127,11 @@ void UProductionSiteManager::SubscribeWorkerToLocalPool(AWorker* _toSub, AProduc
 	{
 		subscribedWorker_UnasignedPool.Add(_toSub);
 
+		
 		if(!_fromWorld)
 			_siteRef->UnsubscribeWorker(_toSub, true);
+		else if(_fromWorld)
+			workerWorldManager->UnsubWorkerFromUnemploymentPool(_toSub);
 
 		_toSub->SetEmployementStatus(EWorkerStatus::WS_Unassigned);
 	}
