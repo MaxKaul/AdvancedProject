@@ -78,6 +78,7 @@ void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSi
 void AAdvancedProjectCharacter::SetDisplayProductionSiteInfo(bool _status, AProductionsite* _hoverProdSite)
 {
 	viewProductionSite = _hoverProdSite;
+	ToggleProdSiteInfoStatus();
 }
 
 AProductionsite* AAdvancedProjectCharacter::GetViewProductionSiteInfo()

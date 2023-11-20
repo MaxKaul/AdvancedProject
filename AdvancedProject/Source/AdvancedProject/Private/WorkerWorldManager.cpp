@@ -6,6 +6,7 @@
 #include "EnumLibrary.h"
 #include "Worker.h"
 #include "NavigationSystem.h"
+#include "Productionsite.h"
 #include "WorkerController.h"
 
 // Sets default values
@@ -136,6 +137,13 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			{
 				AWorker* worker = Cast<AWorker>(tospawn);
 				worker->InitWorker(workerdata, navigationSystem, allWorker.Num(), employementstatus, siteid);
+
+				for(AProductionsite* site : allProductionSites)
+				{
+					if (site->GetLocalProdSiteID() == siteid)
+						site->SubscribeWorker(worker);
+				}
+
 				SubscribeNewWorker(worker);
 
 				break;

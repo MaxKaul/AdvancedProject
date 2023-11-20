@@ -97,7 +97,7 @@ public:
 		void UnsubscribeWorkerToWorldPool(AWorker* _toUnsub);
 
 private:
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 		TArray<AProductionsite*> allProductionSites;
 	UPROPERTY()
 		UWorld* world;

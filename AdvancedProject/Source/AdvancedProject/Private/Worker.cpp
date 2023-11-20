@@ -47,10 +47,10 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	workerController = Cast<AWorkerController>(GetController());
 	navigationSystem = _navSystem;
 
+
+
 	FNavLocation testloc;
-
 	navigationSystem->GetRandomPoint(testloc);
-
 	workerController->MoveToLocation(testloc.Location);
 }
 
