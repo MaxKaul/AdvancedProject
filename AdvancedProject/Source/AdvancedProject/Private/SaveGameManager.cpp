@@ -111,6 +111,35 @@ bool ASaveGameManager::InitAllManager()
 		mm_overloadfuncs->InitMarketManager();
 
 	//----------------------------------------------------------------------------------------------------------------------------//
+	//Spawning and Init of all Productionsites (will onloy spawn with savedata)//
+	//----------------------------------------------------------------------------------------------------------------------------//
+
+	TArray<AProductionsite*> allproductionsites;
+
+	for (APlayerBase* player : allPlayer)
+	{
+		for (AProductionsite* site : player->GetProductionSiteManager()->GetAllProductionSites())
+		{
+			allproductionsites.Add(site);
+		}
+	}
+
+	//----------------------------------------------------------------------------------------------------------------------------//
+	//Spawning and Init of the WorkerWorldManager//
+	//----------------------------------------------------------------------------------------------------------------------------//
+
+	spawnedWorkerWorldManager = Cast<AWorkerWorldManager>(world->SpawnActor(workerWorldManagerClass, &pos));
+
+	FWWM_OverloadFuncs* wwm_overloadfuncs;
+	wwm_overloadfuncs = new FWWM_OverloadFuncs(spawnedWorkerWorldManager);
+
+	if (saveManagerOptionals.workerWorldManagerSaveData.IsSet())
+		wwm_overloadfuncs->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), allproductionsites);
+	else
+		wwm_overloadfuncs->InitWorkerWorldManager();
+
+
+	//----------------------------------------------------------------------------------------------------------------------------//
 	//Spawning and Init of all Player Entities//
 	//----------------------------------------------------------------------------------------------------------------------------//
 
@@ -129,36 +158,6 @@ bool ASaveGameManager::InitAllManager()
 
 		allPlayer[0]->InitPlayer(emptysave, spawnedMarketManager, spawnedWorkerWorldManager);
 	}
-
-
-	//----------------------------------------------------------------------------------------------------------------------------//
-	//Spawning and Init of all Productionsites (will onloy spawn with savedata)//
-	//----------------------------------------------------------------------------------------------------------------------------//
-
-	TArray<AProductionsite*> allproductionsites;
-
-	for (APlayerBase* player : allPlayer)
-	{
-		for (AProductionsite* site : player->GetProductionSiteManager()->GetAllProductionSites())
-		{
-			allproductionsites.Add(site);
-		}
-	}
-
-
-	//----------------------------------------------------------------------------------------------------------------------------//
-	//Spawning and Init of the WorkerWorldManager//
-	//----------------------------------------------------------------------------------------------------------------------------//
-
-	spawnedWorkerWorldManager = Cast<AWorkerWorldManager>(world->SpawnActor(workerWorldManagerClass, &pos));
-
-	FWWM_OverloadFuncs* wwm_overloadfuncs;
-	wwm_overloadfuncs = new FWWM_OverloadFuncs(spawnedWorkerWorldManager);
-
-	if (saveManagerOptionals.workerWorldManagerSaveData.IsSet())
-		wwm_overloadfuncs->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), allproductionsites);
-	else
-		wwm_overloadfuncs->InitWorkerWorldManager();
 
 	return status;
 }
