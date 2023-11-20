@@ -13,6 +13,7 @@ struct FWorkerOptional
 	GENERATED_BODY()
 
 	TOptional<int> productionSiteID;
+	TOptional<class AProductionsite*> productionSiteRef;
 };
 
 USTRUCT(BlueprintType)
@@ -136,7 +137,10 @@ public:
 		EWorkerStatus GetEmployementStatus() { return employmentStatus; }
 
 	FORCEINLINE
-		void SetProductionSiteID(int _siteID) { workerOptionals.productionSiteID = _siteID; }
+		void SetProductionSiteInfo(int _siteID, AProductionsite* _siteRef) { workerOptionals.productionSiteID = _siteID; workerOptionals.productionSiteRef = _siteRef; }
+
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		AProductionsite* GetProductionSiteRef() { return workerOptionals.productionSiteRef.GetValue(); }
 
 	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data 
 	UFUNCTION()

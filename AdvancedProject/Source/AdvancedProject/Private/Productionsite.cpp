@@ -262,7 +262,7 @@ void AProductionsite::SubscribeWorker(AWorker* _toSub)
 	{
 		if (productionSiteManager->GetAllUnasignedWorker().Num() <= 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("AProductionsite, productionSiteManager->GetAllLocalWorker().Num() <= 0"))
+			UE_LOG(LogTemp, Warning, TEXT("AProductionsite, productionSiteManager->GetAllLocalWorker().Num() <= 0"));
 				return;
 		}
 
@@ -277,6 +277,7 @@ void AProductionsite::SubscribeWorker(AWorker* _toSub)
 	if (!subscribedWorker.Contains(_toSub))
 	{
 		subscribedWorker.Add(_toSub);
+		_toSub->SetProductionSiteInfo(siteID, this);
 		productionSiteProductivity += _toSub->GetProductivity();
 
 		productionSiteManager->UnsubscribeWorkerToProductionSite(_toSub, this);

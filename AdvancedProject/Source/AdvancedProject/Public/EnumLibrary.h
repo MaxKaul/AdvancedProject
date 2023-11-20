@@ -43,3 +43,15 @@ enum class EWorkerStatus : uint8
 	WS_Employed_SideJob,
 	WS_ENTRY_AMOUNT
 };
+
+UENUM(BlueprintType)
+enum class EWorkerButtonInitStatus : uint8
+{
+	WS_DEFAULT,
+	WS_ForDirectHire,
+	WS_ForWorld,
+	WS_ForHired,
+	WS_ForAssigned,
+	WS_ForAllAssigned,
+	WS_ENTRY_AMOUNT
+};
