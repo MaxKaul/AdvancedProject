@@ -100,3 +100,8 @@ FPlayerSaveData AAdvancedProjectCharacter::GetPlayerSaveData()
 	return savedata;
 }
 
+void AAdvancedProjectCharacter::ToggleProdSiteInfoStatus()
+{
+	bCanOpenProdSite = !bCanOpenProdSite;
+}
+

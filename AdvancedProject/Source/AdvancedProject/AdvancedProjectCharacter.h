@@ -23,6 +23,9 @@ public:
 	FORCEINLINE
 	class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
+	UFUNCTION(BlueprintCallable)FORCEINLINE
+		bool GetOpenProdSitePanel() {return bCanOpenProdSite ;}
+
 	virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager, class AWorkerWorldManager* _workerWorldManager) override;
 
 	UFUNCTION(BlueprintCallable)
@@ -32,6 +35,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		AProductionsite* GetViewProductionSiteInfo();
+
+	UFUNCTION()
+		void ToggleProdSiteInfoStatus();
 
 protected:
 		virtual FPlayerSaveData GetPlayerSaveData() override;
@@ -43,6 +49,8 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess ))
 	class USpringArmComponent* CameraBoom;
 
+	UPROPERTY()
+		bool bCanOpenProdSite;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
 		class AAdvancedProjectPlayerController* aspController;
