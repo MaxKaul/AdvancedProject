@@ -26,7 +26,7 @@ public:
 	UFUNCTION(BlueprintCallable)FORCEINLINE
 		bool GetOpenProdSitePanel() {return bCanOpenProdSite ;}
 
-	virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager, class AWorkerWorldManager* _workerWorldManager) override;
+	virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager/*, class AWorkerWorldManager* _workerWorldManager*/) override;
 
 	UFUNCTION(BlueprintCallable)
 		void BuildTestProductionSite(class ABuildingSite* _chosenSite);
@@ -55,6 +55,8 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
 		class AAdvancedProjectPlayerController* aspController;
 
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=Info,meta=(AllowPrivateAccess))
+		class AProductionSiteWorldManager* prodSiteWorldManager;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess ))
 		UStaticMesh* testMesh;

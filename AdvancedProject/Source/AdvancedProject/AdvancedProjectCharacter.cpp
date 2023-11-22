@@ -58,10 +58,10 @@ void AAdvancedProjectCharacter::BeginPlay()
 }
 
 // Das meiste an Implementation könnte in die base rein
-void AAdvancedProjectCharacter::InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager)
+void AAdvancedProjectCharacter::InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager/*, AWorkerWorldManager* _workerWorldManager*/)
 {
 	marketManager = _marketManager;
-	workerWorldManager = _workerWorldManager;
+	//workerWorldManager = _workerWorldManager;
 
 	SetActorLocation(_saveData.GetLoaction());
 	SetActorRotation(_saveData.GetRotation());

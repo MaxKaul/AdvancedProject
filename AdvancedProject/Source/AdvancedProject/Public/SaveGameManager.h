@@ -44,7 +44,19 @@ public:
 		void SetSaveGameName(FString _name);
 
 private:
-	bool InitAllManager();
+	UFUNCTION()
+		bool InitAllManager();
+	UFUNCTION()
+		bool InitMarketManager();
+	UFUNCTION()
+		bool InitPlayer();
+	// Dies sollte unter umständen noch durch einen seperaten world manager ergänzt werden damit ich über diesen initialisen kann
+	UFUNCTION()
+		bool InitProductionsiteList();
+	UFUNCTION()
+		bool InitWorkerWorldManager();
+	UFUNCTION()
+		bool InitPlayerLate();
 
 	UFUNCTION()
 		bool NullcheckDependencies();
@@ -61,6 +73,9 @@ public:
 private:
 	UPROPERTY()
 		UWorld* world;
+
+	UPROPERTY()
+		TArray<AProductionsite*> allSavedProductionsites;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
 		TSubclassOf<AMarketManager> marketManagerClass;

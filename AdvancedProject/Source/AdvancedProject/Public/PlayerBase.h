@@ -49,11 +49,21 @@ public:
 	UFUNCTION()
 		virtual FPlayerSaveData GetPlayerSaveData();
 	UFUNCTION()
-		virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager);
+		virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager);
 	UFUNCTION(BlueprintCallable)
 		virtual UProductionSiteManager* GetProductionSiteManager();
 	UFUNCTION(BlueprintCallable)
 		virtual AWorkerWorldManager* GetWorkerWorldManager();
+
+	// Sollte überarbeitet werden
+	// -> Grund hierfür ist -> 
+	/*
+	 * Das essentielle problem ist das der WorkerWorldManager, sollte ein save vorhanden sein eine liste aller production site benötigt um die worker wieder darauf zu verteilen. 
+	 *	Dieses Array wird aber von den Spielern gehalten welche auf grundlage dessen die productionsites spawnen.
+	 *	Nun Kann der Spieler nicht vor dem WorkerWorldManager gespawned werden weil ddieser eine dependencie für den player darstellt.
+	 */
+	UFUNCTION(BlueprintCallable)
+		virtual void SetLateInits(AWorkerWorldManager* _workerWorldManager);
 
 protected:
 	virtual void BeginPlay() override;
