@@ -89,7 +89,7 @@ bool ASaveGameManager::InitAllManager()
 	bool status = true;
 
 	status = InitMarketManager();
-	status = InitWorkerWorldManager();
+	status = SpawnWorkerWorldManager();
 	status = InitPlayer();
 
 	return status;
@@ -173,6 +173,9 @@ bool ASaveGameManager::InitAllManager()
 
 	 spawnedWorkerWorldManager = Cast<AWorkerWorldManager>(world->SpawnActor(workerWorldManagerClass, &pos));
 
+	 if (saveManagerOptionals.workerWorldManagerSaveData.IsSet())
+		 return status;
+
 	 FWWM_OverloadFuncs* wwm_overloadfuncs;
 	 wwm_overloadfuncs = new FWWM_OverloadFuncs(spawnedWorkerWorldManager);
 
@@ -185,6 +188,9 @@ bool ASaveGameManager::InitAllManager()
  bool ASaveGameManager::InitWorkerWorldManager()
  {
 	 bool status = true;
+
+	 if (!saveManagerOptionals.workerWorldManagerSaveData.IsSet())
+		 return status;
 
 	 FWWM_OverloadFuncs* wwm_overloadfuncs;
 	 wwm_overloadfuncs = new FWWM_OverloadFuncs(spawnedWorkerWorldManager);

@@ -66,7 +66,7 @@ void AAdvancedProjectCharacter::InitPlayerStart(FPlayerSaveData _saveData, AMark
 	SetActorLocation(_saveData.GetLoaction());
 	SetActorRotation(_saveData.GetRotation());
 
-	builder->InitBuilder(productionSiteManager, marketManager, this);
+	builder->InitBuilder(productionSiteManager, marketManager, this, workerWorldManager);
 	productionSiteManager->InitProductionSiteManager(this, _saveData.GetProductionSiteManagerSaveData() ,marketManager, workerWorldManager);
 }
 

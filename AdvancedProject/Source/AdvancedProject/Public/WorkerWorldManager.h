@@ -50,18 +50,36 @@ public:
 		FWorkerWorldManagerSaveData GetWorkerManagerSaveData();
 
 	// Subscribes worker to the worker world pool -> this is to hold all worker in the world to manage their status and for saving, workers should only be added at Init
-	UFUNCTION()
-		void SubscribeNewWorker(AWorker* _toSub);
+	UFUNCTION(BlueprintCallable)
+		void UpdateWorkerStatus(AWorker* _toSub);
 	// Function to unsub worker from the global Unemployment pool, does not remove them from the World Pool
 	// Wird im moment auch noch gecalled wenn ein worker von der productionside auf den productionsidemanager subscribed wird
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		void UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub);
 	// Subs the worker to the global Unemployment pool
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		void SubWorkerToUnemploymentPool(AWorker* _toSub);
 
+	UFUNCTION(BlueprintCallable)
+		void SubWorkerToUnassignedPool(AWorker* _toSub);
+	UFUNCTION(BlueprintCallable)
+		void UnsubWorkerFromUnassignedPool(AWorker* _toUnsub);
+
+	UFUNCTION(BlueprintCallable)
+		void SubWorkerToMainJobPool(AWorker* _toSub);
+	UFUNCTION(BlueprintCallable)
+		void UnsubWorkerToMainJobPool(AWorker* _toUnsub);
+
+	UFUNCTION(BlueprintCallable)
+		void SubWorkerToSideJobPool(AWorker* _toSub);
+	UFUNCTION(BlueprintCallable)
+		void UnsubWorkerToSideJobPool(AWorker* _toUnsub);
+
+	UFUNCTION(BlueprintCallable)
+		void AddProductionSite(AProductionsite* _toadd);
+
 	UFUNCTION(BlueprintCallable) FORCEINLINE
-		TArray<AWorker*> GetAllUnemploymentWorker() { return allUnemploymentWorker; }
+		TArray<AWorker*> GetAllUnemploymentWorker() { return allWorker_Unemployed; }
 
 private:
 	UFUNCTION()
@@ -74,10 +92,19 @@ private:
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
-		TArray<AWorker*> allUnemploymentWorker;
-
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category= WorldInfos, meta = (AllowPrivateAccess))
 		TArray<AWorker*> allWorker;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
+		TArray<AWorker*> allWorker_Unemployed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
+		TArray<AWorker*> allWorker_Unassigned;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
+		TArray<AWorker*> allWorker_MainJob;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
+		TArray<AWorker*> allWorker_SideJob;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
 		TArray<class AProductionsite*> allProductionSites;

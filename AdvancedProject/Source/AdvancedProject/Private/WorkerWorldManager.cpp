@@ -147,8 +147,11 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 					}
 
 				}
-				
-				SubscribeNewWorker(worker);
+
+				if (!allWorker.Contains(worker))
+					allWorker.Add(worker);
+
+				UpdateWorkerStatus(worker);
 
 				break;
 			}
@@ -169,26 +172,96 @@ bool AWorkerWorldManager::NullcheckDependencies()
 	return status;
 }
 
-void AWorkerWorldManager::SubscribeNewWorker(AWorker* _toSub)
+void AWorkerWorldManager::UpdateWorkerStatus(AWorker* _toSub)
 {
 	if(!_toSub)
 		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !workerClass"));
 
-	if (!allWorker.Contains(_toSub))
-		allWorker.Add(_toSub);
+	switch (_toSub->GetEmployementStatus())
+	{
+	case EWorkerStatus::WS_Unemployed:
+		SubWorkerToUnemploymentPool(_toSub);
+		break;
+	case EWorkerStatus::WS_Unassigned:
+		SubWorkerToUnassignedPool(_toSub);
+		break;
+	case EWorkerStatus::WS_Employed_MainJob:
+		SubWorkerToMainJobPool(_toSub);
+		break;
+	case EWorkerStatus::WS_Employed_SideJob:
+		SubWorkerToSideJobPool(_toSub);
+		break;
 
-	if (!allUnemploymentWorker.Contains(_toSub))
-		allUnemploymentWorker.Add(_toSub);
-}
-
-void AWorkerWorldManager::UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub)
-{
-	if (allUnemploymentWorker.Contains(_toUnsub))
-		allUnemploymentWorker.Remove(_toUnsub);
+	case EWorkerStatus::WS_DEFAULT:
+		SubWorkerToUnemploymentPool(_toSub);
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, WS_DEFAULT"));
+		break;
+	case EWorkerStatus::WS_ENTRY_AMOUNT:
+		SubWorkerToUnemploymentPool(_toSub);
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, WS_ENTRY_AMOUNT"));
+		break;
+	default: ;
+	}
 }
 
 void AWorkerWorldManager::SubWorkerToUnemploymentPool(AWorker* _toSub)
 {
-	if (!allUnemploymentWorker.Contains(_toSub))
-		allUnemploymentWorker.Add(_toSub);
+	if (!allWorker_Unemployed.Contains(_toSub))
+		allWorker_Unemployed.Add(_toSub);
+
+	UnsubWorkerFromUnassignedPool(_toSub);
+}
+
+void AWorkerWorldManager::UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub)
+{
+	if (allWorker_Unemployed.Contains(_toUnsub))
+		allWorker_Unemployed.Remove(_toUnsub);
+}
+
+void AWorkerWorldManager::SubWorkerToUnassignedPool(AWorker* _toSub)
+{
+	if (!allWorker_Unassigned.Contains(_toSub))
+		allWorker_Unassigned.Add(_toSub);
+
+	UnsubWorkerToMainJobPool(_toSub);
+	UnsubWorkerToSideJobPool(_toSub);
+	UnsubWorkerFromUnemploymentPool(_toSub);
+}
+
+void AWorkerWorldManager::UnsubWorkerFromUnassignedPool(AWorker* _toUnsub)
+{
+	if (allWorker_Unassigned.Contains(_toUnsub))
+		allWorker_Unassigned.Remove(_toUnsub);
+}
+
+void AWorkerWorldManager::SubWorkerToMainJobPool(AWorker* _toSub)
+{
+	if (!allWorker_MainJob.Contains(_toSub))
+		allWorker_MainJob.Add(_toSub);
+
+	UnsubWorkerFromUnassignedPool(_toSub);
+}
+
+void AWorkerWorldManager::UnsubWorkerToMainJobPool(AWorker* _toUnsub)
+{
+	if (allWorker_MainJob.Contains(_toUnsub))
+		allWorker_MainJob.Remove(_toUnsub);
+}
+
+void AWorkerWorldManager::SubWorkerToSideJobPool(AWorker* _toSub)
+{
+	if (!allWorker_SideJob.Contains(_toSub))
+		allWorker_SideJob.Remove(_toSub);
+}
+
+void AWorkerWorldManager::UnsubWorkerToSideJobPool(AWorker* _toUnsub)
+{
+	if (allWorker_SideJob.Contains(_toUnsub))
+		allWorker_SideJob.Remove(_toUnsub);
+}
+
+void AWorkerWorldManager::AddProductionSite(AProductionsite* _toadd)
+{
+	if (!allProductionSites.Contains(_toadd))
+		allProductionSites.Add(_toadd);
 }

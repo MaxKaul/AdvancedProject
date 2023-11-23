@@ -96,6 +96,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void UnsubscribeWorkerToWorldPool(AWorker* _toUnsub);
 
+	UFUNCTION(BlueprintCallable)
+		void WorkerWorldManagerUpdate(AWorker* _toUpdate);
+
 private:
 	UPROPERTY(VisibleAnywhere)
 		TArray<AProductionsite*> allProductionSites;

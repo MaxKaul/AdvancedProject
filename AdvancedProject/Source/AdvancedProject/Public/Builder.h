@@ -24,7 +24,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION()
-	bool InitBuilder(class UProductionSiteManager* _manager, class AMarketManager* marketManager, class APlayerBase* _builderOwner);
+	bool InitBuilder(class UProductionSiteManager* _manager, class AMarketManager* marketManager, class APlayerBase* _builderOwner, class AWorkerWorldManager* _workerWorldManager);
 
 	// Gespeicherte Productionsites werden aus dem ProductionSiteManager (Welcher unique für alle player entities ist) gespawned
 	// Bedeutet der builder wird zum bauen der sites nur gecalled wenn eine player entetie auch tatsächlich etwas baut
@@ -41,6 +41,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Dependencies, meta = (AllowPrivateAccess))
 		 APlayerBase* builderOwner;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Dependencies, meta = (AllowPrivateAccess))
+		AWorkerWorldManager* workerWorldManager;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ProductionSite, meta = (AllowPrivateAccess))
 		TSubclassOf<class AProductionsite> productionSiteClass;
