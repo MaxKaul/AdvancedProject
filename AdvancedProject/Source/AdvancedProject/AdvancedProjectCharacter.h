@@ -26,7 +26,7 @@ public:
 	UFUNCTION(BlueprintCallable)FORCEINLINE
 		bool GetOpenProdSitePanel() {return bCanOpenProdSite ;}
 
-	virtual void InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager/*, class AWorkerWorldManager* _workerWorldManager*/) override;
+	virtual void InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, class AWorkerWorldManager* _workerWorldManager) override;
 
 	UFUNCTION(BlueprintCallable)
 		void BuildTestProductionSite(class ABuildingSite* _chosenSite);

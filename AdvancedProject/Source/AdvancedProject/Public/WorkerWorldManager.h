@@ -22,11 +22,13 @@ struct FWorkerWorldManagerSaveData
 
 public:
 	FORCEINLINE
-		TArray<FWorkerSaveData> GetAllWorker() { return allWorker; }
+	TArray<FWorkerSaveData> GetAllWorker() { return allWorker; }
 	
 private:
 	UPROPERTY()
 		TArray<FWorkerSaveData> allWorker;
+	UPROPERTY()
+		TArray<FWorkerSaveData> allUnemployedWorker;
 };
 
 UCLASS()

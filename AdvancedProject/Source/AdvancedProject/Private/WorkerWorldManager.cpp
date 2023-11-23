@@ -89,7 +89,7 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager()
 			EWorkerStatus::WS_Unemployed,
 			-1
 		};
-	
+
 		allworkersavedata.Add(workersavedata);
 	}
 	
@@ -112,7 +112,7 @@ FWorkerWorldManagerSaveData AWorkerWorldManager::GetWorkerManagerSaveData()
 
 	FWorkerWorldManagerSaveData savedata =
 	{
-		allworkerdata
+		allworkerdata,
 	};
 
 	return savedata;
@@ -138,12 +138,16 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 				AWorker* worker = Cast<AWorker>(tospawn);
 				worker->InitWorker(workerdata, navigationSystem, allWorker.Num(), employementstatus, siteid);
 
-				for(AProductionsite* site : allProductionSites)
+				if(employementstatus == EWorkerStatus::WS_Employed_MainJob)
 				{
-					if (site->GetLocalProdSiteID() == siteid)
-						site->SubscribeWorker(worker);
-				}
+					for (AProductionsite* site : allProductionSites)
+					{
+						if (site->GetLocalProdSiteID() == siteid)
+							site->SubscribeWorker(worker);
+					}
 
+				}
+				
 				SubscribeNewWorker(worker);
 
 				break;

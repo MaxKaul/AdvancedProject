@@ -50,13 +50,15 @@ private:
 		bool InitMarketManager();
 	UFUNCTION()
 		bool InitPlayer();
-	// Dies sollte unter umständen noch durch einen seperaten world manager ergänzt werden damit ich über diesen initialisen kann
+
+	// Der WorkerWorldManager wird mit save data erst gespawned und dann nach dem spawnen aller spieler Init
+	// -> Der WorkerWorldManager benötigt eine Liste aller productionsites, diese spawnen mit der save data allerdings über den spieler und der spieler benötigt den
+	// WorkerWorldManager, diese braucht allerdings noch nicht initialised sein
+	// -> Dies muss noch mit mehreren spielern getestet werde
 	UFUNCTION()
-		bool InitProductionsiteList();
+		bool SpawnWorkerWorldManager();
 	UFUNCTION()
 		bool InitWorkerWorldManager();
-	UFUNCTION()
-		bool InitPlayerLate();
 
 	UFUNCTION()
 		bool NullcheckDependencies();
@@ -74,7 +76,7 @@ private:
 	UPROPERTY()
 		UWorld* world;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 		TArray<AProductionsite*> allSavedProductionsites;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ManagerClasses, meta = (AllowPrivateAccess))
@@ -100,4 +102,12 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
 		TArray<class APlayerBase*> allPlayer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
+		int maxPlayerAmount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
+		FVector defaultStartPos;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
+		FRotator defaultStartRot;
 };

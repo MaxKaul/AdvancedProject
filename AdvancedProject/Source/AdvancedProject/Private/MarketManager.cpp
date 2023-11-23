@@ -16,7 +16,7 @@ AMarketManager::AMarketManager()
 
 void FMM_OverloadFuncs::InitMarketManager(FMarketManagerSaveData _saveData)
 {
-	UE_LOG(LogTemp, Warning, TEXT("SAVEDATA"));
+	UE_LOG(LogTemp, Warning, TEXT("InitMarketManager with SAVEDATA"));
 
 	overloadOwner->world = overloadOwner->GetWorld();
 

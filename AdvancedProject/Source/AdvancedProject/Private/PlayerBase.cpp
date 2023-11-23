@@ -37,7 +37,7 @@ FPlayerSaveData APlayerBase::GetPlayerSaveData()
 	return FPlayerSaveData();
 }
 
-void APlayerBase::InitPlayer(FPlayerSaveData _saveData, AMarketManager* _marketManager)
+void APlayerBase::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager)
 {
 
 }
@@ -50,9 +50,4 @@ UProductionSiteManager* APlayerBase::GetProductionSiteManager()
 AWorkerWorldManager* APlayerBase::GetWorkerWorldManager()
 {
 	return workerWorldManager;
-}
-
-void APlayerBase::SetLateInits(AWorkerWorldManager* _workerWorldManager)
-{
-	workerWorldManager = _workerWorldManager;
 }
