@@ -55,3 +55,14 @@ enum class EWorkerButtonInitStatus : uint8
 	WS_ForAllAssigned,
 	WS_ENTRY_AMOUNT
 };
+
+UENUM(BlueprintType)
+enum class EPlayerIdent : uint8
+{
+	PI_DEFAULT,
+	PI_Player_1,
+	PI_Player_2,
+	PI_Player_3,
+	PI_Player_4,
+	PI_ENTRY_AMOUNT
+};

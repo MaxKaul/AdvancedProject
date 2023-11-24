@@ -39,7 +39,7 @@ FPlayerSaveData APlayerBase::GetPlayerSaveData()
 
 void APlayerBase::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager)
 {
-
+	playerIdent = _saveData.GetIdent();
 }
 
 UProductionSiteManager* APlayerBase::GetProductionSiteManager()

@@ -31,6 +31,18 @@ private:
 		TArray<FWorkerSaveData> allUnemployedWorker;
 };
 
+USTRUCT(BlueprintType)
+struct FWorkerRefArray
+{
+	GENERATED_BODY()
+		FWorkerRefArray();
+public:
+	UPROPERTY()
+		TArray<AWorker*> workerArray;
+
+};
+
+
 UCLASS()
 class ADVANCEDPROJECT_API AWorkerWorldManager : public AActor
 {
@@ -51,24 +63,24 @@ public:
 
 	// Subscribes worker to the worker world pool -> this is to hold all worker in the world to manage their status and for saving, workers should only be added at Init
 	UFUNCTION(BlueprintCallable)
-		void UpdateWorkerStatus(AWorker* _toSub);
+		void UpdateWorkerStatus(AWorker* _toSub, EPlayerIdent _playerIdent);
 	// Function to unsub worker from the global Unemployment pool, does not remove them from the World Pool
 	// Wird im moment auch noch gecalled wenn ein worker von der productionside auf den productionsidemanager subscribed wird
 	UFUNCTION(BlueprintCallable)
 		void UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub);
 	// Subs the worker to the global Unemployment pool
 	UFUNCTION(BlueprintCallable)
-		void SubWorkerToUnemploymentPool(AWorker* _toSub);
+		void SubWorkerToUnemploymentPool(AWorker* _toSub, EPlayerIdent _playerIdent);
 
 	UFUNCTION(BlueprintCallable)
-		void SubWorkerToUnassignedPool(AWorker* _toSub);
+		void SubWorkerToUnassignedPool(AWorker* _toSub, EPlayerIdent _playerIdent);
 	UFUNCTION(BlueprintCallable)
-		void UnsubWorkerFromUnassignedPool(AWorker* _toUnsub);
+		void UnsubWorkerFromUnassignedPool(AWorker* _toUnsub, EPlayerIdent _playerIdent);
 
 	UFUNCTION(BlueprintCallable)
-		void SubWorkerToMainJobPool(AWorker* _toSub);
+		void SubWorkerToMainJobPool(AWorker* _toSub, EPlayerIdent _playerIdent);
 	UFUNCTION(BlueprintCallable)
-		void UnsubWorkerToMainJobPool(AWorker* _toUnsub);
+		void UnsubWorkerToMainJobPool(AWorker* _toUnsub, EPlayerIdent _playerIdent);
 
 	UFUNCTION(BlueprintCallable)
 		void SubWorkerToSideJobPool(AWorker* _toSub);
@@ -98,10 +110,10 @@ private:
 		TArray<AWorker*> allWorker_Unemployed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
-		TArray<AWorker*> allWorker_Unassigned;
+		TMap<EPlayerIdent, FWorkerRefArray> allWorker_Unassigned;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
-		TArray<AWorker*> allWorker_MainJob;
+		TMap<EPlayerIdent, FWorkerRefArray> allWorker_MainJob;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
 		TArray<AWorker*> allWorker_SideJob;

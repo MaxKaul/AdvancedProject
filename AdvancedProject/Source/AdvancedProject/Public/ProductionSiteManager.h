@@ -58,6 +58,8 @@ public:
 private:
 	UFUNCTION()
 		void InitAllProductionSites(FProductionSiteManagerSaveData _saveData);
+	UFUNCTION()
+		void InitWorkerLists();
 
 
 	UFUNCTION()
@@ -94,7 +96,7 @@ public:
 		void UnsubscribeWorkerToProductionSite(AWorker* _toUnsub, class AProductionsite* _siteRef);
 	// Unsubscribe worker from local pool and subscribes him to the global unemployement pool
 	UFUNCTION(BlueprintCallable)
-		void UnsubscribeWorkerToWorldPool(AWorker* _toUnsub);
+		void UnsubscribeWorkerToWorldPool(AWorker* _toUnsub, EPlayerIdent _playerIdent);
 
 	UFUNCTION(BlueprintCallable)
 		void WorkerWorldManagerUpdate(AWorker* _toUpdate);

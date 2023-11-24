@@ -14,11 +14,12 @@ struct FPlayerSaveData
 
 	FPlayerSaveData() {}
 
-	void InitSaveData(FVector _location, FRotator _rotation, FProductionSiteManagerSaveData _siteManagerSaveData)
+	void InitPlayerSaveData(FVector _location, FRotator _rotation, FProductionSiteManagerSaveData _siteManagerSaveData, EPlayerIdent _ident)
 	{
 		location = _location;
 		rotation = _rotation;
 		productionSiteManagerSaveData = _siteManagerSaveData;
+		playerIdent = _ident;
 	}
 
 private:
@@ -28,10 +29,14 @@ private:
 		FRotator rotation;
 	UPROPERTY()
 		FProductionSiteManagerSaveData productionSiteManagerSaveData;
+	UPROPERTY()
+		EPlayerIdent playerIdent;
 
 public:
 	FORCEINLINE
 		FVector GetLoaction() { return location; }
+	FORCEINLINE
+		EPlayerIdent GetIdent() { return playerIdent; }
 	FORCEINLINE
 		FRotator GetRotation() { return rotation; }
 	FORCEINLINE
@@ -55,6 +60,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		virtual AWorkerWorldManager* GetWorkerWorldManager();
 
+	UFUNCTION() FORCEINLINE
+		EPlayerIdent GetPlayerIdent(){return playerIdent};
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -64,6 +72,9 @@ protected:
 		class UBuilder* builder;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
 		class AMarketManager* marketManager;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = PlayerInfo, meta=(AllowPrivateAccess))
+		EPlayerIdent playerIdent;
 
 public:	
 	virtual void Tick(float DeltaTime) override;

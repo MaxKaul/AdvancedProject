@@ -23,7 +23,7 @@ struct FWorkerSaveData
 
 	FWorkerSaveData() {  }
 
-	FWorkerSaveData(FVector _position, FRotator _rotation, USkeletalMesh* _mesh, int _workerID, EWorkerStatus _employmentStatus, int _productionSiteID)
+	FWorkerSaveData(FVector _position, FRotator _rotation, USkeletalMesh* _mesh, int _workerID, EWorkerStatus _employmentStatus, int _productionSiteID, EPlayerIdent _workerOwner)
 	{
 		workerLocation = _position;
 		workerRotation = _rotation;
@@ -31,6 +31,7 @@ struct FWorkerSaveData
 		workerID = _workerID;
 		employmentStatus = _employmentStatus;
 		productionSiteSaveID = _productionSiteID;
+		workerOwner = _workerOwner;
 	}
 
 private:
@@ -48,6 +49,8 @@ private:
 		int productionSiteSaveID;
 	UPROPERTY()
 		FWorkerOptional workerOptional;
+	UPROPERTY()
+		EPlayerIdent workerOwner;
 
 public:
 	FORCEINLINE
@@ -62,6 +65,8 @@ public:
 		EWorkerStatus GetEmploymentStatus() { return employmentStatus; }
 	FORCEINLINE
 		int GetProductionSiteID() { return productionSiteSaveID; }
+	FORCEINLINE
+		EPlayerIdent GetWorkerOwner() { return workerOwner; }
 };
 
 

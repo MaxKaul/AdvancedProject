@@ -87,7 +87,8 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager()
 			mesh,
 			overloadOwner->allWorker.Num(),
 			EWorkerStatus::WS_Unemployed,
-			-1
+			-1,
+			EPlayerIdent::PI_DEFAULT
 		};
 
 		allworkersavedata.Add(workersavedata);
@@ -129,6 +130,7 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			FRotator spawnrot = workerdata.GetWorkerRotation();
 			int siteid = workerdata.GetProductionSiteID();
 			EWorkerStatus employementstatus = workerdata.GetEmploymentStatus();
+			EPlayerIdent workerowner = workerdata.GetWorkerOwner();
 
 			FActorSpawnParameters params;
 			params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
@@ -151,7 +153,7 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 				if (!allWorker.Contains(worker))
 					allWorker.Add(worker);
 
-				UpdateWorkerStatus(worker);
+				UpdateWorkerStatus(worker, workerowner);
 
 				break;
 			}
@@ -172,7 +174,7 @@ bool AWorkerWorldManager::NullcheckDependencies()
 	return status;
 }
 
-void AWorkerWorldManager::UpdateWorkerStatus(AWorker* _toSub)
+void AWorkerWorldManager::UpdateWorkerStatus(AWorker* _toSub, EPlayerIdent _playerIdent)
 {
 	if(!_toSub)
 		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !workerClass"));
@@ -180,36 +182,36 @@ void AWorkerWorldManager::UpdateWorkerStatus(AWorker* _toSub)
 	switch (_toSub->GetEmployementStatus())
 	{
 	case EWorkerStatus::WS_Unemployed:
-		SubWorkerToUnemploymentPool(_toSub);
+		SubWorkerToUnemploymentPool(_toSub, _playerIdent);
 		break;
 	case EWorkerStatus::WS_Unassigned:
-		SubWorkerToUnassignedPool(_toSub);
+		SubWorkerToUnassignedPool(_toSub, _playerIdent);
 		break;
 	case EWorkerStatus::WS_Employed_MainJob:
-		SubWorkerToMainJobPool(_toSub);
+		SubWorkerToMainJobPool(_toSub, _playerIdent);
 		break;
 	case EWorkerStatus::WS_Employed_SideJob:
 		SubWorkerToSideJobPool(_toSub);
 		break;
 
 	case EWorkerStatus::WS_DEFAULT:
-		SubWorkerToUnemploymentPool(_toSub);
+		SubWorkerToUnemploymentPool(_toSub, _playerIdent);
 		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, WS_DEFAULT"));
 		break;
 	case EWorkerStatus::WS_ENTRY_AMOUNT:
-		SubWorkerToUnemploymentPool(_toSub);
+		SubWorkerToUnemploymentPool(_toSub, _playerIdent);
 		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, WS_ENTRY_AMOUNT"));
 		break;
 	default: ;
 	}
 }
 
-void AWorkerWorldManager::SubWorkerToUnemploymentPool(AWorker* _toSub)
+void AWorkerWorldManager::SubWorkerToUnemploymentPool(AWorker* _toSub, EPlayerIdent _playerIdent)
 {
 	if (!allWorker_Unemployed.Contains(_toSub))
 		allWorker_Unemployed.Add(_toSub);
 
-	UnsubWorkerFromUnassignedPool(_toSub);
+	UnsubWorkerFromUnassignedPool(_toSub, _playerIdent);
 }
 
 void AWorkerWorldManager::UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub)
@@ -218,34 +220,42 @@ void AWorkerWorldManager::UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub)
 		allWorker_Unemployed.Remove(_toUnsub);
 }
 
-void AWorkerWorldManager::SubWorkerToUnassignedPool(AWorker* _toSub)
+void AWorkerWorldManager::SubWorkerToUnassignedPool(AWorker* _toSub, EPlayerIdent _playerIdent)
 {
-	if (!allWorker_Unassigned.Contains(_toSub))
-		allWorker_Unassigned.Add(_toSub);
+	FWorkerRefArray workerref = allWorker_Unassigned.FindRef(_playerIdent);
 
-	UnsubWorkerToMainJobPool(_toSub);
+	if(!workerref.workerArray.Contains(_toSub))
+		allWorker_Unassigned.FindRef(_playerIdent).workerArray.Add(_toSub);
+
+	UnsubWorkerToMainJobPool(_toSub, _playerIdent);
 	UnsubWorkerToSideJobPool(_toSub);
 	UnsubWorkerFromUnemploymentPool(_toSub);
 }
 
-void AWorkerWorldManager::UnsubWorkerFromUnassignedPool(AWorker* _toUnsub)
+void AWorkerWorldManager::UnsubWorkerFromUnassignedPool(AWorker* _toUnsub, EPlayerIdent _playerIdent)
 {
-	if (allWorker_Unassigned.Contains(_toUnsub))
-		allWorker_Unassigned.Remove(_toUnsub);
+	FWorkerRefArray workerref = allWorker_Unassigned.FindRef(_playerIdent);
+
+	if (!workerref.workerArray.Contains(_toUnsub))
+		allWorker_Unassigned.FindRef(_playerIdent).workerArray.Add(_toUnsub);
 }
 
-void AWorkerWorldManager::SubWorkerToMainJobPool(AWorker* _toSub)
+void AWorkerWorldManager::SubWorkerToMainJobPool(AWorker* _toSub, EPlayerIdent _playerIdent)
 {
-	if (!allWorker_MainJob.Contains(_toSub))
-		allWorker_MainJob.Add(_toSub);
+	FWorkerRefArray workerref = allWorker_MainJob.FindRef(_playerIdent);
 
-	UnsubWorkerFromUnassignedPool(_toSub);
+	if (!workerref.workerArray.Contains(_toSub))
+		allWorker_MainJob.FindRef(_playerIdent).workerArray.Add(_toSub);
+
+	UnsubWorkerFromUnassignedPool(_toSub, _playerIdent);
 }
 
-void AWorkerWorldManager::UnsubWorkerToMainJobPool(AWorker* _toUnsub)
+void AWorkerWorldManager::UnsubWorkerToMainJobPool(AWorker* _toUnsub, EPlayerIdent _playerIdent)
 {
-	if (allWorker_MainJob.Contains(_toUnsub))
-		allWorker_MainJob.Remove(_toUnsub);
+	FWorkerRefArray workerref = allWorker_MainJob.FindRef(_playerIdent);
+
+	if (!workerref.workerArray.Contains(_toUnsub))
+		allWorker_MainJob.FindRef(_playerIdent).workerArray.Add(_toUnsub);
 }
 
 void AWorkerWorldManager::SubWorkerToSideJobPool(AWorker* _toSub)

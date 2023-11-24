@@ -151,12 +151,12 @@ bool ASaveGameManager::InitAllManager()
 		 InitWorkerWorldManager();
 	 }
 	 else
-	 {
+	 { 
 		 for (size_t i = 0; i < maxPlayerAmount; i++)
 		 {
 			 FPlayerSaveData initsave;
 			 // Leere Prodsite save data weil dieser ja keine werte besitzen wird wenn wir neu starten
-			 initsave.InitSaveData(defaultStartPos, defaultStartRot, FProductionSiteManagerSaveData());
+			 initsave.InitPlayerSaveData(defaultStartPos, defaultStartRot, FProductionSiteManagerSaveData(), EPlayerIdent(i));
 
 			 allPlayer[i]->InitPlayerStart(initsave, spawnedMarketManager, spawnedWorkerWorldManager);
 		 }

@@ -96,7 +96,7 @@ FPlayerSaveData AAdvancedProjectCharacter::GetPlayerSaveData()
 {
 	FPlayerSaveData savedata;
 
-	savedata.InitSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData());
+	savedata.InitSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData(), playerIdent);
 
 	return savedata;
 }

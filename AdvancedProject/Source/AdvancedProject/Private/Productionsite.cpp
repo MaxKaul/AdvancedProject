@@ -279,7 +279,6 @@ void AProductionsite::SubscribeWorker(AWorker* _toSub)
 		subscribedWorker.Add(_toSub);
 		_toSub->SetProductionSiteInfo(siteID, this);
 		productionSiteProductivity += _toSub->GetProductivity();
-
 		productionSiteManager->UnsubscribeWorkerToProductionSite(_toSub, this);
 	}
 	else
