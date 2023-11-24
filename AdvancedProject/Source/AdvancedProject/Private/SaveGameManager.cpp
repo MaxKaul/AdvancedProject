@@ -154,10 +154,23 @@ bool ASaveGameManager::InitAllManager()
 	 { 
 		 for (size_t i = 0; i < maxPlayerAmount; i++)
 		 {
-			 FPlayerSaveData initsave;
-			 // Leere Prodsite save data weil dieser ja keine werte besitzen wird wenn wir neu starten
-			 initsave.InitPlayerSaveData(defaultStartPos, defaultStartRot, FProductionSiteManagerSaveData(), EPlayerIdent(i));
+			 EPlayerIdent ident = EPlayerIdent::PI_DEFAULT;
 
+			 if (i == 0)
+				 ident = EPlayerIdent::PI_Player_1;
+			 else if (i == 1)
+				 ident = EPlayerIdent::PI_Player_2;
+			 else if (i == 2)
+				 ident = EPlayerIdent::PI_Player_3;
+			 else if (i == 3)
+				 ident = EPlayerIdent::PI_Player_4;
+			 else
+				 ident = EPlayerIdent::PI_DEFAULT;
+
+			 FPlayerSaveData initsave;
+
+			 // Leere Prodsite save data weil dieser ja keine werte besitzen wird wenn wir neu starten
+			 initsave.InitPlayerSaveData(defaultStartPos, defaultStartRot, FProductionSiteManagerSaveData(), ident);
 			 allPlayer[i]->InitPlayerStart(initsave, spawnedMarketManager, spawnedWorkerWorldManager);
 		 }
 	 }

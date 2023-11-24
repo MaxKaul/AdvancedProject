@@ -9,7 +9,6 @@ AMarketManager::AMarketManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-
 	resourcePriceTick = 1.f;
 	resourceMinValue = 1.f;
 }

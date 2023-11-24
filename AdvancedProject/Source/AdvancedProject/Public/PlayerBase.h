@@ -61,7 +61,7 @@ public:
 		virtual AWorkerWorldManager* GetWorkerWorldManager();
 
 	UFUNCTION() FORCEINLINE
-		EPlayerIdent GetPlayerIdent(){return playerIdent};
+		EPlayerIdent GetPlayerIdent() { return playerIdent; };
 
 protected:
 	virtual void BeginPlay() override;

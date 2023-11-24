@@ -35,11 +35,16 @@ USTRUCT(BlueprintType)
 struct FWorkerRefArray
 {
 	GENERATED_BODY()
-		FWorkerRefArray();
+		FWorkerRefArray(){}
+
+	void Test(AWorker* _worker) { workerArray.Add(_worker); }
+
 public:
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 		TArray<AWorker*> workerArray;
 
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
+		AWorker* worker;
 };
 
 
@@ -67,7 +72,7 @@ public:
 	// Function to unsub worker from the global Unemployment pool, does not remove them from the World Pool
 	// Wird im moment auch noch gecalled wenn ein worker von der productionside auf den productionsidemanager subscribed wird
 	UFUNCTION(BlueprintCallable)
-		void UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub);
+		void UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub );
 	// Subs the worker to the global Unemployment pool
 	UFUNCTION(BlueprintCallable)
 		void SubWorkerToUnemploymentPool(AWorker* _toSub, EPlayerIdent _playerIdent);
@@ -80,19 +85,22 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void SubWorkerToMainJobPool(AWorker* _toSub, EPlayerIdent _playerIdent);
 	UFUNCTION(BlueprintCallable)
-		void UnsubWorkerToMainJobPool(AWorker* _toUnsub, EPlayerIdent _playerIdent);
+		void UnsubWorkerFromMainJobPool(AWorker* _toUnsub, EPlayerIdent _playerIdent);
 
 	UFUNCTION(BlueprintCallable)
 		void SubWorkerToSideJobPool(AWorker* _toSub);
 	UFUNCTION(BlueprintCallable)
-		void UnsubWorkerToSideJobPool(AWorker* _toUnsub);
+		void UnsubWorkerFromSideJobPool(AWorker* _toUnsub);
 
 	UFUNCTION(BlueprintCallable)
 		void AddProductionSite(AProductionsite* _toadd);
 
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		TArray<AWorker*> GetAllUnemploymentWorker() { return allWorker_Unemployed; }
-
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		TMap<EPlayerIdent, FWorkerRefArray> GetAllWorkerUnassigned() { return allWorker_Unassigned; }
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		TMap<EPlayerIdent, FWorkerRefArray> GetAllWorkerMainJob() { return allWorker_MainJob; }
 private:
 	UFUNCTION()
 		void SpawnAllWorker(FWorkerWorldManagerSaveData _saveData);

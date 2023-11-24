@@ -6,6 +6,7 @@
 #include "EnumLibrary.h"
 #include "Worker.h"
 #include "NavigationSystem.h"
+#include "PlayerBase.h"
 #include "Productionsite.h"
 #include "WorkerController.h"
 
@@ -31,7 +32,6 @@ void AWorkerWorldManager::BeginPlay()
 void AWorkerWorldManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
 }
 
 void FWWM_OverloadFuncs::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<AProductionsite*> _allProductionSites)
@@ -53,7 +53,10 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager()
 {
 	overloadOwner->world = overloadOwner->GetWorld();
 	overloadOwner->navigationSystem = Cast<UNavigationSystemV1>(overloadOwner->world->GetNavigationSystem());
-	
+
+	overloadOwner->allWorker_Unassigned.Add(EPlayerIdent::PI_Player_1, FWorkerRefArray());
+	overloadOwner->allWorker_MainJob.Add(EPlayerIdent::PI_Player_1, FWorkerRefArray());
+
 	if (!overloadOwner->NullcheckDependencies())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !NullcheckDependencies()"));
@@ -138,7 +141,7 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			if (AActor* tospawn = world->SpawnActor(workerClass, &spawnpos, &spawnrot, params))
 			{
 				AWorker* worker = Cast<AWorker>(tospawn);
-				worker->InitWorker(workerdata, navigationSystem, allWorker.Num(), employementstatus, siteid);
+				worker->InitWorker(workerdata, navigationSystem, allWorker.Num(), employementstatus, siteid, workerowner);
 
 				if(employementstatus == EWorkerStatus::WS_Employed_MainJob)
 				{
@@ -212,9 +215,11 @@ void AWorkerWorldManager::SubWorkerToUnemploymentPool(AWorker* _toSub, EPlayerId
 		allWorker_Unemployed.Add(_toSub);
 
 	UnsubWorkerFromUnassignedPool(_toSub, _playerIdent);
+
+	_toSub->SetWorkerOwner(EPlayerIdent::PI_DEFAULT);
 }
 
-void AWorkerWorldManager::UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub)
+void AWorkerWorldManager::UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub )
 {
 	if (allWorker_Unemployed.Contains(_toUnsub))
 		allWorker_Unemployed.Remove(_toUnsub);
@@ -223,12 +228,22 @@ void AWorkerWorldManager::UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub)
 void AWorkerWorldManager::SubWorkerToUnassignedPool(AWorker* _toSub, EPlayerIdent _playerIdent)
 {
 	FWorkerRefArray workerref = allWorker_Unassigned.FindRef(_playerIdent);
+	TArray<AWorker*> workercacharray = workerref.workerArray;
+
 
 	if(!workerref.workerArray.Contains(_toSub))
-		allWorker_Unassigned.FindRef(_playerIdent).workerArray.Add(_toSub);
+	{
+		workercacharray.Add(_toSub);
 
-	UnsubWorkerToMainJobPool(_toSub, _playerIdent);
-	UnsubWorkerToSideJobPool(_toSub);
+		allWorker_Unassigned.FindRef(_playerIdent).Test(_toSub);
+
+		UE_LOG(LogTemp,Warning,TEXT("%i"), allWorker_Unassigned.FindRef(_playerIdent).workerArray.Num())
+
+		_toSub->SetWorkerOwner(_playerIdent);
+	}
+
+	UnsubWorkerFromMainJobPool(_toSub, _playerIdent);
+	UnsubWorkerFromSideJobPool(_toSub);
 	UnsubWorkerFromUnemploymentPool(_toSub);
 }
 
@@ -237,34 +252,44 @@ void AWorkerWorldManager::UnsubWorkerFromUnassignedPool(AWorker* _toUnsub, EPlay
 	FWorkerRefArray workerref = allWorker_Unassigned.FindRef(_playerIdent);
 
 	if (!workerref.workerArray.Contains(_toUnsub))
-		allWorker_Unassigned.FindRef(_playerIdent).workerArray.Add(_toUnsub);
+	{
+		allWorker_Unassigned.FindRef(_playerIdent).workerArray.Remove(_toUnsub);
+		_toUnsub->SetWorkerOwner(_playerIdent);
+	}
 }
 
 void AWorkerWorldManager::SubWorkerToMainJobPool(AWorker* _toSub, EPlayerIdent _playerIdent)
 {
 	FWorkerRefArray workerref = allWorker_MainJob.FindRef(_playerIdent);
+	_toSub->SetWorkerOwner(_playerIdent);
 
 	if (!workerref.workerArray.Contains(_toSub))
+	{
 		allWorker_MainJob.FindRef(_playerIdent).workerArray.Add(_toSub);
+		_toSub->SetWorkerOwner(_playerIdent);
+	}
 
 	UnsubWorkerFromUnassignedPool(_toSub, _playerIdent);
 }
 
-void AWorkerWorldManager::UnsubWorkerToMainJobPool(AWorker* _toUnsub, EPlayerIdent _playerIdent)
+void AWorkerWorldManager::UnsubWorkerFromMainJobPool(AWorker* _toUnsub, EPlayerIdent _playerIdent)
 {
 	FWorkerRefArray workerref = allWorker_MainJob.FindRef(_playerIdent);
 
-	if (!workerref.workerArray.Contains(_toUnsub))
-		allWorker_MainJob.FindRef(_playerIdent).workerArray.Add(_toUnsub);
+	if (workerref.workerArray.Contains(_toUnsub))
+	{
+		allWorker_MainJob.FindRef(_playerIdent).workerArray.Remove(_toUnsub);
+		_toUnsub->SetWorkerOwner(_playerIdent);
+	}
 }
 
 void AWorkerWorldManager::SubWorkerToSideJobPool(AWorker* _toSub)
 {
 	if (!allWorker_SideJob.Contains(_toSub))
-		allWorker_SideJob.Remove(_toSub);
+		allWorker_SideJob.Add(_toSub);
 }
 
-void AWorkerWorldManager::UnsubWorkerToSideJobPool(AWorker* _toUnsub)
+void AWorkerWorldManager::UnsubWorkerFromSideJobPool(AWorker* _toUnsub)
 {
 	if (allWorker_SideJob.Contains(_toUnsub))
 		allWorker_SideJob.Remove(_toUnsub);

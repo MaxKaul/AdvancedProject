@@ -88,9 +88,8 @@ void UProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 void UProductionSiteManager::InitWorkerLists()
 {
-	UE_LOG(LogTemp, Warning, TEXT("%i"), subscribedWorker_HiredPool.Num());
-
-	//subscribedWorker_UnasignedPool = workerWorldManager->GetAllUnemploymentWorker();
+	subscribedWorker_UnasignedPool = workerWorldManager->GetAllWorkerUnassigned().FindRef(managerOwner->GetPlayerIdent()).workerArray;
+	subscribedWorker_HiredPool = workerWorldManager->GetAllWorkerMainJob().FindRef(managerOwner->GetPlayerIdent()).workerArray;
 }
 
 void UProductionSiteManager::SubscribeProductionsite(AProductionsite* _newProductionSite)
@@ -142,7 +141,7 @@ void UProductionSiteManager::SubscribeWorkerToLocalPool(AWorker* _toSub, AProduc
 			workerWorldManager->UnsubWorkerFromUnemploymentPool(_toSub);
 
 		_toSub->SetEmployementStatus(EWorkerStatus::WS_Unassigned);
-		WorkerWorldManagerUpdate(_toSub, managerOwner->GetPlayerIdent());
+		WorkerWorldManagerUpdate(_toSub);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, subscribedWorker.Contains(_toSub)"));
@@ -159,21 +158,18 @@ void UProductionSiteManager::UnsubscribeWorkerToProductionSite(AWorker* _toUnsub
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))
 
 	_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Employed_MainJob, _siteRef);
-	WorkerWorldManagerUpdate(_toUnsub, managerOwner->GetPlayerIdent());
+	WorkerWorldManagerUpdate(_toUnsub);
 }
 
 void UProductionSiteManager::UnsubscribeWorkerToWorldPool(AWorker* _toUnsub, EPlayerIdent _playerIdent)
 {
 	if (subscribedWorker_HiredPool.Contains(_toUnsub))
 	{
-		workerWorldManager->SubWorkerToUnemploymentPool(_toUnsub , managerOwner->GetPlayerIdent());
-
 		subscribedWorker_HiredPool.Remove(_toUnsub);
 		subscribedWorker_UnasignedPool.Remove(_toUnsub);
 
 		_toUnsub->SetEmployementStatus(EWorkerStatus::WS_Unemployed);
-
-		WorkerWorldManagerUpdate(_toUnsub, managerOwner->GetPlayerIdent());
+		WorkerWorldManagerUpdate(_toUnsub);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))
@@ -181,7 +177,7 @@ void UProductionSiteManager::UnsubscribeWorkerToWorldPool(AWorker* _toUnsub, EPl
 
 void UProductionSiteManager::WorkerWorldManagerUpdate(AWorker* _toUpdate)
 {
-	workerWorldManager->UpdateWorkerStatus(_playerIdent);
+	workerWorldManager->UpdateWorkerStatus(_toUpdate, managerOwner->GetPlayerIdent());
 }
 
 

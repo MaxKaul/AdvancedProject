@@ -60,6 +60,8 @@ void AAdvancedProjectCharacter::BeginPlay()
 // Das meiste an Implementation könnte in die base rein
 void AAdvancedProjectCharacter::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager)
 {
+	Super::InitPlayerStart(_saveData, _marketManager, _workerWorldManager);
+
 	marketManager = _marketManager;
 	workerWorldManager = _workerWorldManager;
 
@@ -96,7 +98,7 @@ FPlayerSaveData AAdvancedProjectCharacter::GetPlayerSaveData()
 {
 	FPlayerSaveData savedata;
 
-	savedata.InitSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData(), playerIdent);
+	savedata.InitPlayerSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData(), playerIdent);
 
 	return savedata;
 }

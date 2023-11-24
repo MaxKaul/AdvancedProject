@@ -33,7 +33,12 @@ int AWorker::GetWorkerID()
 	return workerID;
 }
 
-void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID)
+void AWorker::SetWorkerOwner(EPlayerIdent _newOwner)
+{
+	workerOwner = _newOwner;
+}
+
+void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner)
 {
 	workerID = _workerID;
 	workerOptionals.productionSiteID  = _siteID;
@@ -46,7 +51,7 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	skeletalMeshComponent->SetSkeletalMesh(skeletalMesh, true);
 	workerController = Cast<AWorkerController>(GetController());
 	navigationSystem = _navSystem;
-
+	workerOwner = _workerOwner;
 
 
 	FNavLocation testloc;
@@ -63,7 +68,8 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 		skeletalMesh,
 		workerID,
 		employmentStatus,
-		workerOptionals.productionSiteID.GetValue()
+		workerOptionals.productionSiteID.GetValue(),
+		workerOwner
 	};
 
 	return savedata;

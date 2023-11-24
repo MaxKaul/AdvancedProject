@@ -86,6 +86,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		int GetWorkerID();
+	UFUNCTION(BlueprintCallable)
+		void SetWorkerOwner(EPlayerIdent _newOwner);
 
 private:
 	// Sollte in einer range von 0.005f bis 0.08f eingestellt werden (ERSTMAL), dieser wert wird nähmlich von der ResourceTick rate ABGEZOGEN
@@ -110,6 +112,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		int workerID;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		EPlayerIdent workerOwner;
 
 	UPROPERTY()
 		FWorkerOptional workerOptionals;
@@ -149,6 +154,6 @@ public:
 
 	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data 
 	UFUNCTION()
-		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID);
+		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner);
 };
 
