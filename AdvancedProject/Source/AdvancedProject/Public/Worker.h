@@ -117,7 +117,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		EPlayerIdent workerOwner;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, Category = Status, meta=(AllowPrivateAccess))
 		FWorkerOptional workerOptionals;
 
 	UPROPERTY()
@@ -155,7 +155,8 @@ public:
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		AProductionsite* GetProductionSiteRef() { return workerOptionals.productionSiteRef.GetValue(); }
 
-	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data 
+	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data
+	// Hat den naxchteil das ich im moment die site id immer mit -1 ini weil die auch einen default braucht
 	UFUNCTION()
 		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner);
 };
