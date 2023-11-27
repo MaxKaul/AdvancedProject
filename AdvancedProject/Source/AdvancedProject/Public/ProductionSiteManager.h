@@ -121,7 +121,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = PoolInfo, meta = (AllowPrivateAccess))
 		TArray<AWorker*> subscribedWorker_UnasignedPool;
-	// Alle angestellten worker
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = PoolInfo, meta = (AllowPrivateAccess))
 		TArray<AWorker*> subscribedWorker_HiredPool;
 

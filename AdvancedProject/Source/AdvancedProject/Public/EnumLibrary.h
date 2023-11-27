@@ -37,10 +37,11 @@ UENUM(BlueprintType)
 enum class EWorkerStatus : uint8
 {
 	WS_DEFAULT,
-	WS_Unemployed,
+	WS_Unemployed, 
+	WS_Assigned_SideJob,
+
 	WS_Unassigned,
-	WS_Employed_MainJob,
-	WS_Employed_SideJob,
+	WS_Assigned_MainJob,
 	WS_ENTRY_AMOUNT
 };
 
@@ -64,5 +65,6 @@ enum class EPlayerIdent : uint8
 	PI_Player_2,
 	PI_Player_3,
 	PI_Player_4,
+	PI_World,
 	PI_ENTRY_AMOUNT
 };

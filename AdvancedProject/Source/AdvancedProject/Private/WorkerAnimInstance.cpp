@@ -20,8 +20,8 @@ void UWorkerAnimInstance::UpdateAnimationProperties()
 	velocity = instanceOwner->GetVelocity().Length();
 
 	// Müsste noch etwas besser gemacht werden
-	if (instanceOwner->GetEmployementStatus() == EWorkerStatus::WS_Employed_MainJob ||
-		instanceOwner->GetEmployementStatus() == EWorkerStatus::WS_Employed_SideJob)
+	if (instanceOwner->GetEmployementStatus() == EWorkerStatus::WS_Assigned_MainJob ||
+		instanceOwner->GetEmployementStatus() == EWorkerStatus::WS_Assigned_SideJob)
 		bIsWorking = true;
 	else
 		bIsWorking = false;

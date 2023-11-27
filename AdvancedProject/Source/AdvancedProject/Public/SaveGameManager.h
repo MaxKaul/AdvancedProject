@@ -43,6 +43,9 @@ public:
 	UFUNCTION()
 		void SetSaveGameName(FString _name);
 
+	FORCEINLINE
+		int GetMaxPlayerAmount() { return maxPlayerAmount; }
+
 private:
 	UFUNCTION()
 		bool InitAllManager();

@@ -86,6 +86,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		int GetWorkerID();
+
 	UFUNCTION(BlueprintCallable)
 		void SetWorkerOwner(EPlayerIdent _newOwner);
 
@@ -136,6 +137,8 @@ private:
 public:
 	FORCEINLINE
 		float GetProductivity() { return productivity; }
+	FORCEINLINE
+		EPlayerIdent GetCurrentOwner() { return workerOwner; }
 
 	UFUNCTION()
 		FWorkerSaveData GetWorkerSaveData();

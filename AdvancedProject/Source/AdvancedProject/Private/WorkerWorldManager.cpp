@@ -8,6 +8,7 @@
 #include "NavigationSystem.h"
 #include "PlayerBase.h"
 #include "Productionsite.h"
+#include "SaveGameManager.h"
 #include "WorkerController.h"
 
 // Sets default values
@@ -22,23 +23,21 @@ AWorkerWorldManager::AWorkerWorldManager()
 	maxSpawnTries = 10;
 }
 
-// Called when the game starts or when spawned
-void AWorkerWorldManager::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 // Called every frame
 void AWorkerWorldManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 }
 
-void FWWM_OverloadFuncs::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<AProductionsite*> _allProductionSites)
+void FWWM_OverloadFuncs::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<AProductionsite*> _allProductionSites, ASaveGameManager* _saveGameManager)
 {
 	overloadOwner->world = overloadOwner->GetWorld();
 	overloadOwner->navigationSystem = Cast<UNavigationSystemV1>(overloadOwner->world->GetNavigationSystem());
 	overloadOwner->allProductionSites = _allProductionSites;
+	overloadOwner->saveGameManager = _saveGameManager;
+
+	overloadOwner->allWorker_WorldPool.Add(EPlayerIdent::PI_World, FWorkerRefArray());
 
 	if(!overloadOwner->NullcheckDependencies())
 	{
@@ -49,13 +48,11 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(FWorkerWorldManagerSaveData _sav
 	overloadOwner->SpawnAllWorker(_saveData);
 }
 
-void FWWM_OverloadFuncs::InitWorkerWorldManager()
+void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManager)
 {
 	overloadOwner->world = overloadOwner->GetWorld();
 	overloadOwner->navigationSystem = Cast<UNavigationSystemV1>(overloadOwner->world->GetNavigationSystem());
-
-	overloadOwner->allWorker_Unassigned.Add(EPlayerIdent::PI_Player_1, FWorkerRefArray());
-	overloadOwner->allWorker_MainJob.Add(EPlayerIdent::PI_Player_1, FWorkerRefArray());
+	overloadOwner->saveGameManager = _saveGameManager;
 
 	if (!overloadOwner->NullcheckDependencies())
 	{
@@ -88,7 +85,7 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager()
 			spawnpos,
 			spawnrot,
 			mesh,
-			overloadOwner->allWorker.Num(),
+			overloadOwner->allWorker_Ref.Num(),
 			EWorkerStatus::WS_Unemployed,
 			-1,
 			EPlayerIdent::PI_DEFAULT
@@ -109,7 +106,7 @@ FWorkerWorldManagerSaveData AWorkerWorldManager::GetWorkerManagerSaveData()
 {
 	TArray<FWorkerSaveData> allworkerdata;
 
-	for (AWorker* worker : allWorker)
+	for (AWorker* worker : allWorker_Ref)
 	{
 		allworkerdata.Add(worker->GetWorkerSaveData());
 	}
@@ -122,9 +119,18 @@ FWorkerWorldManagerSaveData AWorkerWorldManager::GetWorkerManagerSaveData()
 	return savedata;
 }
 
-
 void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 {
+	// Adding the key to the individual lists
+	allWorker_WorldPool.Add(EPlayerIdent::PI_World, FWorkerRefArray());
+	allWorker_SideJobPool.Add(EPlayerIdent::PI_World, FWorkerRefArray());
+
+	for (size_t i = 0; i < saveGameManager->GetMaxPlayerAmount(); i++)
+	{
+		allWorker_AssignedPool.Add(EPlayerIdent(i + 1), FWorkerRefArray());
+		allWorker_UnassignedPool.Add(EPlayerIdent(i + 1), FWorkerRefArray());
+	}
+
 	for (FWorkerSaveData workerdata : _saveData.GetAllWorker())
 	{
 		for (size_t i = 0; i < maxSpawnTries; i++)
@@ -141,9 +147,9 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			if (AActor* tospawn = world->SpawnActor(workerClass, &spawnpos, &spawnrot, params))
 			{
 				AWorker* worker = Cast<AWorker>(tospawn);
-				worker->InitWorker(workerdata, navigationSystem, allWorker.Num(), employementstatus, siteid, workerowner);
+				worker->InitWorker(workerdata, navigationSystem, allWorker_Ref.Num(), employementstatus, siteid, workerowner);
 
-				if(employementstatus == EWorkerStatus::WS_Employed_MainJob)
+				if(employementstatus == EWorkerStatus::WS_Assigned_MainJob)
 				{
 					for (AProductionsite* site : allProductionSites)
 					{
@@ -153,8 +159,8 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 
 				}
 
-				if (!allWorker.Contains(worker))
-					allWorker.Add(worker);
+				if (!allWorker_Ref.Contains(worker))
+					allWorker_Ref.Add(worker);
 
 				UpdateWorkerStatus(worker, workerowner);
 
@@ -177,7 +183,8 @@ bool AWorkerWorldManager::NullcheckDependencies()
 	return status;
 }
 
-void AWorkerWorldManager::UpdateWorkerStatus(AWorker* _toSub, EPlayerIdent _playerIdent)
+
+void AWorkerWorldManager::UpdateWorkerStatus(AWorker* _toSub, EPlayerIdent _newOwner)
 {
 	if(!_toSub)
 		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !workerClass"));
@@ -185,114 +192,107 @@ void AWorkerWorldManager::UpdateWorkerStatus(AWorker* _toSub, EPlayerIdent _play
 	switch (_toSub->GetEmployementStatus())
 	{
 	case EWorkerStatus::WS_Unemployed:
-		SubWorkerToUnemploymentPool(_toSub, _playerIdent);
+		SubscribeToWorldPool(_toSub);
 		break;
+
+	case EWorkerStatus::WS_Assigned_SideJob:
+		SubscribeToSideJobPool(_toSub);
+		break;
+
 	case EWorkerStatus::WS_Unassigned:
-		SubWorkerToUnassignedPool(_toSub, _playerIdent);
-		break;
-	case EWorkerStatus::WS_Employed_MainJob:
-		SubWorkerToMainJobPool(_toSub, _playerIdent);
-		break;
-	case EWorkerStatus::WS_Employed_SideJob:
-		SubWorkerToSideJobPool(_toSub);
+		SubscribeToUnassignedPool(_toSub, _newOwner);
 		break;
 
-	case EWorkerStatus::WS_DEFAULT:
-		SubWorkerToUnemploymentPool(_toSub, _playerIdent);
-		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, WS_DEFAULT"));
+	case EWorkerStatus::WS_Assigned_MainJob:
+		SubscribeToAssignedPool(_toSub);
 		break;
-	case EWorkerStatus::WS_ENTRY_AMOUNT:
-		SubWorkerToUnemploymentPool(_toSub, _playerIdent);
-		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, WS_ENTRY_AMOUNT"));
-		break;
-	default: ;
+
+	default:
+		UE_LOG(LogTemp,Error,TEXT("AWorkerWorldManager, UpdateWorkerStatus "))
+		;
 	}
 }
 
-void AWorkerWorldManager::SubWorkerToUnemploymentPool(AWorker* _toSub, EPlayerIdent _playerIdent)
+void AWorkerWorldManager::SubscribeToWorldPool(AWorker* _toSub)
 {
-	if (!allWorker_Unemployed.Contains(_toSub))
-		allWorker_Unemployed.Add(_toSub);
+	allWorker_WorldPool.Find(EPlayerIdent::PI_World)->AddWorker(_toSub);
 
-	UnsubWorkerFromUnassignedPool(_toSub, _playerIdent);
+	EPlayerIdent previousowner = _toSub->GetCurrentOwner();
 
-	_toSub->SetWorkerOwner(EPlayerIdent::PI_DEFAULT);
-}
-
-void AWorkerWorldManager::UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub )
-{
-	if (allWorker_Unemployed.Contains(_toUnsub))
-		allWorker_Unemployed.Remove(_toUnsub);
-}
-
-void AWorkerWorldManager::SubWorkerToUnassignedPool(AWorker* _toSub, EPlayerIdent _playerIdent)
-{
-	FWorkerRefArray workerref = allWorker_Unassigned.FindRef(_playerIdent);
-	TArray<AWorker*> workercacharray = workerref.workerArray;
-
-
-	if(!workerref.workerArray.Contains(_toSub))
+	// With no previous owner the worker is most likely subbed without save file
+	if (previousowner == EPlayerIdent::PI_DEFAULT || previousowner == EPlayerIdent::PI_World)
+		_toSub->SetWorkerOwner(EPlayerIdent::PI_World);
+	else
 	{
-		workercacharray.Add(_toSub);
-
-		allWorker_Unassigned.FindRef(_playerIdent).Test(_toSub);
-
-		UE_LOG(LogTemp,Warning,TEXT("%i"), allWorker_Unassigned.FindRef(_playerIdent).workerArray.Num())
-
-		_toSub->SetWorkerOwner(_playerIdent);
+		if (allWorker_SideJobPool.Contains(previousowner))
+			allWorker_SideJobPool.Find(previousowner)->RemoveWorker(_toSub);
+		else if(allWorker_UnassignedPool.Contains(previousowner))
+			allWorker_UnassignedPool.Find(previousowner)->RemoveWorker(_toSub);
+		else if (allWorker_AssignedPool.Contains(previousowner))
+			allWorker_AssignedPool.Find(previousowner)->RemoveWorker(_toSub);
 	}
-
-	UnsubWorkerFromMainJobPool(_toSub, _playerIdent);
-	UnsubWorkerFromSideJobPool(_toSub);
-	UnsubWorkerFromUnemploymentPool(_toSub);
 }
 
-void AWorkerWorldManager::UnsubWorkerFromUnassignedPool(AWorker* _toUnsub, EPlayerIdent _playerIdent)
+void AWorkerWorldManager::SubscribeToSideJobPool(AWorker* _toSub)
 {
-	FWorkerRefArray workerref = allWorker_Unassigned.FindRef(_playerIdent);
+	allWorker_SideJobPool.Find(EPlayerIdent::PI_World)->AddWorker(_toSub);
 
-	if (!workerref.workerArray.Contains(_toUnsub))
+	EPlayerIdent previousowner = _toSub->GetCurrentOwner();
+
+	if (previousowner == EPlayerIdent::PI_DEFAULT)
 	{
-		allWorker_Unassigned.FindRef(_playerIdent).workerArray.Remove(_toUnsub);
-		_toUnsub->SetWorkerOwner(_playerIdent);
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, SubscribeToSideJobPool, Owner was default"));
+		return;
 	}
+
+	if (allWorker_WorldPool.Contains(previousowner))
+		allWorker_WorldPool.Find(previousowner)->RemoveWorker(_toSub);
+	else if (allWorker_UnassignedPool.Contains(previousowner))
+		allWorker_UnassignedPool.Find(previousowner)->RemoveWorker(_toSub);
+	else if (allWorker_AssignedPool.Contains(previousowner))
+		allWorker_AssignedPool.Find(previousowner)->RemoveWorker(_toSub);
 }
 
-void AWorkerWorldManager::SubWorkerToMainJobPool(AWorker* _toSub, EPlayerIdent _playerIdent)
+void AWorkerWorldManager::SubscribeToUnassignedPool(AWorker* _toSub, EPlayerIdent _newOwner)
 {
-	FWorkerRefArray workerref = allWorker_MainJob.FindRef(_playerIdent);
-	_toSub->SetWorkerOwner(_playerIdent);
+	allWorker_UnassignedPool.Find(_newOwner)->AddWorker(_toSub);
 
-	if (!workerref.workerArray.Contains(_toSub))
+	EPlayerIdent previousowner = _toSub->GetCurrentOwner();
+
+	if (previousowner == EPlayerIdent::PI_DEFAULT)
 	{
-		allWorker_MainJob.FindRef(_playerIdent).workerArray.Add(_toSub);
-		_toSub->SetWorkerOwner(_playerIdent);
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, SubscribeToUnassignedPool, Owner was default"));
+		return;
 	}
 
-	UnsubWorkerFromUnassignedPool(_toSub, _playerIdent);
+	_toSub->SetWorkerOwner(_newOwner);
+
+	if (allWorker_WorldPool.Contains(previousowner))
+		allWorker_WorldPool.Find(previousowner)->RemoveWorker(_toSub);
+	else if (allWorker_SideJobPool.Contains(previousowner))
+		allWorker_SideJobPool.Find(previousowner)->RemoveWorker(_toSub);
+	else if (allWorker_AssignedPool.Contains(previousowner))
+		allWorker_AssignedPool.Find(previousowner)->RemoveWorker(_toSub);
 }
 
-void AWorkerWorldManager::UnsubWorkerFromMainJobPool(AWorker* _toUnsub, EPlayerIdent _playerIdent)
+void AWorkerWorldManager::SubscribeToAssignedPool(AWorker* _toSub)
 {
-	FWorkerRefArray workerref = allWorker_MainJob.FindRef(_playerIdent);
+	EPlayerIdent currentowner = _toSub->GetCurrentOwner();
 
-	if (workerref.workerArray.Contains(_toUnsub))
+	if (currentowner == EPlayerIdent::PI_DEFAULT)
 	{
-		allWorker_MainJob.FindRef(_playerIdent).workerArray.Remove(_toUnsub);
-		_toUnsub->SetWorkerOwner(_playerIdent);
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, SubscribeToAssignedPool, currentowner was default"));
+		return;
 	}
-}
 
-void AWorkerWorldManager::SubWorkerToSideJobPool(AWorker* _toSub)
-{
-	if (!allWorker_SideJob.Contains(_toSub))
-		allWorker_SideJob.Add(_toSub);
-}
+	allWorker_AssignedPool.Find(currentowner)->AddWorker(_toSub);
 
-void AWorkerWorldManager::UnsubWorkerFromSideJobPool(AWorker* _toUnsub)
-{
-	if (allWorker_SideJob.Contains(_toUnsub))
-		allWorker_SideJob.Remove(_toUnsub);
+	if (allWorker_UnassignedPool.Contains(currentowner))
+		allWorker_UnassignedPool.Find(currentowner)->RemoveWorker(_toSub);
+	else if (allWorker_WorldPool.Contains(currentowner))
+		allWorker_WorldPool.Find(currentowner)->RemoveWorker(_toSub);
+	else if (allWorker_SideJobPool.Contains(currentowner))
+		allWorker_SideJobPool.Find(currentowner)->RemoveWorker(_toSub);
 }
 
 void AWorkerWorldManager::AddProductionSite(AProductionsite* _toadd)

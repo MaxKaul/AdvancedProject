@@ -193,7 +193,7 @@ bool ASaveGameManager::InitAllManager()
 	 wwm_overloadfuncs = new FWWM_OverloadFuncs(spawnedWorkerWorldManager);
 
 	// Der Worker World Manager wird Init nachdem alle spieler gespawned sind, davor wird er nur gespawned
-	wwm_overloadfuncs->InitWorkerWorldManager();
+	wwm_overloadfuncs->InitWorkerWorldManager(this);
 
 	 return status;
  }
@@ -207,7 +207,7 @@ bool ASaveGameManager::InitAllManager()
 
 	 FWWM_OverloadFuncs* wwm_overloadfuncs;
 	 wwm_overloadfuncs = new FWWM_OverloadFuncs(spawnedWorkerWorldManager);
-	 wwm_overloadfuncs->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), allSavedProductionsites);
+	 wwm_overloadfuncs->InitWorkerWorldManager(saveManagerOptionals.workerWorldManagerSaveData.GetValue(), allSavedProductionsites,this);
 
 	 return status;
  }
