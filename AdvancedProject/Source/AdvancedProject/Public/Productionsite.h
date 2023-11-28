@@ -246,6 +246,12 @@ public:
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		int GetLocalProdSiteID() { return siteID; }
 
+	UFUNCTION(BlueprintCallable)
+		void SubscribeWorkerToOnSite(AWorker* _subToOnSite);
+
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		TArray<AWorker*> GetAllWorkerAtSite() { return workerAtSite; }
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();
@@ -257,10 +263,10 @@ private:
 private:
 	UPROPERTY()
 		bool bWasInit;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,meta=(AllowPrivateAccess))
 		UStaticMesh* actorMesh;
-	UPROPERTY()
-		UStaticMeshComponent* actorMeshComponent;
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		UStaticMeshComponent* actorMeshComp;
 
 	UPROPERTY()
 		ABuildingSite* buildingSite;
@@ -301,6 +307,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
 		class APlayerBase* siteOwner;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=WorkerInfo,meta=(AllowPrivateAccess))
+		TArray<AWorker*> workerAtSite;
 
 	UPROPERTY()
 		int siteID;

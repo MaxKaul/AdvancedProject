@@ -52,6 +52,7 @@ private:
 	UPROPERTY()
 		EPlayerIdent workerOwner;
 
+
 public:
 	FORCEINLINE
 		FVector GetWorkerLocation() { return workerLocation; }
@@ -81,6 +82,12 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	virtual void OnOverlapBegin(UPrimitiveComponent* _overlapComp, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIdx, bool _bFromSweep, const FHitResult& _sweepResult) ;
+	UFUNCTION()
+	virtual void OnOverlapEnd(UPrimitiveComponent* _overlapComp, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIdx) ;
+
+
 public:	
 	virtual void Tick(float DeltaTime) override;
 
@@ -101,21 +108,25 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		USkeletalMesh* skeletalMesh;
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category=Comps,meta=(AllowPrivateAccess))
+		UCapsuleComponent* workerHitBox;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+		UCapsuleComponent* capsuleComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Debug, meta = (AllowPrivateAccess))
+		float ZOffsetForSites;
+
+	bool testtoggle;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		USkeletalMeshComponent* skeletalMeshComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		class AWorkerController* workerController;
 
-	// Ertsmal placeholder für später wenn der JobManager implementiert ist
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
-		bool bIsWorking;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		int workerID;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
-		EPlayerIdent workerOwner;
 
 	UPROPERTY(VisibleAnywhere, Category = Status, meta=(AllowPrivateAccess))
 		FWorkerOptional workerOptionals;
@@ -125,16 +136,45 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Category = Status, meta=(AllowPrivateAccess))
 		EWorkerStatus employmentStatus;
-
-	UPROPERTY()
-	class AProductionsite* subbedSite;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		EPlayerIdent workerOwner;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		AProductionsite* subbedSite;
 
 
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();
 
+	UFUNCTION()
+		void State_Idle();
+	UFUNCTION()
+		void State_Employed_SideJob();
+	UFUNCTION()
+		void State_Employed_Unassigned();
+	UFUNCTION()
+		void State_Employed_Assigned();
+	UFUNCTION()
+		void State_FulfillingNeed();
+	UFUNCTION()
+		void State_SomethingWentWrong();
+
+	UFUNCTION()
+		void MoveOrder(FVector _movePos);
+
+	// Idle -> Open for work i.e roaming the world
+	// Employed_Unassigned -> Sollte slebes behaviour sein wie Idle, nur halt nicht open for workd
+	// Employed_Assigned -> Ist einer site assigned
+	// Fullfilling Needs -> In diesen state wird über den MoodManager geswitched wenn der worker eines seiner bedürfnisse befriedigen muss
+
+	// SideJob -> Kann erstmal weggelassen werden i.e placeholder
+
 public:
+	UFUNCTION()
+		void UncacheWorkerFromSite();
+	UFUNCTION()
+		void CacheWorkerToSite();
+
 	FORCEINLINE
 		float GetProductivity() { return productivity; }
 	FORCEINLINE
@@ -144,7 +184,7 @@ public:
 		FWorkerSaveData GetWorkerSaveData();
 
 	UFUNCTION()
-		void SetEmployementStatus(EWorkerStatus _employmentStatus, AProductionsite* _site = nullptr);
+		void SetWorkerState(EWorkerStatus _employmentStatus, AProductionsite* _site = nullptr);
 
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		EWorkerStatus GetEmployementStatus() { return employmentStatus; }

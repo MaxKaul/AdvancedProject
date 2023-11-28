@@ -12,6 +12,8 @@
 UBuilder::UBuilder()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+	ZOffset = 300.f;
 }
 
 
@@ -67,7 +69,7 @@ bool UBuilder::BuildProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _
 			FRotator spawnrot = _buildingSite->GetActorRotation();
 
 			// Debug weil die gebäude meshes noch angepasst werden müssen
-			spawnpos.Z -= 300.f;
+			spawnpos.Z -= ZOffset;
 
 			AProductionsite* spawnedsite = Cast<AProductionsite>(world->SpawnActor(productionSiteClass, &spawnpos, &spawnrot));
 

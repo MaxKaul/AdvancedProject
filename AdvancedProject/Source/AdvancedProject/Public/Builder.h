@@ -47,6 +47,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ProductionSite, meta = (AllowPrivateAccess))
 		TSubclassOf<class AProductionsite> productionSiteClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Debug, meta = (AllowPrivateAccess))
+		float ZOffset;
+
 	UPROPERTY()
 		AMarketManager* marketManager;
 

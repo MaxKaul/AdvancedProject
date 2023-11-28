@@ -12,8 +12,8 @@ AProductionsite::AProductionsite()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	actorMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Actor Mesh");
-	RootComponent = actorMeshComponent;
+	actorMeshComp = CreateDefaultSubobject<UStaticMeshComponent>("Actor Mesh");
+	RootComponent = actorMeshComp;
 
 	resourceStdTickValue = 1.f;
 	productionSiteProductivity = 0.f;
@@ -38,7 +38,7 @@ void FPS_OverloadFuncs::InitProductionSite(FProductionSiteSaveData _saveData, AM
 	overloadOwner->world = overloadOwner->GetWorld();
 	overloadOwner->productionSiteType = _saveData.GetSavedType();
 	overloadOwner->actorMesh = _saveData.GetSavedMesh();
-	overloadOwner->actorMeshComponent->SetStaticMesh(overloadOwner->actorMesh);
+	overloadOwner->actorMeshComp->SetStaticMesh(overloadOwner->actorMesh);
 	overloadOwner->marketManager = _marketManager;
 	overloadOwner->buildingSite = _saveData.GetSavedBuildingSite();
 	overloadOwner->siteID = _saveData.GetProductionsiteID();
@@ -64,7 +64,7 @@ void FPS_OverloadFuncs::InitProductionSite(UStaticMesh* _siteMesh, EProductionSi
 	overloadOwner->world = overloadOwner->GetWorld();
 	overloadOwner->productionSiteType = _type;
 	overloadOwner->actorMesh = _siteMesh;
-	overloadOwner->actorMeshComponent->SetStaticMesh(overloadOwner->actorMesh);
+	overloadOwner->actorMeshComp->SetStaticMesh(overloadOwner->actorMesh);
 	overloadOwner->marketManager = _marketManager;
 	overloadOwner->buildingSite = _buildingSite;
 	overloadOwner->siteID = _siteID;
@@ -96,7 +96,7 @@ bool AProductionsite::NullcheckDependencies()
 {
 	bool status = true;
 
-	if (!actorMeshComponent)
+	if (!actorMeshComp)
 	{
 		status = false;
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !actorMeshComponent"));
@@ -305,12 +305,28 @@ void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub, bool _fromManager)
 	{
 		subscribedWorker.Remove(_toUnsub);
 		productionSiteProductivity -= _toUnsub->GetProductivity();
+		_toUnsub->UncacheWorkerFromSite();
+
+		if (workerAtSite.Contains(_toUnsub))
+			workerAtSite.Remove(_toUnsub);
 
 		if(!_fromManager)
 			productionSiteManager->SubscribeWorkerToLocalPool(_toUnsub, this, true);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !subscribedWorker.Contains(_toUnsub)"))
+}
+
+void AProductionsite::SubscribeWorkerToOnSite(AWorker* _subToOnSite)
+{
+	if (!_subToOnSite)
+		return;
+
+	if (!workerAtSite.Contains(_subToOnSite))
+	{
+		workerAtSite.Add(_subToOnSite);
+		_subToOnSite->CacheWorkerToSite();
+	}
 }
 
 // Ich checke welcher resourcentyp mit welcher production site übereinstimmt und adde dann das pair
