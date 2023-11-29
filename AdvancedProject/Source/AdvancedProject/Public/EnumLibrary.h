@@ -68,3 +68,14 @@ enum class EPlayerIdent : uint8
 	PI_World,
 	PI_ENTRY_AMOUNT
 };
+
+UENUM(BlueprintType)
+enum class EWorkerAttributes : uint8
+{
+	WA_DEFAULT,
+	WA_A1,
+	WA_A2,
+	WA_A3,
+	WA_A4,
+	WA_ENTRY_AMOUNT
+};

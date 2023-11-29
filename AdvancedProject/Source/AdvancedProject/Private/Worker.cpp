@@ -6,6 +6,7 @@
 #include "NavigationSystem.h"
 #include "Productionsite.h"
 #include "WorkerController.h"
+#include "WorkerMoodManager.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 
@@ -21,6 +22,8 @@ AWorker::AWorker()
 
 	workerHitBox = CreateDefaultSubobject<UCapsuleComponent>("Hit Box");
 	workerHitBox->SetupAttachment(GetRootComponent());
+
+	moodManager = CreateDefaultSubobject<UWorkerMoodManager>("Mood Manager");
 
 	capsuleComp = GetCapsuleComponent();
 }
