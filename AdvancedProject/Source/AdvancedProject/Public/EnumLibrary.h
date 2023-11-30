@@ -70,12 +70,12 @@ enum class EPlayerIdent : uint8
 };
 
 UENUM(BlueprintType)
-enum class EWorkerAttributes : uint8
+enum class EWorkerAttributeIdentifier : uint8
 {
-	WA_DEFAULT,
-	WA_A1,
-	WA_A2,
-	WA_A3,
-	WA_A4,
-	WA_ENTRY_AMOUNT
+	WAI_DEFAULT,
+	WAI_A1,
+	WAI_A2,
+	WAI_A3,
+	WAI_A4,
+	WAI_ENTRY_AMOUNT
 };

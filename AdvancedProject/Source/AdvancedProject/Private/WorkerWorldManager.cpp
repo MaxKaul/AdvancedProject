@@ -21,6 +21,7 @@ AWorkerWorldManager::AWorkerWorldManager()
 	capsuleHightValue = 100.f;
 
 	maxSpawnTries = 10;
+	workerAttributeAmount = 3;
 }
 
 // Called every frame
@@ -79,7 +80,14 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManag
 		spawnrot = FRotator(0, 0, 0);
 	
 		mesh = overloadOwner->possibleSkeletalMeshes[FMath::RandRange(0, overloadOwner->possibleSkeletalMeshes.Num() - 1)];
-	
+
+		TArray<FWorkerDesireBase> rnddesirebase;
+
+		for (size_t j = 0; j < overloadOwner->workerAttributeAmount; j++)
+		{
+			rnddesirebase.Add(overloadOwner->GenerateWorkerAttribute());
+		}
+
 		FWorkerSaveData workersavedata =
 		{
 			spawnpos,
@@ -88,7 +96,8 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManag
 			overloadOwner->allWorker_Ref.Num(),
 			EWorkerStatus::WS_Unemployed,
 			-1,
-			EPlayerIdent::PI_DEFAULT
+			EPlayerIdent::PI_DEFAULT,
+			rnddesirebase
 		};
 
 		allworkersavedata.Add(workersavedata);
@@ -140,6 +149,7 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			int siteid = workerdata.GetProductionSiteID();
 			EWorkerStatus employementstatus = workerdata.GetEmploymentStatus();
 			EPlayerIdent workerowner = workerdata.GetWorkerOwner();
+			TArray<FWorkerDesireBase> workerdesirebase = workerdata.GetDesireBase();
 
 			FActorSpawnParameters params;
 			params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
@@ -147,7 +157,7 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			if (AActor* tospawn = world->SpawnActor(workerClass, &spawnpos, &spawnrot, params))
 			{
 				AWorker* worker = Cast<AWorker>(tospawn);
-				worker->InitWorker(workerdata, navigationSystem, allWorker_Ref.Num(), employementstatus, siteid, workerowner);
+				worker->InitWorker(workerdata, navigationSystem, allWorker_Ref.Num(), employementstatus, siteid, workerowner, workerdesirebase);
 
 				if(employementstatus == EWorkerStatus::WS_Assigned_MainJob)
 				{
@@ -180,7 +190,32 @@ bool AWorkerWorldManager::NullcheckDependencies()
 		status = false;
 	}
 
+	else if(!workerAttributeTable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, !workerDesireTable"));
+		status = false;
+	}
+
 	return status;
+}
+
+FWorkerDesireBase AWorkerWorldManager::GenerateWorkerAttribute()
+{
+	TArray<FAttributeEffetcTableRow*> tablerowref;
+
+
+	for(TTuple<FName, unsigned char*> item : workerAttributeTable->GetRowMap())
+	{
+		tablerowref.Add(reinterpret_cast<FAttributeEffetcTableRow*>(item.Value));
+	}
+
+	//int rndidx = FMath::RandRange(0, tablerowref[0]->attributeBase.Num());
+	//
+	//
+	//// Ich geh jetzt mal immer von 0 aus da ich im moment nur eine row nutze
+	//FWorkerDesireBase base = tablerowref[0]->attributeBase.Contains(static_cast<EWorkerAttributeIdentifier>(rndidx));
+
+	return FWorkerDesireBase();
 }
 
 

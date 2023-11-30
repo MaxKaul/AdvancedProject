@@ -92,7 +92,7 @@ void AWorker::SetWorkerOwner(EPlayerIdent _newOwner)
 	workerOwner = _newOwner;
 }
 
-void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner)
+void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase)
 {
 	workerID = _workerID;
 	workerOptionals.productionSiteID  = _siteID;
@@ -106,6 +106,7 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	workerController = Cast<AWorkerController>(GetController());
 	navigationSystem = _navSystem;
 	workerOwner = _workerOwner;
+	workerDesireBases = _desireBase;
 }
 
 FWorkerSaveData AWorker::GetWorkerSaveData()
@@ -118,7 +119,8 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 		workerID,
 		employmentStatus,
 		workerOptionals.productionSiteID.GetValue(),
-		workerOwner
+		workerOwner,
+		workerDesireBases
 	};
 
 	return savedata;

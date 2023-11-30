@@ -3,11 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AttributeLibrary.h"
 #include "Worker.h"
 #include "GameFramework/Actor.h"
 #include "WorkerWorldManager.generated.h"
 
 
+class UDataTable;
 USTRUCT(BlueprintType)
 struct FWorkerWorldManagerSaveData
 {
@@ -43,13 +45,15 @@ public:
 	FORCEINLINE
 		void RemoveWorker(AWorker* _toRemove) { if (workerArray.Contains(_toRemove)) workerArray.Remove(_toRemove); }
 
-/*	UFUNCTION(BlueprintCallable) */FORCEINLINE
+	FORCEINLINE
 		TArray<AWorker*> GetWorkerArray() { return workerArray; }
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TArray<AWorker*> workerArray;
 };
+
+
 
 
 UCLASS()
@@ -61,30 +65,6 @@ public:
 	AWorkerWorldManager();
 
 protected:
-	// Function to unsub worker from the global Unemployment pool, does not remove them from the World Pool
-	// Wird im moment auch noch gecalled wenn ein worker von der productionside auf den productionsidemanager subscribed wird
-	//UFUNCTION()
-	//	void UnsubWorkerFromUnemploymentPool(AWorker* _toUnsub);
-	//// Subs the worker to the global Unemployment pool
-	//UFUNCTION()
-	//	void SubWorkerToUnemploymentPool(AWorker* _toSub, EPlayerIdent _previousOwner);
-	//
-	//UFUNCTION()
-	//	void SubWorkerToUnassignedPool(AWorker* _toSub, EPlayerIdent _playerIdent);
-	//UFUNCTION()
-	//	void UnsubWorkerFromUnassignedPool(AWorker* _toUnsub, EPlayerIdent _unsubOwner);
-	//
-	//UFUNCTION()
-	//	void SubWorkerToMainJobPool(AWorker* _toSub, EPlayerIdent _playerIdent);
-	//UFUNCTION()
-	//	void UnsubWorkerFromMainJobPool(AWorker* _toUnsub, EPlayerIdent _playerIdent);
-	//
-	//UFUNCTION()
-	//	void SubWorkerToSideJobPool(AWorker* _toSub);
-	//UFUNCTION()
-	//	void UnsubWorkerFromSideJobPool(AWorker* _toUnsub);
-
-	protected:
 	// Worker Owner ist die World
 	// Alle not hired worker in der welt
 	UFUNCTION()
@@ -117,19 +97,19 @@ protected:
 		TMap<EPlayerIdent, FWorkerRefArray> allWorker_AssignedPool;
 
 public:
-		UFUNCTION(BlueprintCallable) FORCEINLINE
-			TArray<AWorker*> GetWorker_AllRef() { return allWorker_Ref; }
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		TArray<AWorker*> GetWorker_AllRef() { return allWorker_Ref; }
 
-		UFUNCTION(BlueprintCallable) FORCEINLINE
-			TMap<EPlayerIdent, FWorkerRefArray> GetWorker_WorldPool() { return allWorker_WorldPool; }
-		UFUNCTION(BlueprintCallable) FORCEINLINE
-			TMap<EPlayerIdent, FWorkerRefArray> GetWorker_SideJobPool() { return allWorker_SideJobPool; }
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		TMap<EPlayerIdent, FWorkerRefArray> GetWorker_WorldPool() { return allWorker_WorldPool; }
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		TMap<EPlayerIdent, FWorkerRefArray> GetWorker_SideJobPool() { return allWorker_SideJobPool; }
 
 
-		UFUNCTION(BlueprintCallable) FORCEINLINE
-			TMap<EPlayerIdent, FWorkerRefArray> GetWorker_UnassignedPool() { return allWorker_UnassignedPool; }
-		UFUNCTION(BlueprintCallable) FORCEINLINE
-			TMap<EPlayerIdent, FWorkerRefArray> GetWorker_AssignedPool() { return allWorker_AssignedPool; }
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		TMap<EPlayerIdent, FWorkerRefArray> GetWorker_UnassignedPool() { return allWorker_UnassignedPool; }
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		TMap<EPlayerIdent, FWorkerRefArray> GetWorker_AssignedPool() { return allWorker_AssignedPool; }
 
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -152,6 +132,9 @@ private:
 	UFUNCTION()
 		bool NullcheckDependencies(); 
 
+	UFUNCTION()
+		FWorkerDesireBase GenerateWorkerAttribute();
+
 	friend struct FWWM_OverloadFuncs;
 
 private:
@@ -169,17 +152,22 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		int maxSpawnTries;
-protected:
+
 	UPROPERTY()
 		UWorld* world;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SpawnInfos, meta = (AllowPrivateAccess))
 		int stdWorkerSpawnAmount;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SpawnInfos, meta = (AllowPrivateAccess))
+		int workerAttributeAmount;
 
 	UPROPERTY()
 	class UNavigationSystemV1* navigationSystem;
 	UPROPERTY()
 		class ASaveGameManager* saveGameManager;
+
+	UPROPERTY(EditAnywhere, Category = WorkerDesireTable, meta = (AllowPrivateAccess))
+		UDataTable* workerAttributeTable;
 };
 
 USTRUCT(BlueprintType)

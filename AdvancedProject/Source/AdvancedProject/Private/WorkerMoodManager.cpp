@@ -25,6 +25,15 @@ void UWorkerMoodManager::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 }
 
+FWorkerMoodManagerSaveData UWorkerMoodManager::GetWorkerMoodManagerSaveData()
+{
+	FWorkerMoodManagerSaveData savedata =
+	{
+	};
+
+	return savedata;
+}
+
 void UWorkerMoodManager::InitWorkerMoodManager(AWorker* _owner, FWorkerMoodManagerSaveData _saveData)
 {
 	managerOwner = _owner;

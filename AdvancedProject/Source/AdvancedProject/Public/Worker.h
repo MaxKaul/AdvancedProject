@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AttributeLibrary.h"
 #include "EnumLibrary.h"
+#include "TableBaseLibrary.h"
 #include "GameFramework/Character.h"
 #include "Worker.generated.h"
 
@@ -21,9 +23,9 @@ struct FWorkerSaveData
 {
 	GENERATED_BODY()
 
-	FWorkerSaveData() {  }
+	FWorkerSaveData(){};
 
-	FWorkerSaveData(FVector _position, FRotator _rotation, USkeletalMesh* _mesh, int _workerID, EWorkerStatus _employmentStatus, int _productionSiteID, EPlayerIdent _workerOwner)
+	FWorkerSaveData(FVector _position, FRotator _rotation, USkeletalMesh* _mesh, int _workerID, EWorkerStatus _employmentStatus, int _productionSiteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase)
 	{
 		workerLocation = _position;
 		workerRotation = _rotation;
@@ -32,6 +34,7 @@ struct FWorkerSaveData
 		employmentStatus = _employmentStatus;
 		productionSiteSaveID = _productionSiteID;
 		workerOwner = _workerOwner;
+		desireBase = _desireBase;
 	}
 
 private:
@@ -51,7 +54,8 @@ private:
 		FWorkerOptional workerOptional;
 	UPROPERTY()
 		EPlayerIdent workerOwner;
-
+	UPROPERTY()
+		TArray<FWorkerDesireBase> desireBase;
 
 public:
 	FORCEINLINE
@@ -68,8 +72,9 @@ public:
 		int GetProductionSiteID() { return productionSiteSaveID; }
 	FORCEINLINE
 		EPlayerIdent GetWorkerOwner() { return workerOwner; }
+	FORCEINLINE
+		TArray<FWorkerDesireBase> GetDesireBase() { return desireBase; }
 };
-
 
 UCLASS()
 class ADVANCEDPROJECT_API AWorker : public ACharacter
@@ -141,6 +146,13 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		AProductionsite* subbedSite;
 
+	UPROPERTY(VisibleAnywhere,Category= WorkerDesires, meta = (AllowPrivateAccess))
+		TArray<FWorkerDesireBase> workerDesireBases;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		float desireHunger;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		float desireLuxury;
 
 private:
 	UFUNCTION()
@@ -198,6 +210,6 @@ public:
 	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data
 	// Hat den naxchteil das ich im moment die site id immer mit -1 ini weil die auch einen default braucht
 	UFUNCTION()
-		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner);
+		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase);
 };
 
