@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "EnumLibrary.h"
+#include "MarketStall.h"
 #include "MarketManager.generated.h"
 
 
@@ -117,17 +118,23 @@ struct FMarketManagerSaveData
 	GENERATED_BODY()
 
 private:
-	TMap<EResourceIdent, FIndividualResourceInfo> resourceIdentInfoPair;
+	UPROPERTY()
+		TMap<EResourceIdent, FIndividualResourceInfo> resourceIdentInfoPair;
+	UPROPERTY()
+		TArray<FMarketStallSaveData> marketStallSaveData;
 
 public:
 	FORCEINLINE
 		TMap<EResourceIdent, FIndividualResourceInfo> GetResourceInfoPair() { return resourceIdentInfoPair; }
+	FORCEINLINE
+		TArray<FMarketStallSaveData> GetMarketStallSaveData() { return marketStallSaveData; }
 
 	FMarketManagerSaveData() {}
 
-	FMarketManagerSaveData(TMap<EResourceIdent, FIndividualResourceInfo> _resourceIdentInfoPair )
+	FMarketManagerSaveData(TMap<EResourceIdent, FIndividualResourceInfo> _resourceIdentInfoPair, TArray<FMarketStallSaveData> _marketStallSaveData)
 	{
 		resourceIdentInfoPair = _resourceIdentInfoPair;
+		marketStallSaveData = _marketStallSaveData;
 	}
 };
 
@@ -185,15 +192,20 @@ private:
 	UFUNCTION()
 		bool NullcheckDependencies();
 	UFUNCTION()
-		void InitMarketStalls();
+		void InitMarketStalls(TArray<FMarketStallSaveData> _stallSaveData);
 	UFUNCTION()
 		void InitResources(FMarketManagerSaveData _saveData);
 
 	UFUNCTION()
 		void  UpdateResourcePrices();
 
+	UFUNCTION()
 	void InitIndividualResource(float _lastResourcePrice,int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate,
 						        bool _bHasCost, TMap<EResourceIdent, int> _resourceCost);
+
+	// Mit jedemn run werden die resourcen wwelche bei den stalls gekauft/verkauf werden können neu generiert
+	UFUNCTION()
+		TArray<FMarketStallSaveData> GenerateStallTypes();
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ComponentInfos, meta = (AllowPrivateAccess))

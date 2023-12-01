@@ -18,7 +18,7 @@ AMarketStall::AMarketStall()
 void AMarketStall::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 void AMarketStall::Tick(float DeltaTime)
@@ -27,7 +27,14 @@ void AMarketStall::Tick(float DeltaTime)
 
 }
 
-void AMarketStall::SetMesh(UStaticMesh* _newMesh)
+void AMarketStall::InitMarketStall(UStaticMesh* _newMesh, FMarketStallSaveData _saveData)
 {
+	stallTypes = _saveData.GetSiteType();
 	actorMesh->SetStaticMesh(_newMesh);
+}
+
+
+FMarketStallSaveData AMarketStall::GetStallSaveData()
+{
+	return FMarketStallSaveData(stallTypes);
 }

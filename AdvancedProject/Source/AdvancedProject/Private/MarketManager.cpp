@@ -1,8 +1,10 @@
 
 #include "MarketManager.h"
 #include "MarketStall.h"
+#include "ParameterCollection.h"
 #include "..\Public\TableBaseLibrary.h"
 #include "Engine/DataTable.h"
+#include "Kismet/KismetArrayLibrary.h"
 
 
 AMarketManager::AMarketManager()
@@ -26,7 +28,7 @@ void FMM_OverloadFuncs::InitMarketManager(FMarketManagerSaveData _saveData)
 	}
 
 	overloadOwner->InitResources(_saveData);
-	overloadOwner->InitMarketStalls();
+	overloadOwner->InitMarketStalls(_saveData.GetMarketStallSaveData());
 
 	FTimerHandle timerhandle;
 	FTimerDelegate timerdelegate;
@@ -60,13 +62,57 @@ void FMM_OverloadFuncs::InitMarketManager()
 			resourcebasevalues[i]->Resource.GetHasCost(), resourcebasevalues[i]->Resource.GetResourceCost());
 	}
 
-	overloadOwner->InitMarketStalls();
+	TArray<FMarketStallSaveData> newstallsave = overloadOwner->GenerateStallTypes();
+
+	overloadOwner->InitMarketStalls(newstallsave);
 
 	FTimerHandle timerhandle;
 	FTimerDelegate timerdelegate;
 	timerdelegate.BindUFunction(overloadOwner, FName("UpdateResourcePrices"));
 
 	overloadOwner->world->GetTimerManager().SetTimer(timerhandle, timerdelegate, overloadOwner->resourcePriceTick, false);
+}
+
+
+TArray<FMarketStallSaveData> AMarketManager::GenerateStallTypes()
+{
+	TArray<FMarketStallSaveData> stallsave;
+
+	TArray<EProductionSiteType> alltypes;
+	TArray<int32> shufflearray;
+
+	for (size_t j = 1; j < (int)EProductionSiteType::PST_ENTRY_AMOUNT; j++)
+	{
+		alltypes.Add(EProductionSiteType(j));
+	}
+
+	if (alltypes.Num() > 0)
+	{
+		int32 LastIndex = alltypes.Num() - 1;
+		for (int32 i = 0; i <= LastIndex; ++i)
+		{
+			int32 Index = FMath::RandRange(i, LastIndex);
+			if (i != Index)
+			{
+				alltypes.Swap(i, Index);
+			}
+		}
+	}
+
+	for (size_t i = 0; i < stallPositions.Num(); i++)
+	{
+		FMarketStallSaveData newsave;
+
+		if(i <= alltypes.Num() )
+			newsave.AddNewProductionType(alltypes[i]);
+
+		if (i + 2 < alltypes.Num())
+			newsave.AddNewProductionType(alltypes[i + 2]);
+
+		stallsave.Add(newsave);
+	}
+
+	return stallsave;
 }
 
 // Noch resourcen auf dem markt auf 0 checken
@@ -150,7 +196,7 @@ TArray<FResourceTransactionTicket> AMarketManager::SellResources(TArray<FResourc
 	return returntickets;
 }
 
-void AMarketManager::InitMarketStalls()
+void AMarketManager::InitMarketStalls(TArray<FMarketStallSaveData> _stallSaveData)
 {
 	for (size_t i = 0; i < stallPositions.Num(); i++)
 	{
@@ -159,7 +205,11 @@ void AMarketManager::InitMarketStalls()
 
 		if (tospawn)
 		{
-			tospawn->SetMesh(stallMeshes[i]);
+			if(i <= _stallSaveData.Num() - 1)
+				tospawn->InitMarketStall(stallMeshes[i], _stallSaveData[i]);
+			else
+				tospawn->InitMarketStall(stallMeshes[i], _stallSaveData[0]);
+
 			spawnedStalls.Add(tospawn);
 		}
 		else
@@ -257,7 +307,14 @@ void AMarketManager::InitIndividualResource(float _lastResourcePrice, int _resou
 
 FMarketManagerSaveData AMarketManager::GetMarketManagerSaveData()
 {
-	FMarketManagerSaveData newsavefile = {resourceList};
+	TArray<FMarketStallSaveData> marketStallSaveData;
+
+	for (AMarketStall* stall : spawnedStalls)
+	{
+		marketStallSaveData.Add(stall->GetStallSaveData());
+	}
+
+	FMarketManagerSaveData newsavefile = {resourceList, marketStallSaveData};
 
 	return newsavefile;
 }
