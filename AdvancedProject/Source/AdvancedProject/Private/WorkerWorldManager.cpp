@@ -203,19 +203,17 @@ FWorkerDesireBase AWorkerWorldManager::GenerateWorkerAttribute()
 {
 	TArray<FAttributeEffetcTableRow*> tablerowref;
 
-
 	for(TTuple<FName, unsigned char*> item : workerAttributeTable->GetRowMap())
 	{
 		tablerowref.Add(reinterpret_cast<FAttributeEffetcTableRow*>(item.Value));
 	}
 
-	//int rndidx = FMath::RandRange(0, tablerowref[0]->attributeBase.Num());
-	//
-	//
-	//// Ich geh jetzt mal immer von 0 aus da ich im moment nur eine row nutze
-	//FWorkerDesireBase base = tablerowref[0]->attributeBase.Contains(static_cast<EWorkerAttributeIdentifier>(rndidx));
+	int rndidx = FMath::RandRange(1, tablerowref[0]->attributeBase.Num());
+	EWorkerAttributeIdentifier rndident = (EWorkerAttributeIdentifier)rndidx;
+	
+	FWorkerDesireBase* base = tablerowref[0]->attributeBase.Find(rndident);
 
-	return FWorkerDesireBase();
+	return *base;
 }
 
 
