@@ -196,6 +196,10 @@ private:
 	UFUNCTION()
 		void State_SomethingWentWrong();
 
+	// Wenn der worker sich in transit (EWorkerStatus::WS_FullfillNeed) befindet soll dies nicht durch eine entlassung unterbrochen werden
+	UFUNCTION()
+		void FinishFulfillNeed();
+
 	UFUNCTION()
 		void MoveWorker(FVector _movePos);
 	UFUNCTION()

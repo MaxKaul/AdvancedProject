@@ -41,6 +41,7 @@ enum class EWorkerStatus : uint8
 	WS_Assigned_SideJob,
 
 	WS_FullfillNeed,
+	WS_FinishFullfillNeed,
 
 	WS_Unassigned,
 	WS_Assigned_MainJob,

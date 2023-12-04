@@ -87,6 +87,7 @@ void AWorker::Tick(float DeltaTime)
 		State_SomethingWentWrong();
 		break;;
 	}
+
 }
 
 int AWorker::GetWorkerID()
@@ -142,7 +143,24 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 
 void AWorker::SetWorkerState(EWorkerStatus _employmentStatus, AProductionsite* _site)
 {
-	currentStatus = _employmentStatus;
+	if (currentStatus == EWorkerStatus::WS_FullfillNeed && _employmentStatus != EWorkerStatus::WS_FinishFullfillNeed)
+	{
+		if (_employmentStatus == EWorkerStatus::WS_Unemployed || _employmentStatus == EWorkerStatus::WS_Unassigned || _employmentStatus == EWorkerStatus::WS_Assigned_MainJob)
+			previousStatus = _employmentStatus;
+
+		return;
+	}
+	else if(_employmentStatus == EWorkerStatus::WS_FinishFullfillNeed)
+	{
+		currentStatus = previousStatus;
+	}
+	else
+	{
+		previousStatus = currentStatus;
+		currentStatus = _employmentStatus;
+	}
+
+
 	workerOptionals.possibleMarketStalls.Reset();
 	workerOptionals.chosenMarketStall.Reset();
 	movePos = FVector(0);
@@ -197,12 +215,8 @@ void AWorker::State_FulfillingNeed()
 {
 	if (workerOptionals.chosenMarketStall.IsSet())
 	{
-		if( (GetActorLocation( ) - movePos).Length() <= interactionRange)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("DDDD"));
-			SetWorkerState(EWorkerStatus::WS_FullfillNeed);
-
-		}
+		if ((GetActorLocation() - movePos).Length() <= interactionRange)
+			FinishFulfillNeed();
 
 		return;
 	}
@@ -260,6 +274,11 @@ TArray<AMarketStall*> AWorker::ChooseMarketStalls()
 void AWorker::State_SomethingWentWrong()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UFF"));
+}
+
+void AWorker::FinishFulfillNeed()
+{
+	SetWorkerState(EWorkerStatus::WS_FinishFullfillNeed);
 }
 
 void AWorker::MoveWorker(FVector _movePos)

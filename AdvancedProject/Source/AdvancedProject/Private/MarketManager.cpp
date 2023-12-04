@@ -157,14 +157,12 @@ TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResource
 
 		if(resourcelistinfo.GetLastResourcePrice() <= ticket.marketManagerOptionals.maxBuyPricePerResource.GetValue())
 		{
-			// !! NOCH EINE LÖSUNG FÜR CALLS FINDEN WELCHE ZEITGLEICH STATTFINDEN !! -> Waiting List?
 			resourceList.Find(ticket.resourceIdent)->SubtractResourceAmount(ticket.resourceAmount);
 			resourceList.Find(ticket.resourceIdent)->Subtract_K_Value(ticket.resourceAmount);
 
 			newticketentry.resourceIdent = ticket.resourceIdent;
 			newticketentry.resourceAmount = ticket.resourceAmount;
 
-			// Wir geben die differenz wieder zurück da jeder käufer immer all sein geld reinwirft
 			newticketentry.exchangedCapital = ticket.exchangedCapital - ticket.resourceAmount * resourcelistinfo.GetLastResourcePrice();
 
 			returntickets.Add(newticketentry);
