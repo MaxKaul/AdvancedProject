@@ -15,7 +15,7 @@ struct FWorkerDesireBase
 public:
 	FWorkerDesireBase() {}
 
-	FWorkerDesireBase(TArray<EResourceIdent> _prefferedLuxuryResources, float _dmLuxury, float _dmHunger)
+	FWorkerDesireBase(TArray<EResourceIdent> _prefferedLuxuryResources, TArray<EResourceIdent> _prefferedNutritionResources, float _dmLuxury, float _dmHunger)
 	{
 		prefferedLuxuryResources = _prefferedLuxuryResources;
 		modifier_desireLuxury = _dmLuxury;
@@ -29,7 +29,8 @@ private:
 		float modifier_desireHunger;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		TArray<EResourceIdent> prefferedLuxuryResources;
-
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		TArray<EResourceIdent> prefferedNutritionResources;
 public:
 	FORCEINLINE
 		float GetDesireMod_Luxury() { return modifier_desireLuxury; }
@@ -37,6 +38,8 @@ public:
 		float GetDesireMod_Hunger() { return modifier_desireHunger; }
 	FORCEINLINE
 		TArray<EResourceIdent> GetDesired_LuxuryResources() { return prefferedLuxuryResources; }
+	FORCEINLINE
+		TArray<EResourceIdent> GetDesired_NutritionResources() { return prefferedLuxuryResources; }
 };
 
 USTRUCT()

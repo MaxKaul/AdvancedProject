@@ -15,21 +15,21 @@ struct FMarketStallSaveData
 
 	FMarketStallSaveData(){};
 
-	FMarketStallSaveData(TArray<EProductionSiteType> _stallType)
+	FMarketStallSaveData(TArray<EResourceIdent> _stallResources)
 	{
-		stallType = _stallType;
+		stallResources = _stallResources;
 	}
 
 private:
 	UPROPERTY()
-		TArray<EProductionSiteType> stallType;
+		TArray<EResourceIdent> stallResources;
 
 public:
 	FORCEINLINE
-		TArray<EProductionSiteType> GetSiteType() { return stallType; }
+		TArray<EResourceIdent> GetSiteType() { return stallResources; }
 
 	FORCEINLINE
-		void AddNewProductionType(EProductionSiteType _toAdd) { stallType.Add(_toAdd); }
+		void AddNewProductionType(EResourceIdent _toAdd) { stallResources.Add(_toAdd); }
 };
 
 UCLASS()
@@ -50,10 +50,13 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION() FORCEINLINE
-		TArray<EProductionSiteType> GetStallType() { return stallTypes; }
+		TArray<EResourceIdent> GetStallResources() { return stallResources; }
 
 	UFUNCTION()
 		FMarketStallSaveData GetStallSaveData();
+
+	UFUNCTION() FORCEINLINE
+		UStaticMeshComponent* GetMesh() { return actorMesh; }
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess))
@@ -63,5 +66,5 @@ private:
 
 	// Jeder stall kann zwei resourcen kaufen verkaufen
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Infos, meta = (AllowPrivateAccess))
-		TArray<EProductionSiteType> stallTypes;
+		TArray<EResourceIdent> stallResources;
 };

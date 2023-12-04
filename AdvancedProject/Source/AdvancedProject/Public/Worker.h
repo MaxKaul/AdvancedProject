@@ -16,6 +16,9 @@ struct FWorkerOptional
 
 	TOptional<int> productionSiteID;
 	TOptional<class AProductionsite*> productionSiteRef;
+
+	TOptional<TArray<AMarketStall*>> possibleMarketStalls;
+	TOptional<AMarketStall*> chosenMarketStall;
 };
 
 USTRUCT(BlueprintType)
@@ -133,6 +136,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		int workerID;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		TArray<FName> possibleSockets;
+
 	UPROPERTY(VisibleAnywhere, Category = Status, meta=(AllowPrivateAccess))
 		FWorkerOptional workerOptionals;
 
@@ -140,9 +146,14 @@ private:
 		class UNavigationSystemV1* navigationSystem;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Category = Status, meta=(AllowPrivateAccess))
-		EWorkerStatus employmentStatus;
+		EWorkerStatus currentStatus;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		EWorkerStatus previousStatus;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		EPlayerIdent workerOwner;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		AMarketManager* marketManager;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		AProductionsite* subbedSite;
 
@@ -153,6 +164,17 @@ private:
 		float desireHunger;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		float desireLuxury;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+	TArray<EResourceIdent> allLuxurybBiases;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+	TArray<EResourceIdent> allNutritionBiases;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		FVector movePos;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		float interactionRange;
 
 private:
 	UFUNCTION()
@@ -168,11 +190,16 @@ private:
 		void State_Employed_Assigned();
 	UFUNCTION()
 		void State_FulfillingNeed();
+	// Dies ist ein Array weil es auch vorkommen soll das ein worker ein bedürfniss nach luxus und nahrung gleichzeitig stillen will und dies nicht alles an einem MarketStall machen kann
+	UFUNCTION()
+		TArray<AMarketStall*> ChooseMarketStalls();
 	UFUNCTION()
 		void State_SomethingWentWrong();
 
 	UFUNCTION()
-		void MoveOrder(FVector _movePos);
+		void MoveWorker(FVector _movePos);
+	UFUNCTION()
+		void FillBiasLists();
 
 	// Idle -> Open for work i.e roaming the world
 	// Employed_Unassigned -> Sollte slebes behaviour sein wie Idle, nur halt nicht open for workd
@@ -199,7 +226,7 @@ public:
 		void SetWorkerState(EWorkerStatus _employmentStatus, AProductionsite* _site = nullptr);
 
 	UFUNCTION(BlueprintCallable) FORCEINLINE
-		EWorkerStatus GetEmployementStatus() { return employmentStatus; }
+		EWorkerStatus GetEmployementStatus() { return currentStatus; }
 
 	FORCEINLINE
 		void SetProductionSiteInfo(int _siteID, AProductionsite* _siteRef) { workerOptionals.productionSiteID = _siteID; workerOptionals.productionSiteRef = _siteRef; }
@@ -210,6 +237,6 @@ public:
 	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data
 	// Hat den naxchteil das ich im moment die site id immer mit -1 ini weil die auch einen default braucht
 	UFUNCTION()
-		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase);
+		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase, AMarketManager* _marketManager);
 };
 

@@ -78,23 +78,25 @@ TArray<FMarketStallSaveData> AMarketManager::GenerateStallTypes()
 {
 	TArray<FMarketStallSaveData> stallsave;
 
-	TArray<EProductionSiteType> alltypes;
+	TArray<EResourceIdent> allresources;
 	TArray<int32> shufflearray;
 
-	for (size_t j = 1; j < (int)EProductionSiteType::PST_ENTRY_AMOUNT; j++)
+	TArray<EResourceIdent> usedresources;
+
+	for (size_t j = 1; j < (int)EResourceIdent::ERI_ENTRY_AMOUNT; j++)
 	{
-		alltypes.Add(EProductionSiteType(j));
+		allresources.Add(EResourceIdent(j));
 	}
 
-	if (alltypes.Num() > 0)
+	if (allresources.Num() > 0)
 	{
-		int32 LastIndex = alltypes.Num() - 1;
+		int32 LastIndex = allresources.Num() - 1;
 		for (int32 i = 0; i <= LastIndex; ++i)
 		{
 			int32 Index = FMath::RandRange(i, LastIndex);
 			if (i != Index)
 			{
-				alltypes.Swap(i, Index);
+				allresources.Swap(i, Index);
 			}
 		}
 	}
@@ -103,11 +105,36 @@ TArray<FMarketStallSaveData> AMarketManager::GenerateStallTypes()
 	{
 		FMarketStallSaveData newsave;
 
-		if(i <= alltypes.Num() )
-			newsave.AddNewProductionType(alltypes[i]);
+		if(i <= allresources.Num() )
+		{
+			newsave.AddNewProductionType(allresources[i]);
+			usedresources.Add(allresources[i]);
+		}
 
-		if (i + 2 < alltypes.Num())
-			newsave.AddNewProductionType(alltypes[i + 2]);
+		if (i + 2 < allresources.Num())
+		{
+			newsave.AddNewProductionType(allresources[i + 2]);
+			usedresources.Add(allresources[i + 2]);
+		}
+
+		if (i + 3 < allresources.Num())
+		{
+			newsave.AddNewProductionType(allresources[i + 3]);
+			usedresources.Add(allresources[i + 3]);
+		}
+
+		// Zum catchen von edgecases falls eine resource nicht richtig zugewiesen wurde
+		if(i >= stallPositions.Num() - 1)
+		{
+			for(EResourceIdent ident : allresources)
+			{
+				if(!usedresources.Contains(ident))
+				{
+					newsave.AddNewProductionType(ident);
+					usedresources.Add(ident);
+				}
+			}
+		}
 
 		stallsave.Add(newsave);
 	}

@@ -29,12 +29,12 @@ void AMarketStall::Tick(float DeltaTime)
 
 void AMarketStall::InitMarketStall(UStaticMesh* _newMesh, FMarketStallSaveData _saveData)
 {
-	stallTypes = _saveData.GetSiteType();
+	stallResources = _saveData.GetSiteType();
 	actorMesh->SetStaticMesh(_newMesh);
 }
 
 
 FMarketStallSaveData AMarketStall::GetStallSaveData()
 {
-	return FMarketStallSaveData(stallTypes);
+	return FMarketStallSaveData(stallResources);
 }

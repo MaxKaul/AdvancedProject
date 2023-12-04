@@ -13,5 +13,7 @@ UCLASS()
 class ADVANCEDPROJECT_API AWorkerController : public AAIController
 {
 	GENERATED_BODY()
-	
+
+	AWorkerController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
 };

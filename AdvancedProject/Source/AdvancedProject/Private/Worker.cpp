@@ -8,6 +8,7 @@
 #include "WorkerController.h"
 #include "WorkerMoodManager.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/StaticMeshSocket.h"
 #include "GameFramework/PawnMovementComponent.h"
 
 // Sets default values
@@ -19,6 +20,7 @@ AWorker::AWorker()
 	productivity = 0.08f;
 
 	ZOffsetForSites = 700.f;
+	interactionRange = 200.f;
 
 	workerHitBox = CreateDefaultSubobject<UCapsuleComponent>("Hit Box");
 	workerHitBox->SetupAttachment(GetRootComponent());
@@ -26,6 +28,10 @@ AWorker::AWorker()
 	moodManager = CreateDefaultSubobject<UWorkerMoodManager>("Mood Manager");
 
 	capsuleComp = GetCapsuleComponent();
+
+	possibleSockets.Add("InteractionSocket_0");
+	possibleSockets.Add("InteractionSocket_1");
+	possibleSockets.Add("InteractionSocket_2");
 }
 
 // Called when the game starts or when spawned
@@ -33,14 +39,12 @@ void AWorker::BeginPlay()
 {
 	Super::BeginPlay();
 
-	workerHitBox->OnComponentBeginOverlap.AddDynamic(this, &AWorker::OnOverlapBegin);
-	workerHitBox->OnComponentEndOverlap.AddDynamic(this, &AWorker::OnOverlapEnd);
 }
 
 void AWorker::OnOverlapBegin(UPrimitiveComponent* _overlapComp, AActor* _otherActor, UPrimitiveComponent* _otherComp,
 	int32 _otherBodyIdx, bool _bFromSweep, const FHitResult& _sweepResult)
 {
-	if (subbedSite && Cast<AProductionsite>(_otherActor) == subbedSite)
+	if (subbedSite && currentStatus == EWorkerStatus::WS_Assigned_MainJob && Cast<AProductionsite>(_otherActor) == subbedSite)
 		subbedSite->SubscribeWorkerToOnSite(this);
 }
 
@@ -55,7 +59,7 @@ void AWorker::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	switch (employmentStatus)
+	switch (currentStatus)
 	{
 	case EWorkerStatus::WS_Unemployed:
 		State_Idle();
@@ -70,6 +74,9 @@ void AWorker::Tick(float DeltaTime)
 		State_Employed_Assigned();
 		break;
 
+	case EWorkerStatus::WS_FullfillNeed:
+			State_FulfillingNeed();
+		break;
 
 	case EWorkerStatus::WS_DEFAULT:
 		break;
@@ -92,11 +99,12 @@ void AWorker::SetWorkerOwner(EPlayerIdent _newOwner)
 	workerOwner = _newOwner;
 }
 
-void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase)
+void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase, AMarketManager* _marketManager)
 {
 	workerID = _workerID;
 	workerOptionals.productionSiteID  = _siteID;
-	employmentStatus = _employementStatus;
+	currentStatus = _employementStatus;
+	marketManager = _marketManager;
 
 	skeletalMeshComponent = GetMesh();
 	
@@ -107,6 +115,12 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	navigationSystem = _navSystem;
 	workerOwner = _workerOwner;
 	workerDesireBases = _desireBase;
+
+	workerHitBox->OnComponentBeginOverlap.AddDynamic(this, &AWorker::OnOverlapBegin);
+	workerHitBox->OnComponentEndOverlap.AddDynamic(this, &AWorker::OnOverlapEnd);
+
+	FillBiasLists();
+	SetWorkerState(EWorkerStatus::WS_FullfillNeed, nullptr);
 }
 
 FWorkerSaveData AWorker::GetWorkerSaveData()
@@ -117,7 +131,7 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 		GetActorRotation(),
 		skeletalMesh,
 		workerID,
-		employmentStatus,
+		currentStatus,
 		workerOptionals.productionSiteID.GetValue(),
 		workerOwner,
 		workerDesireBases
@@ -128,11 +142,14 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 
 void AWorker::SetWorkerState(EWorkerStatus _employmentStatus, AProductionsite* _site)
 {
-	employmentStatus = _employmentStatus;
+	currentStatus = _employmentStatus;
+	workerOptionals.possibleMarketStalls.Reset();
+	workerOptionals.chosenMarketStall.Reset();
+	movePos = FVector(0);
 
 	workerController->StopMovement();
 
-	if (_site && employmentStatus == EWorkerStatus::WS_Assigned_MainJob)
+	if (_site && currentStatus == EWorkerStatus::WS_Assigned_MainJob)
 		subbedSite = _site;
 	else
 		subbedSite = nullptr;
@@ -178,7 +195,66 @@ void AWorker::State_Employed_Assigned()
 
 void AWorker::State_FulfillingNeed()
 {
+	if (workerOptionals.chosenMarketStall.IsSet())
+	{
+		if( (GetActorLocation( ) - movePos).Length() <= interactionRange)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("DDDD"));
+			SetWorkerState(EWorkerStatus::WS_FullfillNeed);
 
+		}
+
+		return;
+	}
+	else if (!workerOptionals.possibleMarketStalls.IsSet())
+		workerOptionals.possibleMarketStalls = ChooseMarketStalls();
+	else if (!workerOptionals.possibleMarketStalls.IsSet())
+	{
+		UE_LOG(LogTemp,Warning,TEXT("AWorker, Could not Choose Market Stall"))
+		return;
+	}
+
+	int rndidx = 0;
+	int rndsocket = FMath::RandRange(0, possibleSockets.Num() - 1);
+
+	if (workerOptionals.possibleMarketStalls.GetValue().Num() > 0)
+		rndidx = FMath::RandRange(0, workerOptionals.possibleMarketStalls.GetValue().Num() - 1);
+
+	workerOptionals.chosenMarketStall = workerOptionals.possibleMarketStalls.GetValue()[rndidx];
+
+	movePos = workerOptionals.possibleMarketStalls.GetValue()[rndidx]->GetMesh()->GetSocketLocation(possibleSockets[rndsocket]);
+
+	if (workerOptionals.chosenMarketStall.IsSet())
+		DrawDebugSphere(GetWorld(), movePos, 16, 16, FColor::Red, true, 15.f, 16, 16);
+
+	MoveWorker(movePos);
+}
+
+TArray<AMarketStall*> AWorker::ChooseMarketStalls()
+{
+	TArray<AMarketStall*> possiblestalls;
+
+	// rnd für die individuelle order
+	EResourceIdent rndluxurybias;
+	EResourceIdent rndnutritionbias;
+
+	int rndidx = 0;
+
+	rndidx = FMath::RandRange(0, allLuxurybBiases.Num() - 1);
+	rndluxurybias = allLuxurybBiases[rndidx];
+
+	rndidx = FMath::RandRange(0, allNutritionBiases.Num() - 1);
+	rndnutritionbias = allNutritionBiases[rndidx];
+
+	for(AMarketStall* stall : marketManager->GetAllMarketStalls())
+	{
+		TArray<EResourceIdent> availableresoruces;
+
+		if (stall->GetStallResources().Contains(rndluxurybias) || stall->GetStallResources().Contains(rndnutritionbias))
+			possiblestalls.Add(stall);
+	}
+
+	return possiblestalls;
 }
 
 void AWorker::State_SomethingWentWrong()
@@ -186,12 +262,28 @@ void AWorker::State_SomethingWentWrong()
 	UE_LOG(LogTemp, Warning, TEXT("UFF"));
 }
 
-void AWorker::MoveOrder(FVector _movePos)
+void AWorker::MoveWorker(FVector _movePos)
 {
 	if (GetMovementComponent()->Velocity.Length() > 0)
 		return;
 
 	workerController->MoveToLocation(_movePos);
+}
+
+void AWorker::FillBiasLists()
+{
+	for (FWorkerDesireBase base : workerDesireBases)
+	{
+		for (size_t i = 0; i < base.GetDesired_LuxuryResources().Num(); i++)
+		{
+			allLuxurybBiases.Add(base.GetDesired_LuxuryResources()[i]);
+		}
+
+		for (size_t i = 0; i < base.GetDesired_NutritionResources().Num(); i++)
+		{
+			allNutritionBiases.Add(base.GetDesired_NutritionResources()[i]);
+		}
+	}
 }
 
 void AWorker::UncacheWorkerFromSite()

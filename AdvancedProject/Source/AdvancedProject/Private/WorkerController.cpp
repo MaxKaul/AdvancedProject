@@ -3,3 +3,10 @@
 
 #include "WorkerController.h"
 
+#include "Navigation/CrowdFollowingComponent.h"
+
+AWorkerController::AWorkerController(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UCrowdFollowingComponent>(TEXT("PathFollowingComponent")))
+{
+
+}

@@ -31,12 +31,13 @@ void AWorkerWorldManager::Tick(float DeltaTime)
 
 }
 
-void FWWM_OverloadFuncs::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<AProductionsite*> _allProductionSites, ASaveGameManager* _saveGameManager)
+void FWWM_OverloadFuncs::InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<AProductionsite*> _allProductionSites, ASaveGameManager* _saveGameManager, AMarketManager* _marketManager)
 {
 	overloadOwner->world = overloadOwner->GetWorld();
 	overloadOwner->navigationSystem = Cast<UNavigationSystemV1>(overloadOwner->world->GetNavigationSystem());
 	overloadOwner->allProductionSites = _allProductionSites;
 	overloadOwner->saveGameManager = _saveGameManager;
+	overloadOwner->marketManager = _marketManager;
 
 	overloadOwner->allWorker_WorldPool.Add(EPlayerIdent::PI_World, FWorkerRefArray());
 
@@ -49,11 +50,12 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(FWorkerWorldManagerSaveData _sav
 	overloadOwner->SpawnAllWorker(_saveData);
 }
 
-void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManager)
+void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManager, AMarketManager* _marketManager)
 {
 	overloadOwner->world = overloadOwner->GetWorld();
 	overloadOwner->navigationSystem = Cast<UNavigationSystemV1>(overloadOwner->world->GetNavigationSystem());
 	overloadOwner->saveGameManager = _saveGameManager;
+	overloadOwner->marketManager = _marketManager;
 
 	if (!overloadOwner->NullcheckDependencies())
 	{
@@ -157,7 +159,7 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			if (AActor* tospawn = world->SpawnActor(workerClass, &spawnpos, &spawnrot, params))
 			{
 				AWorker* worker = Cast<AWorker>(tospawn);
-				worker->InitWorker(workerdata, navigationSystem, allWorker_Ref.Num(), employementstatus, siteid, workerowner, workerdesirebase);
+				worker->InitWorker(workerdata, navigationSystem, allWorker_Ref.Num(), employementstatus, siteid, workerowner, workerdesirebase, marketManager);
 
 				if(employementstatus == EWorkerStatus::WS_Assigned_MainJob)
 				{

@@ -188,6 +188,9 @@ public:
 	FORCEINLINE
 		TMap<EResourceIdent, FIndividualResourceInfo> GetPoolInfo() { return resourceList; }
 
+	UFUNCTION() FORCEINLINE
+		TArray<class AMarketStall*> GetAllMarketStalls() { return spawnedStalls; }
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();

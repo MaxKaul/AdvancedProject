@@ -141,6 +141,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
 		TArray<class AProductionsite*> allProductionSites;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorldInfos, meta = (AllowPrivateAccess))
+		AMarketManager* marketManager;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		TSubclassOf<AWorker> workerClass;
 
@@ -153,6 +156,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		int maxSpawnTries;
 
+
 	UPROPERTY()
 		UWorld* world;
 
@@ -162,12 +166,14 @@ private:
 		int workerAttributeAmount;
 
 	UPROPERTY()
-	class UNavigationSystemV1* navigationSystem;
+		UNavigationSystemV1* navigationSystem;
 	UPROPERTY()
 		class ASaveGameManager* saveGameManager;
 
 	UPROPERTY(EditAnywhere, Category = WorkerDesireTable, meta = (AllowPrivateAccess))
 		UDataTable* workerAttributeTable;
+
+
 };
 
 USTRUCT(BlueprintType)
@@ -183,6 +189,6 @@ public:
 	FWWM_OverloadFuncs() {}
 	FWWM_OverloadFuncs(AWorkerWorldManager* _friend) : overloadOwner(_friend){}
 
-	void InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<class AProductionsite*> _allProductionSites, ASaveGameManager* _saveGameManager);
-	void InitWorkerWorldManager(ASaveGameManager* _saveGameManager);
+	void InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<class AProductionsite*> _allProductionSites, ASaveGameManager* _saveGameManager, AMarketManager* _marketManager);
+	void InitWorkerWorldManager(ASaveGameManager* _saveGameManager, AMarketManager* _marketManager);
 };
