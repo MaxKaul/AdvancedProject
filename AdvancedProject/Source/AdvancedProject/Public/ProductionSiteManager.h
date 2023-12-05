@@ -61,7 +61,6 @@ private:
 	UFUNCTION()
 		void InitWorkerLists();
 
-
 	UFUNCTION()
 		bool NullcheckDependencies();
 

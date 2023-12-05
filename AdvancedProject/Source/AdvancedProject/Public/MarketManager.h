@@ -26,7 +26,7 @@ struct FIndividualResourceInfo
 	GENERATED_BODY()
 
 	FIndividualResourceInfo(EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSites, int _resourceAmount, float _lastResourcePrice, float _k_Value, float _resourceTickRate, bool _bHasCost,
-							TMap<EResourceIdent, int> _resourceIdentCostPair)
+							TMap<EResourceIdent, int> _resourceIdentCostPair, float _desireFulfillmentValue)
 	{
 		resourceIdent = _resourceIdent;
 		allowedProductionSites = _allowedProductionSites;
@@ -35,6 +35,7 @@ struct FIndividualResourceInfo
 		k_Value = _k_Value;
 		resourceTickRate = _resourceTickRate;
 		bHasResourceCost = _bHasCost;
+		desireFulfillmentValue = _desireFulfillmentValue;
 
 		resourceIdentCostPair = _resourceIdentCostPair;
 	}
@@ -57,6 +58,8 @@ private:
 	// The Resource Price with which the Resource will be initialised at the start of each new game
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float lastResourcePrice;
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		float desireFulfillmentValue;
 
 	// Decay or Growth value of the individual resource, starts with 0 and is representativ for resources entering/leaving the market
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
@@ -84,6 +87,8 @@ public:
 	FORCEINLINE
 		float Get_K_Value() { return k_Value; }
 	FORCEINLINE
+		float GetFulfillmentValue() { return desireFulfillmentValue; }
+	FORCEINLINE
 		bool GetHasCost() { return bHasResourceCost; }
 	FORCEINLINE
 		EResourceIdent GetResourceIdent() { return resourceIdent; }
@@ -110,6 +115,8 @@ public:
 		void Set_K_Value(float _newValue) { k_Value = _newValue; }
 	FORCEINLINE
 		void SetResourceIdent(EResourceIdent _ident) { resourceIdent = _ident; }
+	FORCEINLINE
+		void GetFulfillmentValue(float _fulfillmentValue) { desireFulfillmentValue = _fulfillmentValue; }
 };
 
 USTRUCT(BlueprintType)
@@ -204,7 +211,7 @@ private:
 
 	UFUNCTION()
 	void InitIndividualResource(float _lastResourcePrice,int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate,
-						        bool _bHasCost, TMap<EResourceIdent, int> _resourceCost);
+						        bool _bHasCost, TMap<EResourceIdent, int> _resourceCost, float _desirefulfillmentValue);
 
 	// Mit jedemn run werden die resourcen wwelche bei den stalls gekauft/verkauf werden können neu generiert
 	UFUNCTION()

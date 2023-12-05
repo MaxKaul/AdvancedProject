@@ -22,6 +22,8 @@ AWorker::AWorker()
 	ZOffsetForSites = 700.f;
 	interactionRange = 200.f;
 
+	desireDefaultMax = 100.f;
+
 	workerHitBox = CreateDefaultSubobject<UCapsuleComponent>("Hit Box");
 	workerHitBox->SetupAttachment(GetRootComponent());
 
@@ -90,16 +92,6 @@ void AWorker::Tick(float DeltaTime)
 
 }
 
-int AWorker::GetWorkerID()
-{
-	return workerID;
-}
-
-void AWorker::SetWorkerOwner(EPlayerIdent _newOwner)
-{
-	workerOwner = _newOwner;
-}
-
 void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase, AMarketManager* _marketManager)
 {
 	workerID = _workerID;
@@ -121,7 +113,10 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	workerHitBox->OnComponentEndOverlap.AddDynamic(this, &AWorker::OnOverlapEnd);
 
 	FillBiasLists();
-	SetWorkerState(EWorkerStatus::WS_FullfillNeed, nullptr);
+
+	FTimerHandle handle;
+
+	GetWorld()->GetTimerManager().SetTimer(handle, this, &AWorker::DEBUGSTARTDESIRE, 3.f);
 }
 
 FWorkerSaveData AWorker::GetWorkerSaveData()
@@ -216,7 +211,7 @@ void AWorker::State_FulfillingNeed()
 	if (workerOptionals.chosenMarketStall.IsSet())
 	{
 		if ((GetActorLocation() - movePos).Length() <= interactionRange)
-			FinishFulfillNeed();
+			BuyResources();
 
 		return;
 	}
@@ -238,9 +233,6 @@ void AWorker::State_FulfillingNeed()
 
 	movePos = workerOptionals.possibleMarketStalls.GetValue()[rndidx]->GetMesh()->GetSocketLocation(possibleSockets[rndsocket]);
 
-	if (workerOptionals.chosenMarketStall.IsSet())
-		DrawDebugSphere(GetWorld(), movePos, 16, 16, FColor::Red, true, 15.f, 16, 16);
-
 	MoveWorker(movePos);
 }
 
@@ -249,22 +241,21 @@ TArray<AMarketStall*> AWorker::ChooseMarketStalls()
 	TArray<AMarketStall*> possiblestalls;
 
 	// rnd für die individuelle order
-	EResourceIdent rndluxurybias;
-	EResourceIdent rndnutritionbias;
+
 
 	int rndidx = 0;
 
 	rndidx = FMath::RandRange(0, allLuxurybBiases.Num() - 1);
-	rndluxurybias = allLuxurybBiases[rndidx];
+	currentLuxuryGood = allLuxurybBiases[rndidx];
 
 	rndidx = FMath::RandRange(0, allNutritionBiases.Num() - 1);
-	rndnutritionbias = allNutritionBiases[rndidx];
+	currentNutritionGood = allNutritionBiases[rndidx];
 
 	for(AMarketStall* stall : marketManager->GetAllMarketStalls())
 	{
 		TArray<EResourceIdent> availableresoruces;
 
-		if (stall->GetStallResources().Contains(rndluxurybias) || stall->GetStallResources().Contains(rndnutritionbias))
+		if (stall->GetStallResources().Contains(currentLuxuryGood) || stall->GetStallResources().Contains(currentNutritionGood))
 			possiblestalls.Add(stall);
 	}
 
@@ -276,10 +267,125 @@ void AWorker::State_SomethingWentWrong()
 	UE_LOG(LogTemp, Warning, TEXT("UFF"));
 }
 
+void AWorker::BuyResources()
+{
+	TArray<FResourceTransactionTicket> buyorder;
+
+	if(workerOptionals.chosenMarketStall.GetValue()->GetStallResources().Contains(currentLuxuryGood))
+	{
+		FResourceTransactionTicket ticket_luxury = CalculateTicket_Luxury();
+
+		buyorder.Add(ticket_luxury);
+	}
+
+	if (workerOptionals.chosenMarketStall.GetValue()->GetStallResources().Contains(currentNutritionGood))
+	{
+		FResourceTransactionTicket ticket_nutrition = CalculateTicket_Nutrition();
+
+		buyorder.Add(ticket_nutrition);
+	}
+
+	ProcessBuyReturn(marketManager->BuyResources(buyorder));
+}
+
+
+FResourceTransactionTicket AWorker::CalculateTicket_Luxury()
+{
+	int buyamount = 0;
+	float capital = 0;
+	EResourceIdent ident = currentLuxuryGood;
+	FMarketManagerOptionals mmoptionals;
+
+	float desiretofill = desireDefaultMax - desireLuxury;
+	float fulfillmentvalue = marketManager->GetPoolInfo().FindRef(ident).GetFulfillmentValue();
+	float resourcevalue = marketManager->GetPoolInfo().FindRef(ident).GetLastResourcePrice();
+
+	buyamount = (int)(desiretofill / resourcevalue);
+
+	if (marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount() < buyamount)
+		buyamount = marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount();
+
+	if(ownedCurrency < (buyamount * resourcevalue))
+	{
+		for (size_t i = 0; i < buyamount; i++)
+		{
+			buyamount--;
+
+			if (ownedCurrency >= (buyamount * resourcevalue))
+				break;
+		}
+	}
+
+	capital = buyamount * resourcevalue;
+
+	mmoptionals.maxBuyPricePerResource = 99999.f;
+	mmoptionals.minSellPricePerResource = 0.f;
+
+	return FResourceTransactionTicket(buyamount, capital, ident, mmoptionals.maxBuyPricePerResource, mmoptionals.maxBuyPricePerResource);
+}
+
+FResourceTransactionTicket AWorker::CalculateTicket_Nutrition()
+{
+	int buyamount = 0;
+	float capital = 0;
+	EResourceIdent ident = currentNutritionGood;
+	FMarketManagerOptionals mmoptionals;
+
+	float desiretofill = desireDefaultMax - desireHunger;
+	float fulfillmentvalue = marketManager->GetPoolInfo().FindRef(ident).GetFulfillmentValue();
+	float resourcevalue = marketManager->GetPoolInfo().FindRef(ident).GetLastResourcePrice();
+
+	buyamount = (int)(desiretofill / resourcevalue);
+
+	if (marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount() < buyamount)
+		buyamount = marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount();
+
+	if (ownedCurrency < (buyamount * resourcevalue))
+	{
+		for (size_t i = 0; i < buyamount; i++)
+		{
+			buyamount--;
+
+			if (ownedCurrency >= (buyamount * resourcevalue))
+				break;
+		}
+	}
+	else
+		capital = buyamount * resourcevalue;
+
+	ownedCurrency -= capital;
+
+	mmoptionals.maxBuyPricePerResource = 99999.f;
+	mmoptionals.minSellPricePerResource = 0.f;
+
+	return FResourceTransactionTicket(buyamount, capital, ident, mmoptionals.maxBuyPricePerResource, mmoptionals.maxBuyPricePerResource);
+}
+
+void AWorker::ProcessBuyReturn(TArray<FResourceTransactionTicket> _tickets)
+{
+	for (FResourceTransactionTicket ticket : _tickets)
+	{
+		ownedCurrency += ticket.exchangedCapital;
+		
+		float fulfillmentvalue = marketManager->GetPoolInfo().FindRef(ticket.resourceIdent).GetFulfillmentValue();
+
+		for (size_t i = 0; i < ticket.resourceAmount; i++)
+		{
+			if(ticket.resourceIdent == currentLuxuryGood)
+				desireLuxury += fulfillmentvalue;
+			else if(ticket.resourceIdent == currentNutritionGood)
+				desireHunger += fulfillmentvalue;
+		}
+	}
+
+	FinishFulfillNeed();
+}
+
 void AWorker::FinishFulfillNeed()
 {
 	SetWorkerState(EWorkerStatus::WS_FinishFullfillNeed);
 }
+
 
 void AWorker::MoveWorker(FVector _movePos)
 {
@@ -305,6 +411,11 @@ void AWorker::FillBiasLists()
 	}
 }
 
+void AWorker::DEBUGSTARTDESIRE()
+{
+	SetWorkerState(EWorkerStatus::WS_FullfillNeed);
+}
+
 void AWorker::UncacheWorkerFromSite()
 {
 	capsuleComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -328,3 +439,5 @@ bool AWorker::NullcheckDependencies()
 
 	return status;
 }
+
+int AWorker::GetWorkerID() {return workerID;}

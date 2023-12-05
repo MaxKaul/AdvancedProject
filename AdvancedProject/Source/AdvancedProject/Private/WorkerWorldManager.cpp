@@ -242,6 +242,10 @@ void AWorkerWorldManager::UpdateWorkerStatus(AWorker* _toSub, EPlayerIdent _newO
 		SubscribeToAssignedPool(_toSub);
 		break;
 
+	case EWorkerStatus::WS_DEFAULT:
+		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, UpdateWorkerStatus, Default -> Ignore if Init "))
+		break;
+
 	default:
 		UE_LOG(LogTemp,Error,TEXT("AWorkerWorldManager, UpdateWorkerStatus "))
 		;

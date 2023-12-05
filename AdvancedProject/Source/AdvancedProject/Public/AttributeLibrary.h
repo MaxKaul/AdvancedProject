@@ -18,6 +18,7 @@ public:
 	FWorkerDesireBase(TArray<EResourceIdent> _prefferedLuxuryResources, TArray<EResourceIdent> _prefferedNutritionResources, float _dmLuxury, float _dmHunger)
 	{
 		prefferedLuxuryResources = _prefferedLuxuryResources;
+		prefferedNutritionResources = _prefferedNutritionResources;
 		modifier_desireLuxury = _dmLuxury;
 		modifier_desireHunger = _dmHunger;
 	}
@@ -39,7 +40,7 @@ public:
 	FORCEINLINE
 		TArray<EResourceIdent> GetDesired_LuxuryResources() { return prefferedLuxuryResources; }
 	FORCEINLINE
-		TArray<EResourceIdent> GetDesired_NutritionResources() { return prefferedLuxuryResources; }
+		TArray<EResourceIdent> GetDesired_NutritionResources() { return prefferedNutritionResources; }
 };
 
 USTRUCT()

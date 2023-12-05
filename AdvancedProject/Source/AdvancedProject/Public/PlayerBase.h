@@ -63,6 +63,10 @@ public:
 	UFUNCTION() FORCEINLINE
 		EPlayerIdent GetPlayerIdent() { return playerIdent; };
 
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -76,12 +80,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = PlayerInfo, meta=(AllowPrivateAccess))
 		EPlayerIdent playerIdent;
 
-public:	
-	virtual void Tick(float DeltaTime) override;
-
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
 		class UProductionSiteManager* productionSiteManager;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = PlayerInfo, meta = (AllowPrivateAccess))
+		float payementTickValue;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = PlayerInfo, meta = (AllowPrivateAccess))
+		float playerCurrency;
+protected:
+	UFUNCTION()
+		virtual void TickWorkerPayement();
+
 };

@@ -102,13 +102,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 		int GetWorkerID();
 
-	UFUNCTION(BlueprintCallable)
-		void SetWorkerOwner(EPlayerIdent _newOwner);
+
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		void SetWorkerOwner(EPlayerIdent _newOwner) { workerOwner = _newOwner; }
 
 private:
 	// Sollte in einer range von 0.005f bis 0.08f eingestellt werden (ERSTMAL), dieser wert wird nähmlich von der ResourceTick rate ABGEZOGEN
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerInfo, meta = (AllowPrivateAccess))
 		float productivity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		float ownedCurrency;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerInfo, meta = (AllowPrivateAccess))
 		class UWorkerMoodManager* moodManager;
@@ -160,10 +164,14 @@ private:
 	UPROPERTY(VisibleAnywhere,Category= WorkerDesires, meta = (AllowPrivateAccess))
 		TArray<FWorkerDesireBase> workerDesireBases;
 
+	// Desire Values for Luxury and Hunger, to normalize between 0-100, but can also be overloaded for as long as the worker has enough money to get above 100
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		float desireHunger;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		float desireLuxury;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		float desireDefaultMax;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 	TArray<EResourceIdent> allLuxurybBiases;
@@ -175,6 +183,14 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		float interactionRange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		float workerSalary;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		EResourceIdent currentLuxuryGood;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		EResourceIdent currentNutritionGood;
 
 private:
 	UFUNCTION()
@@ -199,11 +215,22 @@ private:
 	// Wenn der worker sich in transit (EWorkerStatus::WS_FullfillNeed) befindet soll dies nicht durch eine entlassung unterbrochen werden
 	UFUNCTION()
 		void FinishFulfillNeed();
+	UFUNCTION()
+		void BuyResources();
+	UFUNCTION()
+		void ProcessBuyReturn(TArray<FResourceTransactionTicket> _tickets);
+	UFUNCTION()
+		FResourceTransactionTicket CalculateTicket_Luxury();
+	UFUNCTION()
+		FResourceTransactionTicket CalculateTicket_Nutrition();
 
 	UFUNCTION()
 		void MoveWorker(FVector _movePos);
 	UFUNCTION()
 		void FillBiasLists();
+
+	UFUNCTION()
+		void DEBUGSTARTDESIRE();
 
 	// Idle -> Open for work i.e roaming the world
 	// Employed_Unassigned -> Sollte slebes behaviour sein wie Idle, nur halt nicht open for workd
@@ -220,6 +247,10 @@ public:
 
 	FORCEINLINE
 		float GetProductivity() { return productivity; }
+
+	FORCEINLINE
+		float GetWorkerSalary() { return workerSalary; }
+
 	FORCEINLINE
 		EPlayerIdent GetCurrentOwner() { return workerOwner; }
 
@@ -238,9 +269,13 @@ public:
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		AProductionsite* GetProductionSiteRef() { return workerOptionals.productionSiteRef.GetValue(); }
 
+	UFUNCTION() FORCEINLINE
+		void AddCurrencyToWorker(float _amount){ownedCurrency += _amount;};
+
 	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data
 	// Hat den naxchteil das ich im moment die site id immer mit -1 ini weil die auch einen default braucht
 	UFUNCTION()
 		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase, AMarketManager* _marketManager);
-};
 
+
+};

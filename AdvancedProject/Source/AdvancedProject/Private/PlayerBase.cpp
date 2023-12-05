@@ -3,6 +3,8 @@
 
 #include "PlayerBase.h"
 
+#include "Worker.h"
+
 // Sets default values
 APlayerBase::APlayerBase()
 {
@@ -15,7 +17,63 @@ APlayerBase::APlayerBase()
 void APlayerBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+
+	FTimerHandle handle;
+	GetWorld()->GetTimerManager().SetTimer(handle, this, &APlayerBase::TickWorkerPayement, payementTickValue);
+}
+
+void APlayerBase::TickWorkerPayement()
+{
+	if(!productionSiteManager)
+	{
+		FTimerHandle handle;
+		GetWorld()->GetTimerManager().SetTimer(handle, this, &APlayerBase::TickWorkerPayement, payementTickValue);
+
+		UE_LOG(LogTemp,Warning,TEXT("APlayerBase, !productionSiteManager"));
+		return;
+	}
+
+	if (productionSiteManager->GetAllHiredWorker().Num() <= 0 && productionSiteManager->GetAllUnasignedWorker().Num() <= 0)
+	{
+		FTimerHandle handle;
+		GetWorld()->GetTimerManager().SetTimer(handle, this, &APlayerBase::TickWorkerPayement, payementTickValue);
+
+		return;
+	}
+
+	TArray<AWorker*> workerstopay;
+
+	for(AWorker* worker : productionSiteManager->GetAllHiredWorker())
+	{
+		if (!workerstopay.Contains(worker))
+			workerstopay.Add(worker);
+	}
+
+	for (AWorker* worker : productionSiteManager->GetAllUnasignedWorker())
+	{
+		if (!workerstopay.Contains(worker))
+			workerstopay.Add(worker);
+	}
+
+	for (AWorker* worker : workerstopay)
+	{
+		if(playerCurrency - worker->GetWorkerSalary() > 0)
+		{
+			playerCurrency -= worker->GetWorkerSalary();
+			worker->AddCurrencyToWorker(worker->GetWorkerSalary());
+		}
+		else
+		{
+			if(playerCurrency > 0)
+				worker->AddCurrencyToWorker(playerCurrency);
+			else
+				worker->AddCurrencyToWorker(0);
+		}
+	}
+
+	FTimerHandle handle;
+	GetWorld()->GetTimerManager().SetTimer(handle, this, &APlayerBase::TickWorkerPayement, payementTickValue);
 }
 
 // Called every frame

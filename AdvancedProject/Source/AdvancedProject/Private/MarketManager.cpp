@@ -59,7 +59,7 @@ void FMM_OverloadFuncs::InitMarketManager()
 	for (size_t i = 0; i < resourcebasevalues.Num(); i++)
 	{
 		overloadOwner->InitIndividualResource(resourcebasevalues[i]->Resource.GetLastResourcePrice(), resourcebasevalues[i]->Resource.GetResourceAmount(), resourcebasevalues[i]->Resource.GetResourceIdent(), resourcebasevalues[i]->Resource.GetAllowedProductionSites(), resourcebasevalues[i]->Resource.GetResourceTickRate(),
-			resourcebasevalues[i]->Resource.GetHasCost(), resourcebasevalues[i]->Resource.GetResourceCost());
+			resourcebasevalues[i]->Resource.GetHasCost(), resourcebasevalues[i]->Resource.GetResourceCost(), resourcebasevalues[i]->Resource.GetFulfillmentValue());
 	}
 
 	TArray<FMarketStallSaveData> newstallsave = overloadOwner->GenerateStallTypes();
@@ -250,7 +250,7 @@ void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
 	for (FIndividualResourceInfo resource : allresources)
 	{
 		InitIndividualResource(resource.GetLastResourcePrice(), resource.GetResourceAmount(), resource.GetResourceIdent(), resource.GetAllowedProductionSites(), 
-							   resource.GetResourceTickRate(), resource.GetHasCost(), resource.GetResourceCost());
+							   resource.GetResourceTickRate(), resource.GetHasCost(), resource.GetResourceCost(), resource.GetFulfillmentValue());
 	}
 }
 
@@ -313,7 +313,7 @@ void AMarketManager::UpdateResourcePrices()
 }
 
 void AMarketManager::InitIndividualResource(float _lastResourcePrice, int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate, 
-											bool _bHasCost, TMap<EResourceIdent, int> _resourceCost)
+											bool _bHasCost, TMap<EResourceIdent, int> _resourceCost, float _desirefulfillmentValue)
 {
 	FIndividualResourceInfo currentresource =
 	{
@@ -324,7 +324,8 @@ void AMarketManager::InitIndividualResource(float _lastResourcePrice, int _resou
 		0.f,
 		_resourceTickRate,
 		_bHasCost,
-		_resourceCost
+		_resourceCost,
+		_desirefulfillmentValue
 	};
 
 	resourceList.Add(_resourceIdent, currentresource);
