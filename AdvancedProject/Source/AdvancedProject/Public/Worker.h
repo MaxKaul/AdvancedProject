@@ -18,7 +18,7 @@ struct FWorkerOptional
 	TOptional<class AProductionsite*> productionSiteRef;
 
 	TOptional<TArray<AMarketStall*>> possibleMarketStalls;
-	TOptional<AMarketStall*> chosenMarketStall;
+	TOptional<AMarketStall*> currentMarketStall;
 };
 
 USTRUCT(BlueprintType)
@@ -102,6 +102,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		int GetWorkerID();
 
+	int DEBUG;
 
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		void SetWorkerOwner(EPlayerIdent _newOwner) { workerOwner = _newOwner; }
@@ -110,6 +111,9 @@ private:
 	// Sollte in einer range von 0.005f bis 0.08f eingestellt werden (ERSTMAL), dieser wert wird nähmlich von der ResourceTick rate ABGEZOGEN
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerInfo, meta = (AllowPrivateAccess))
 		float productivity;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerInfo, meta = (AllowPrivateAccess))
+		bool bProcessingTicket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		float ownedCurrency;

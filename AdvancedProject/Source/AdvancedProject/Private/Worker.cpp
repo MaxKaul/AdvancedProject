@@ -34,6 +34,8 @@ AWorker::AWorker()
 	possibleSockets.Add("InteractionSocket_0");
 	possibleSockets.Add("InteractionSocket_1");
 	possibleSockets.Add("InteractionSocket_2");
+
+	DEBUG = 0;
 }
 
 // Called when the game starts or when spawned
@@ -157,7 +159,7 @@ void AWorker::SetWorkerState(EWorkerStatus _employmentStatus, AProductionsite* _
 
 
 	workerOptionals.possibleMarketStalls.Reset();
-	workerOptionals.chosenMarketStall.Reset();
+	workerOptionals.currentMarketStall.Reset();
 	movePos = FVector(0);
 
 	workerController->StopMovement();
@@ -208,14 +210,12 @@ void AWorker::State_Employed_Assigned()
 
 void AWorker::State_FulfillingNeed()
 {
-	if (workerOptionals.chosenMarketStall.IsSet())
+	if (workerOptionals.possibleMarketStalls.IsSet() && bProcessingTicket)
 	{
 		if ((GetActorLocation() - movePos).Length() <= interactionRange)
 			BuyResources();
-
-		return;
 	}
-	else if (!workerOptionals.possibleMarketStalls.IsSet())
+	else if (!workerOptionals.possibleMarketStalls.IsSet() || !bProcessingTicket)
 		workerOptionals.possibleMarketStalls = ChooseMarketStalls();
 	else if (!workerOptionals.possibleMarketStalls.IsSet())
 	{
@@ -223,17 +223,19 @@ void AWorker::State_FulfillingNeed()
 		return;
 	}
 
-	int rndidx = 0;
-	int rndsocket = FMath::RandRange(0, possibleSockets.Num() - 1);
+	if (!bProcessingTicket && workerOptionals.possibleMarketStalls.GetValue().Num() > 0)
+	{
+		int rndsocket = FMath::RandRange(0, possibleSockets.Num() - 1);
 
-	if (workerOptionals.possibleMarketStalls.GetValue().Num() > 0)
-		rndidx = FMath::RandRange(0, workerOptionals.possibleMarketStalls.GetValue().Num() - 1);
+		workerOptionals.currentMarketStall = workerOptionals.possibleMarketStalls.GetValue()[0];
 
-	workerOptionals.chosenMarketStall = workerOptionals.possibleMarketStalls.GetValue()[rndidx];
+		movePos = workerOptionals.currentMarketStall.GetValue()->GetMesh()->GetSocketLocation(possibleSockets[rndsocket]);
+		MoveWorker(movePos);
 
-	movePos = workerOptionals.possibleMarketStalls.GetValue()[rndidx]->GetMesh()->GetSocketLocation(possibleSockets[rndsocket]);
-
-	MoveWorker(movePos);
+		bProcessingTicket = true;
+	}
+	else if (workerOptionals.possibleMarketStalls.GetValue().Num() <= 0)
+		FinishFulfillNeed();
 }
 
 TArray<AMarketStall*> AWorker::ChooseMarketStalls()
@@ -241,7 +243,6 @@ TArray<AMarketStall*> AWorker::ChooseMarketStalls()
 	TArray<AMarketStall*> possiblestalls;
 
 	// rnd für die individuelle order
-
 
 	int rndidx = 0;
 
@@ -251,12 +252,31 @@ TArray<AMarketStall*> AWorker::ChooseMarketStalls()
 	rndidx = FMath::RandRange(0, allNutritionBiases.Num() - 1);
 	currentNutritionGood = allNutritionBiases[rndidx];
 
+	// Das mit den bools köännt ich unter umständen noch etwas schöbner machen
+	bool bluxuryset = false;
+	bool bnutritionset = false;
+
 	for(AMarketStall* stall : marketManager->GetAllMarketStalls())
 	{
 		TArray<EResourceIdent> availableresoruces;
 
 		if (stall->GetStallResources().Contains(currentLuxuryGood) || stall->GetStallResources().Contains(currentNutritionGood))
+		{
+			if(stall->GetStallResources().Contains(currentLuxuryGood) && stall->GetStallResources().Contains(currentNutritionGood))
+			{
+				bluxuryset = true;
+				bnutritionset = true;
+			}
+			else if(stall->GetStallResources().Contains(currentLuxuryGood) && !stall->GetStallResources().Contains(currentNutritionGood))
+				bluxuryset = true;
+			else if(!stall->GetStallResources().Contains(currentLuxuryGood) && stall->GetStallResources().Contains(currentNutritionGood))
+				bnutritionset = true;
+
 			possiblestalls.Add(stall);
+
+			if (bluxuryset && bnutritionset)
+				break;
+		}
 	}
 
 	return possiblestalls;
@@ -271,14 +291,14 @@ void AWorker::BuyResources()
 {
 	TArray<FResourceTransactionTicket> buyorder;
 
-	if(workerOptionals.chosenMarketStall.GetValue()->GetStallResources().Contains(currentLuxuryGood))
+	if(workerOptionals.currentMarketStall.GetValue()->GetStallResources().Contains(currentLuxuryGood))
 	{
 		FResourceTransactionTicket ticket_luxury = CalculateTicket_Luxury();
 
 		buyorder.Add(ticket_luxury);
 	}
 
-	if (workerOptionals.chosenMarketStall.GetValue()->GetStallResources().Contains(currentNutritionGood))
+	if (workerOptionals.currentMarketStall.GetValue()->GetStallResources().Contains(currentNutritionGood))
 	{
 		FResourceTransactionTicket ticket_nutrition = CalculateTicket_Nutrition();
 
@@ -300,7 +320,7 @@ FResourceTransactionTicket AWorker::CalculateTicket_Luxury()
 	float fulfillmentvalue = marketManager->GetPoolInfo().FindRef(ident).GetFulfillmentValue();
 	float resourcevalue = marketManager->GetPoolInfo().FindRef(ident).GetLastResourcePrice();
 
-	buyamount = (int)(desiretofill / resourcevalue);
+	buyamount = (int)(desiretofill / fulfillmentvalue);
 
 	if (marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount() < buyamount)
 		buyamount = marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount();
@@ -316,12 +336,14 @@ FResourceTransactionTicket AWorker::CalculateTicket_Luxury()
 		}
 	}
 
+	ownedCurrency -= capital;
+
 	capital = buyamount * resourcevalue;
 
 	mmoptionals.maxBuyPricePerResource = 99999.f;
 	mmoptionals.minSellPricePerResource = 0.f;
 
-	return FResourceTransactionTicket(buyamount, capital, ident, mmoptionals.maxBuyPricePerResource, mmoptionals.maxBuyPricePerResource);
+	return FResourceTransactionTicket(buyamount, capital, ident, mmoptionals.maxBuyPricePerResource, mmoptionals.minSellPricePerResource);
 }
 
 FResourceTransactionTicket AWorker::CalculateTicket_Nutrition()
@@ -335,7 +357,7 @@ FResourceTransactionTicket AWorker::CalculateTicket_Nutrition()
 	float fulfillmentvalue = marketManager->GetPoolInfo().FindRef(ident).GetFulfillmentValue();
 	float resourcevalue = marketManager->GetPoolInfo().FindRef(ident).GetLastResourcePrice();
 
-	buyamount = (int)(desiretofill / resourcevalue);
+	buyamount = (int)(desiretofill / fulfillmentvalue);
 
 	if (marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount() < buyamount)
 		buyamount = marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount();
@@ -358,7 +380,7 @@ FResourceTransactionTicket AWorker::CalculateTicket_Nutrition()
 	mmoptionals.maxBuyPricePerResource = 99999.f;
 	mmoptionals.minSellPricePerResource = 0.f;
 
-	return FResourceTransactionTicket(buyamount, capital, ident, mmoptionals.maxBuyPricePerResource, mmoptionals.maxBuyPricePerResource);
+	return FResourceTransactionTicket(buyamount, capital, ident, mmoptionals.maxBuyPricePerResource, mmoptionals.minSellPricePerResource);
 }
 
 void AWorker::ProcessBuyReturn(TArray<FResourceTransactionTicket> _tickets)
@@ -378,7 +400,13 @@ void AWorker::ProcessBuyReturn(TArray<FResourceTransactionTicket> _tickets)
 		}
 	}
 
-	FinishFulfillNeed();
+	bProcessingTicket = false;
+
+
+	if (workerOptionals.possibleMarketStalls.GetValue().Num() > 0 && workerOptionals.possibleMarketStalls.GetValue()[0])
+		workerOptionals.possibleMarketStalls.GetValue().RemoveAt(0);
+	else if(workerOptionals.possibleMarketStalls.GetValue().Num() <= 0)
+		FinishFulfillNeed();
 }
 
 void AWorker::FinishFulfillNeed()
@@ -389,8 +417,8 @@ void AWorker::FinishFulfillNeed()
 
 void AWorker::MoveWorker(FVector _movePos)
 {
-	if (GetMovementComponent()->Velocity.Length() > 0)
-		return;
+	//if (GetMovementComponent()->Velocity.Length() > 0)
+	//	return;
 
 	workerController->MoveToLocation(_movePos);
 }
