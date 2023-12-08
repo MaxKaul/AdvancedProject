@@ -94,16 +94,32 @@ void AWorker::Tick(float DeltaTime)
 
 }
 
-void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase, AMarketManager* _marketManager)
+void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, EWorkerStatus _cachedStatus, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase, 
+	AMarketManager* _marketManager, TArray<int> _possibleStallsIDs)
 {
 	workerID = _workerID;
-	workerOptionals.productionSiteID  = _siteID;
 	currentStatus = _employementStatus;
+	previousStatus = _cachedStatus;
 	marketManager = _marketManager;
+	currentLuxuryGood = _saveData.GetCurrentLuxuryGood_S();
+	currentNutritionGood = _saveData.GetCurrentNutritionGood_S();
+	desireLuxury = _saveData.GetDesireLuxury();
+	desireHunger = _saveData.GetDesireHunger();
+
+	//if (_saveData.GetWorkerOptionals_S().possibleStallIDs.IsSet() && _saveData.GetWorkerOptionals_S().possibleStallIDs.GetValue().Num() > 0)
+	//{
+	//	workerOptionals.possibleStallIDs = _saveData.GetWorkerOptionals_S().possibleStallIDs.GetValue();
+	//	InitPossibleSitesFromSave();
+	//}
+
+	possibleStallIDs = _possibleStallsIDs;
+	InitPossibleSitesFromSave();
+
+	workerOptionals.workProductionSiteID = _saveData.GetWorkerOptionals_S().workProductionSiteID;
 
 	skeletalMeshComponent = GetMesh();
 	
-	skeletalMesh = _saveData.GetWorkerMesh();
+	skeletalMesh = _saveData.GetWorkerMesh_S();
 
 	skeletalMeshComponent->SetSkeletalMesh(skeletalMesh, true);
 	workerController = Cast<AWorkerController>(GetController());
@@ -115,10 +131,37 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	workerHitBox->OnComponentEndOverlap.AddDynamic(this, &AWorker::OnOverlapEnd);
 
 	FillBiasLists();
+}
 
-	FTimerHandle handle;
+void AWorker::InitPossibleSitesFromSave()
+{
+	if (!marketManager)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("AWorker, !marketManager"))
+		return;
+	}
 
-	GetWorld()->GetTimerManager().SetTimer(handle, this, &AWorker::DEBUGSTARTDESIRE, 3.f);
+	TArray<AMarketStall*> allstalls = marketManager->GetAllMarketStalls();
+
+	TArray<AMarketStall*> newarray;
+
+	for (size_t i = 0; i < possibleStallIDs.Num(); i++)
+	{
+		for (AMarketStall* stall : marketManager->GetAllMarketStalls())
+		{
+			if (stall->GetStallID() == possibleStallIDs[i])
+			{
+				if(workerOptionals.possibleMarketStalls.IsSet())
+					workerOptionals.possibleMarketStalls.GetValue().Add(stall);
+				else
+				{
+					newarray.Add(stall);
+					workerOptionals.possibleMarketStalls = newarray;
+					
+				}
+			}
+		}
+	}
 }
 
 FWorkerSaveData AWorker::GetWorkerSaveData()
@@ -130,9 +173,15 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 		skeletalMesh,
 		workerID,
 		currentStatus,
-		workerOptionals.productionSiteID.GetValue(),
+				previousStatus,
 		workerOwner,
-		workerDesireBases
+		workerDesireBases,
+		currentLuxuryGood,
+		currentNutritionGood,
+		//workerOptionals,
+		desireLuxury,
+		desireHunger,
+		possibleStallIDs,
 	};
 
 	return savedata;
@@ -165,7 +214,10 @@ void AWorker::SetWorkerState(EWorkerStatus _employmentStatus, AProductionsite* _
 	workerController->StopMovement();
 
 	if (_site && currentStatus == EWorkerStatus::WS_Assigned_MainJob)
+	{
+		workerOptionals.workProductionSiteID = subbedSite->GetLocalProdSiteID();
 		subbedSite = _site;
+	}
 	else
 		subbedSite = nullptr;
 }
@@ -229,6 +281,11 @@ void AWorker::State_FulfillingNeed()
 
 		workerOptionals.currentMarketStall = workerOptionals.possibleMarketStalls.GetValue()[0];
 
+		for(AMarketStall* stall : workerOptionals.possibleMarketStalls.GetValue())
+		{
+			UE_LOG(LogTemp,Warning,TEXT("%i"), stall->GetStallID())
+		}
+
 		movePos = workerOptionals.currentMarketStall.GetValue()->GetMesh()->GetSocketLocation(possibleSockets[rndsocket]);
 		MoveWorker(movePos);
 
@@ -274,6 +331,16 @@ TArray<AMarketStall*> AWorker::ChooseMarketStalls()
 
 			possiblestalls.Add(stall);
 
+			if (possibleStallIDs.Num() > 0)
+				possibleStallIDs.Add(stall->GetStallID());
+			else 
+			{
+				TArray<int> initarray;
+				initarray.Add(stall->GetStallID());
+
+				possibleStallIDs = initarray;
+			}
+
 			if (bluxuryset && bnutritionset)
 				break;
 		}
@@ -305,6 +372,8 @@ void AWorker::BuyResources()
 		buyorder.Add(ticket_nutrition);
 	}
 
+	//workerOptionals.currentBuyOrder = buyorder;
+
 	ProcessBuyReturn(marketManager->BuyResources(buyorder));
 }
 
@@ -335,10 +404,10 @@ FResourceTransactionTicket AWorker::CalculateTicket_Luxury()
 				break;
 		}
 	}
+	else
+		capital = buyamount * resourcevalue;
 
 	ownedCurrency -= capital;
-
-	capital = buyamount * resourcevalue;
 
 	mmoptionals.maxBuyPricePerResource = 99999.f;
 	mmoptionals.minSellPricePerResource = 0.f;
@@ -439,10 +508,6 @@ void AWorker::FillBiasLists()
 	}
 }
 
-void AWorker::DEBUGSTARTDESIRE()
-{
-	SetWorkerState(EWorkerStatus::WS_FullfillNeed);
-}
 
 void AWorker::UncacheWorkerFromSite()
 {

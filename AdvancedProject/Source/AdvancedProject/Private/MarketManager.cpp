@@ -107,19 +107,19 @@ TArray<FMarketStallSaveData> AMarketManager::GenerateStallTypes()
 
 		if(i <= allresources.Num() )
 		{
-			newsave.AddNewProductionType(allresources[i]);
+			newsave.AddNewProductionType_S(allresources[i]);
 			usedresources.Add(allresources[i]);
 		}
 
 		if (i + 2 < allresources.Num())
 		{
-			newsave.AddNewProductionType(allresources[i + 2]);
+			newsave.AddNewProductionType_S(allresources[i + 2]);
 			usedresources.Add(allresources[i + 2]);
 		}
 
 		if (i + 3 < allresources.Num())
 		{
-			newsave.AddNewProductionType(allresources[i + 3]);
+			newsave.AddNewProductionType_S(allresources[i + 3]);
 			usedresources.Add(allresources[i + 3]);
 		}
 
@@ -130,12 +130,12 @@ TArray<FMarketStallSaveData> AMarketManager::GenerateStallTypes()
 			{
 				if(!usedresources.Contains(ident))
 				{
-					newsave.AddNewProductionType(ident);
+					newsave.AddNewProductionType_S(ident);
 					usedresources.Add(ident);
 				}
 			}
 		}
-
+		newsave.SetStallID(i);
 		stallsave.Add(newsave);
 	}
 
@@ -245,7 +245,7 @@ void AMarketManager::InitMarketStalls(TArray<FMarketStallSaveData> _stallSaveDat
 void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
 {
 	TArray<FIndividualResourceInfo> allresources;
-	resourceList.GenerateValueArray(allresources);
+	_saveData.GetResourceInfoPair().GenerateValueArray(allresources);
 
 	for (FIndividualResourceInfo resource : allresources)
 	{

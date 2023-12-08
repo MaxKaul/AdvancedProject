@@ -97,9 +97,14 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManag
 			mesh,
 			overloadOwner->allWorker_Ref.Num(),
 			EWorkerStatus::WS_Unemployed,
-			-1,
+			EWorkerStatus::WS_Unemployed,
 			EPlayerIdent::PI_DEFAULT,
-			rnddesirebase
+			rnddesirebase,
+			EResourceIdent::ERI_DEFAULT,
+			EResourceIdent::ERI_DEFAULT,
+			100.f,
+			100.f,
+			TArray<int>()
 		};
 
 		allworkersavedata.Add(workersavedata);
@@ -146,12 +151,17 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 	{
 		for (size_t i = 0; i < maxSpawnTries; i++)
 		{
-			FVector spawnpos = workerdata.GetWorkerLocation();
-			FRotator spawnrot = workerdata.GetWorkerRotation();
-			int siteid = workerdata.GetProductionSiteID();
-			EWorkerStatus employementstatus = workerdata.GetEmploymentStatus();
-			EPlayerIdent workerowner = workerdata.GetWorkerOwner();
-			TArray<FWorkerDesireBase> workerdesirebase = workerdata.GetDesireBase();
+			FVector spawnpos = workerdata.GetWorkerLocation_S();
+			FRotator spawnrot = workerdata.GetWorkerRotation_S();
+			EWorkerStatus employementstatus = workerdata.GetEmploymentStatus_S();
+			EWorkerStatus cachedstatus = workerdata.GetCachedEmploymentStatus_S();
+			EPlayerIdent workerowner = workerdata.GetWorkerOwner_S();
+			TArray<FWorkerDesireBase> workerdesirebase = workerdata.GetDesireBase_S();
+
+			int siteid = 0;
+
+			if(workerdata.GetWorkerOptionals_S().workProductionSiteID.IsSet())
+				siteid = workerdata.GetWorkerOptionals_S().workProductionSiteID.GetValue();
 
 			FActorSpawnParameters params;
 			params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
@@ -159,7 +169,7 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			if (AActor* tospawn = world->SpawnActor(workerClass, &spawnpos, &spawnrot, params))
 			{
 				AWorker* worker = Cast<AWorker>(tospawn);
-				worker->InitWorker(workerdata, navigationSystem, allWorker_Ref.Num(), employementstatus, siteid, workerowner, workerdesirebase, marketManager);
+				worker->InitWorker(workerdata, navigationSystem, allWorker_Ref.Num(), employementstatus, cachedstatus, workerowner, workerdesirebase, marketManager, workerdata.GetPossibleStallIDs());
 
 				if(employementstatus == EWorkerStatus::WS_Assigned_MainJob)
 				{

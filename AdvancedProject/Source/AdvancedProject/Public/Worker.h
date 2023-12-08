@@ -9,12 +9,15 @@
 #include "GameFramework/Character.h"
 #include "Worker.generated.h"
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FWorkerOptional
 {
 	GENERATED_BODY()
 
-	TOptional<int> productionSiteID;
+public:
+	FWorkerOptional(){}
+		
+	TOptional<int> workProductionSiteID;
 	TOptional<class AProductionsite*> productionSiteRef;
 
 	TOptional<TArray<AMarketStall*>> possibleMarketStalls;
@@ -28,55 +31,88 @@ struct FWorkerSaveData
 
 	FWorkerSaveData(){};
 
-	FWorkerSaveData(FVector _position, FRotator _rotation, USkeletalMesh* _mesh, int _workerID, EWorkerStatus _employmentStatus, int _productionSiteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase)
+	FWorkerSaveData(FVector _position, FRotator _rotation, USkeletalMesh* _mesh, int _workerID, EWorkerStatus _employmentStatus, EWorkerStatus _cachedStatus, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase,
+					EResourceIdent _currentLuxuryGood, EResourceIdent _currentNutritionGood/*, FWorkerOptional _workerOptionals*/, float _desireLuxury, float _desireNutrition, TArray<int> _possibleStallIDs)
 	{
-		workerLocation = _position;
-		workerRotation = _rotation;
-		workerMesh = _mesh;
-		workerID = _workerID;
-		employmentStatus = _employmentStatus;
-		productionSiteSaveID = _productionSiteID;
-		workerOwner = _workerOwner;
-		desireBase = _desireBase;
+		s_workerLocation = _position;
+		s_workerRotation = _rotation;
+		s_workerMesh = _mesh;
+		s_workerID = _workerID;
+		s_employmentStatus = _employmentStatus;
+		s_workerOwner = _workerOwner;
+		s_desireBase = _desireBase;
+		s_currentLuxuryGood = _currentLuxuryGood;
+		s_currentNutritionGood = _currentNutritionGood;
+		s_desireLuxury = _desireLuxury;
+		s_desireNutrition = _desireNutrition;
+
+		s_possibleStallIDs = _possibleStallIDs;
 	}
 
 private:
 	UPROPERTY()
-		FVector workerLocation;
+		FVector s_workerLocation;
 	UPROPERTY()
-		FRotator workerRotation;
+		FRotator s_workerRotation;
 	UPROPERTY()
-		USkeletalMesh* workerMesh;
+		USkeletalMesh* s_workerMesh;
 	UPROPERTY()
-		int workerID;
+		int s_workerID;
 	UPROPERTY()
-		EWorkerStatus employmentStatus;
+		EWorkerStatus s_employmentStatus;
 	UPROPERTY()
-		int productionSiteSaveID;
+		EWorkerStatus s_cachedStatus;
 	UPROPERTY()
-		FWorkerOptional workerOptional;
+		int s_productionSiteSaveID;
 	UPROPERTY()
-		EPlayerIdent workerOwner;
+		FWorkerOptional s_workerOptionals;
 	UPROPERTY()
-		TArray<FWorkerDesireBase> desireBase;
+		EPlayerIdent s_workerOwner;
+	UPROPERTY()
+		TArray<FWorkerDesireBase> s_desireBase;
+
+	UPROPERTY()
+		EResourceIdent s_currentLuxuryGood;
+	UPROPERTY()
+		EResourceIdent s_currentNutritionGood;
+
+	UPROPERTY()
+		float s_desireLuxury;
+	UPROPERTY()
+		float s_desireNutrition;
+
+	UPROPERTY()
+		TArray<int> s_possibleStallIDs;
 
 public:
 	FORCEINLINE
-		FVector GetWorkerLocation() { return workerLocation; }
+		FVector GetWorkerLocation_S() { return s_workerLocation; }
 	FORCEINLINE
-		FRotator GetWorkerRotation() { return workerRotation; }
+		FRotator GetWorkerRotation_S() { return s_workerRotation; }
 	FORCEINLINE
-		USkeletalMesh* GetWorkerMesh() { return workerMesh; }
+		USkeletalMesh* GetWorkerMesh_S() { return s_workerMesh; }
 	FORCEINLINE
-		int GetWorkerID() { return workerID; }
+		int GetWorkerID_S() { return s_workerID; }
 	FORCEINLINE
-		EWorkerStatus GetEmploymentStatus() { return employmentStatus; }
+		EWorkerStatus GetEmploymentStatus_S() { return s_employmentStatus; }
 	FORCEINLINE
-		int GetProductionSiteID() { return productionSiteSaveID; }
+		EWorkerStatus GetCachedEmploymentStatus_S() { return s_cachedStatus; }
 	FORCEINLINE
-		EPlayerIdent GetWorkerOwner() { return workerOwner; }
+		EPlayerIdent GetWorkerOwner_S() { return s_workerOwner; }
 	FORCEINLINE
-		TArray<FWorkerDesireBase> GetDesireBase() { return desireBase; }
+		TArray<FWorkerDesireBase> GetDesireBase_S() { return s_desireBase; }
+	FORCEINLINE
+		EResourceIdent GetCurrentLuxuryGood_S() { return s_currentLuxuryGood; }
+	FORCEINLINE
+		EResourceIdent GetCurrentNutritionGood_S() { return s_currentNutritionGood; }
+	FORCEINLINE
+		FWorkerOptional GetWorkerOptionals_S() { return s_workerOptionals; }
+	FORCEINLINE
+		float GetDesireLuxury() { return s_desireLuxury; }
+	FORCEINLINE
+		float GetDesireHunger() { return s_desireNutrition; }
+	FORCEINLINE
+		TArray<int> GetPossibleStallIDs() { return s_possibleStallIDs; }
 };
 
 UCLASS()
@@ -152,6 +188,9 @@ private:
 
 	UPROPERTY()
 		class UNavigationSystemV1* navigationSystem;
+
+	UPROPERTY()
+		TArray<int>	possibleStallIDs;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Category = Status, meta=(AllowPrivateAccess))
 		EWorkerStatus currentStatus;
@@ -233,9 +272,6 @@ private:
 	UFUNCTION()
 		void FillBiasLists();
 
-	UFUNCTION()
-		void DEBUGSTARTDESIRE();
-
 	// Idle -> Open for work i.e roaming the world
 	// Employed_Unassigned -> Sollte slebes behaviour sein wie Idle, nur halt nicht open for workd
 	// Employed_Assigned -> Ist einer site assigned
@@ -268,7 +304,7 @@ public:
 		EWorkerStatus GetEmployementStatus() { return currentStatus; }
 
 	FORCEINLINE
-		void SetProductionSiteInfo(int _siteID, AProductionsite* _siteRef) { workerOptionals.productionSiteID = _siteID; workerOptionals.productionSiteRef = _siteRef; }
+		void SetProductionSiteInfo(int _siteID, AProductionsite* _siteRef) { workerOptionals.workProductionSiteID = _siteID; workerOptionals.productionSiteRef = _siteRef; }
 
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		AProductionsite* GetProductionSiteRef() { return workerOptionals.productionSiteRef.GetValue(); }
@@ -276,10 +312,14 @@ public:
 	UFUNCTION() FORCEINLINE
 		void AddCurrencyToWorker(float _amount){ownedCurrency += _amount;};
 
+	UFUNCTION()
+		void InitPossibleSitesFromSave();
+
 	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data
 	// Hat den naxchteil das ich im moment die site id immer mit -1 ini weil die auch einen default braucht
 	UFUNCTION()
-		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, int _siteID, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase, AMarketManager* _marketManager);
+		void InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, EWorkerStatus _cachedStatus, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase, AMarketManager* _marketManager,
+						TArray<int> _possibleStallsIDs);
 
 
 };

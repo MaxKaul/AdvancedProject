@@ -189,6 +189,8 @@ public:
 	FWWM_OverloadFuncs() {}
 	FWWM_OverloadFuncs(AWorkerWorldManager* _friend) : overloadOwner(_friend){}
 
+	// With SaveData
 	void InitWorkerWorldManager(FWorkerWorldManagerSaveData _saveData, TArray<class AProductionsite*> _allProductionSites, ASaveGameManager* _saveGameManager, AMarketManager* _marketManager);
+	// Without SaveData
 	void InitWorkerWorldManager(ASaveGameManager* _saveGameManager, AMarketManager* _marketManager);
 };
