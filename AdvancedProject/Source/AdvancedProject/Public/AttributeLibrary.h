@@ -15,32 +15,22 @@ struct FWorkerDesireBase
 public:
 	FWorkerDesireBase() {}
 
-	FWorkerDesireBase(TArray<EResourceIdent> _prefferedLuxuryResources, TArray<EResourceIdent> _prefferedNutritionResources, float _dmLuxury, float _dmHunger)
+	FWorkerDesireBase(TMap<EResourceIdent, float> _prefferedLuxuryWeightPair, TMap<EResourceIdent, float> _prefferedNutritionWeightPair)
 	{
-		prefferedLuxuryResources = _prefferedLuxuryResources;
-		prefferedNutritionResources = _prefferedNutritionResources;
-		modifier_desireLuxury = _dmLuxury;
-		modifier_desireHunger = _dmHunger;
+		prefferedLuxuryBiasWeightPairs = _prefferedLuxuryWeightPair;
+		prefferedNutritionBiasWeightPairs = _prefferedNutritionWeightPair;
 	}
 
 private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		float modifier_desireLuxury;
+		TMap<EResourceIdent, float> prefferedLuxuryBiasWeightPairs;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		float modifier_desireHunger;
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		TArray<EResourceIdent> prefferedLuxuryResources;
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		TArray<EResourceIdent> prefferedNutritionResources;
+		TMap<EResourceIdent, float> prefferedNutritionBiasWeightPairs;
 public:
 	FORCEINLINE
-		float GetDesireMod_Luxury() { return modifier_desireLuxury; }
+		TMap<EResourceIdent, float> GetDesired_LuxuryWeightPairs() { return prefferedLuxuryBiasWeightPairs; }
 	FORCEINLINE
-		float GetDesireMod_Hunger() { return modifier_desireHunger; }
-	FORCEINLINE
-		TArray<EResourceIdent> GetDesired_LuxuryResources() { return prefferedLuxuryResources; }
-	FORCEINLINE
-		TArray<EResourceIdent> GetDesired_NutritionResources() { return prefferedNutritionResources; }
+		TMap<EResourceIdent, float> GetDesired_NutritionWeightPairs() { return prefferedNutritionBiasWeightPairs; }
 };
 
 USTRUCT()

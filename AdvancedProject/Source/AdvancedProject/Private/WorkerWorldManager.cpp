@@ -21,6 +21,7 @@ AWorkerWorldManager::AWorkerWorldManager()
 	capsuleHightValue = 100.f;
 
 	maxSpawnTries = 10;
+	workerDesireDefaultMax = 100.f;
 	workerAttributeAmount = 3;
 }
 
@@ -102,9 +103,10 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManag
 			rnddesirebase,
 			EResourceIdent::ERI_DEFAULT,
 			EResourceIdent::ERI_DEFAULT,
-			100.f,
-			100.f,
-			TArray<int>()
+			overloadOwner->workerDesireDefaultMax,
+			overloadOwner->workerDesireDefaultMax,
+			overloadOwner->workerDesireDefaultMax,
+			TArray<int>(),
 		};
 
 		allworkersavedata.Add(workersavedata);

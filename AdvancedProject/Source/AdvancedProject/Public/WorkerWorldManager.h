@@ -154,8 +154,10 @@ private:
 		float capsuleHightValue;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
-		int maxSpawnTries;
+		float workerDesireDefaultMax;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+		int maxSpawnTries;
 
 	UPROPERTY()
 		UWorld* world;

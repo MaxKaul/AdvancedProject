@@ -23,6 +23,7 @@ AWorker::AWorker()
 	interactionRange = 200.f;
 
 	desireDefaultMax = 100.f;
+	externalMoralModifier = 1.f;
 
 	workerHitBox = CreateDefaultSubobject<UCapsuleComponent>("Hit Box");
 	workerHitBox->SetupAttachment(GetRootComponent());
@@ -63,6 +64,9 @@ void AWorker::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	TickWorkerDesire();
+	TickWorkerMotivation();
+	
 	switch (currentStatus)
 	{
 	case EWorkerStatus::WS_Unemployed:
@@ -104,7 +108,8 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	currentLuxuryGood = _saveData.GetCurrentLuxuryGood_S();
 	currentNutritionGood = _saveData.GetCurrentNutritionGood_S();
 	desireLuxury = _saveData.GetDesireLuxury();
-	desireHunger = _saveData.GetDesireHunger();
+	desireNutrition = _saveData.GetDesireHunger();
+	desireDefaultMax = _saveData.GetDesireDefaultMax();
 
 	//if (_saveData.GetWorkerOptionals_S().possibleStallIDs.IsSet() && _saveData.GetWorkerOptionals_S().possibleStallIDs.GetValue().Num() > 0)
 	//{
@@ -131,6 +136,10 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	workerHitBox->OnComponentEndOverlap.AddDynamic(this, &AWorker::OnOverlapEnd);
 
 	FillBiasLists();
+
+	FTimerHandle handle;
+
+	GetWorld()->GetTimerManager().SetTimer(handle, this, &AWorker::ChoseCurrentBiasWeightPair, 2.f, false);
 }
 
 void AWorker::InitPossibleSitesFromSave()
@@ -173,14 +182,14 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 		skeletalMesh,
 		workerID,
 		currentStatus,
-				previousStatus,
+		previousStatus,
 		workerOwner,
 		workerDesireBases,
 		currentLuxuryGood,
 		currentNutritionGood,
-		//workerOptionals,
 		desireLuxury,
-		desireHunger,
+		desireNutrition,
+		desireDefaultMax,
 		possibleStallIDs,
 	};
 
@@ -293,6 +302,8 @@ void AWorker::State_FulfillingNeed()
 	}
 	else if (workerOptionals.possibleMarketStalls.GetValue().Num() <= 0)
 		FinishFulfillNeed();
+
+	
 }
 
 TArray<AMarketStall*> AWorker::ChooseMarketStalls()
@@ -300,16 +311,10 @@ TArray<AMarketStall*> AWorker::ChooseMarketStalls()
 	TArray<AMarketStall*> possiblestalls;
 
 	// rnd für die individuelle order
+	ChoseCurrentBiasWeightPair();
 
-	int rndidx = 0;
 
-	rndidx = FMath::RandRange(0, allLuxurybBiases.Num() - 1);
-	currentLuxuryGood = allLuxurybBiases[rndidx];
-
-	rndidx = FMath::RandRange(0, allNutritionBiases.Num() - 1);
-	currentNutritionGood = allNutritionBiases[rndidx];
-
-	// Das mit den bools köännt ich unter umständen noch etwas schöbner machen
+	// Das mit den bools könnt ich unter umständen noch etwas schöbner machen
 	bool bluxuryset = false;
 	bool bnutritionset = false;
 
@@ -349,6 +354,45 @@ TArray<AMarketStall*> AWorker::ChooseMarketStalls()
 	return possiblestalls;
 }
 
+void AWorker::ChoseCurrentBiasWeightPair()
+{
+	int rndidx = 0;
+	int idx = 0;
+	rndidx = FMath::RandRange(0, luxuryBiasWeightPair.Num());
+
+	for (TTuple<EResourceIdent, float> chosenattribute : luxuryBiasWeightPair)
+	{
+		if (idx != rndidx)
+		{
+			idx++;
+			continue;
+		}
+
+		currentLuxuryGood = chosenattribute.Key;
+		currentWeightLuxury = chosenattribute.Value;
+
+		break;
+	}
+
+	idx = 0;
+	rndidx = FMath::RandRange(0, luxuryBiasWeightPair.Num());
+
+	for (TTuple<EResourceIdent, float> chosenattribute : nutritionBiasWeightPair)
+	{
+		if (idx != rndidx)
+		{
+			idx++;
+			continue;
+		}
+
+		currentNutritionGood = chosenattribute.Key;
+		currentWeightNutrition = chosenattribute.Value;
+
+		break;
+	}
+
+}
+
 void AWorker::State_SomethingWentWrong()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UFF"));
@@ -371,8 +415,6 @@ void AWorker::BuyResources()
 
 		buyorder.Add(ticket_nutrition);
 	}
-
-	//workerOptionals.currentBuyOrder = buyorder;
 
 	ProcessBuyReturn(marketManager->BuyResources(buyorder));
 }
@@ -422,7 +464,7 @@ FResourceTransactionTicket AWorker::CalculateTicket_Nutrition()
 	EResourceIdent ident = currentNutritionGood;
 	FMarketManagerOptionals mmoptionals;
 
-	float desiretofill = desireDefaultMax - desireHunger;
+	float desiretofill = desireDefaultMax - desireNutrition;
 	float fulfillmentvalue = marketManager->GetPoolInfo().FindRef(ident).GetFulfillmentValue();
 	float resourcevalue = marketManager->GetPoolInfo().FindRef(ident).GetLastResourcePrice();
 
@@ -465,7 +507,7 @@ void AWorker::ProcessBuyReturn(TArray<FResourceTransactionTicket> _tickets)
 			if(ticket.resourceIdent == currentLuxuryGood)
 				desireLuxury += fulfillmentvalue;
 			else if(ticket.resourceIdent == currentNutritionGood)
-				desireHunger += fulfillmentvalue;
+				desireNutrition += fulfillmentvalue;
 		}
 	}
 
@@ -492,20 +534,45 @@ void AWorker::MoveWorker(FVector _movePos)
 	workerController->MoveToLocation(_movePos);
 }
 
+void AWorker::TickWorkerDesire()
+{
+	if (desireLuxury > 0)
+		desireLuxury -= currentWeightLuxury / 1000.f;
+
+	if (desireNutrition > 0)
+		desireNutrition -= currentWeightNutrition / 1000.f;
+}
+
+void AWorker::TickWorkerMotivation()
+{
+	// Ich setzte mir die gewichtung des totale kapital besitzt aus den gewichtungen für luxury und nutrition zusammen
+	float capitalweight = currentWeightLuxury + currentWeightNutrition;
+	// Mal schauen wie sinnvoll es ist den wert so herzuleiten
+	// Dies wird dann auch davon abhängen über welche rreichweite ich meinen exterenal modifier mache
+	float modifierweight = capitalweight / currentWorkerMoral;
+
+	currentWorkerMoral = currentWeightLuxury * desireLuxury + 
+						 currentWeightNutrition * desireNutrition + 
+						 capitalweight * ownedCurrency + 
+						 modifierweight * externalMoralModifier;
+}
+
 void AWorker::FillBiasLists()
 {
 	for (FWorkerDesireBase base : workerDesireBases)
 	{
-		for (size_t i = 0; i < base.GetDesired_LuxuryResources().Num(); i++)
+		for(TTuple<EResourceIdent, float> item : base.GetDesired_LuxuryWeightPairs())
 		{
-			allLuxurybBiases.Add(base.GetDesired_LuxuryResources()[i]);
+			luxuryBiasWeightPair.Add(item.Key, item.Value);
 		}
 
-		for (size_t i = 0; i < base.GetDesired_NutritionResources().Num(); i++)
+		for (TTuple<EResourceIdent, float> item : base.GetDesired_NutritionWeightPairs())
 		{
-			allNutritionBiases.Add(base.GetDesired_NutritionResources()[i]);
+			nutritionBiasWeightPair.Add(item.Key, item.Value);
 		}
 	}
+
+	//ChoseCurrentBiasWeightPair();
 }
 
 

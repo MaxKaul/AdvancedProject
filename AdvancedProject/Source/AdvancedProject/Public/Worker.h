@@ -32,7 +32,7 @@ struct FWorkerSaveData
 	FWorkerSaveData(){};
 
 	FWorkerSaveData(FVector _position, FRotator _rotation, USkeletalMesh* _mesh, int _workerID, EWorkerStatus _employmentStatus, EWorkerStatus _cachedStatus, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase,
-					EResourceIdent _currentLuxuryGood, EResourceIdent _currentNutritionGood/*, FWorkerOptional _workerOptionals*/, float _desireLuxury, float _desireNutrition, TArray<int> _possibleStallIDs)
+					EResourceIdent _currentLuxuryGood, EResourceIdent _currentNutritionGood, float _desireDefaultMax, float _desireLuxury, float _desireNutrition, TArray<int> _possibleStallIDs)
 	{
 		s_workerLocation = _position;
 		s_workerRotation = _rotation;
@@ -45,8 +45,9 @@ struct FWorkerSaveData
 		s_currentNutritionGood = _currentNutritionGood;
 		s_desireLuxury = _desireLuxury;
 		s_desireNutrition = _desireNutrition;
-
+		s_desireDefaultMax = _desireDefaultMax;
 		s_possibleStallIDs = _possibleStallIDs;
+		
 	}
 
 private:
@@ -80,6 +81,8 @@ private:
 		float s_desireLuxury;
 	UPROPERTY()
 		float s_desireNutrition;
+	UPROPERTY()
+		float s_desireDefaultMax;
 
 	UPROPERTY()
 		TArray<int> s_possibleStallIDs;
@@ -111,6 +114,8 @@ public:
 		float GetDesireLuxury() { return s_desireLuxury; }
 	FORCEINLINE
 		float GetDesireHunger() { return s_desireNutrition; }
+	FORCEINLINE
+		float GetDesireDefaultMax() { return s_desireDefaultMax; }
 	FORCEINLINE
 		TArray<int> GetPossibleStallIDs() { return s_possibleStallIDs; }
 };
@@ -209,27 +214,45 @@ private:
 
 	// Desire Values for Luxury and Hunger, to normalize between 0-100, but can also be overloaded for as long as the worker has enough money to get above 100
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
-		float desireHunger;
+		float desireNutrition;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		float desireLuxury;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+	// Dieser wert ergibt sich aus desireNutrition,desireLuxury und dem Gesamt Kapital des workers
+
+
+	// Wird über den WorkerWorldManager gesetzt (ich hab die mal in die saveData gepackt damit ich nicht noch einen seperaten parameter brauche)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		float desireDefaultMax;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
-	TArray<EResourceIdent> allLuxurybBiases;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
-	TArray<EResourceIdent> allNutritionBiases;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		float workerSalary;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+	TMap<EResourceIdent, float> luxuryBiasWeightPair;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		TMap<EResourceIdent, float> nutritionBiasWeightPair;
+
+	// Ich benutze die weights sowohl zum herleiten der moral las auch zum ticken der desire values.
+	// Dies bietet sich dahingehend an das dass currenweight in relation zur momentan gewählten resource steht und
+	// es daher logisch erscheint die entopie aus ihnen herzuleiten
+	// Ich muss selbsetverständlich noch die besten werte dafür herrleiten, im moment normalisiere ich diese werte allerdings durch 10
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		float currentWeightNutrition;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		float currentWeightLuxury;
+	// Ich setzte diesen wert erst mal an von -10 bis 10
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		float externalMoralModifier;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		float currentWorkerMoral;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		FVector movePos;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		float interactionRange;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
-		float workerSalary;
-
+	// Ich setzte die beiden gewichtungen jedes mal wenn der worker eine neue buy order ausführt
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		EResourceIdent currentLuxuryGood;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
@@ -253,7 +276,11 @@ private:
 	UFUNCTION()
 		TArray<AMarketStall*> ChooseMarketStalls();
 	UFUNCTION()
+		void ChoseCurrentBiasWeightPair();
+	UFUNCTION()
 		void State_SomethingWentWrong();
+	UFUNCTION() FORCEINLINE
+		void SetMoralModifier(float _modifier) { externalMoralModifier = _modifier; }
 
 	// Wenn der worker sich in transit (EWorkerStatus::WS_FullfillNeed) befindet soll dies nicht durch eine entlassung unterbrochen werden
 	UFUNCTION()
@@ -270,7 +297,15 @@ private:
 	UFUNCTION()
 		void MoveWorker(FVector _movePos);
 	UFUNCTION()
+		void TickWorkerDesire();
+	UFUNCTION()
+		void TickWorkerMotivation();
+	UFUNCTION()
 		void FillBiasLists();
+
+
+	UFUNCTION(BlueprintCallable) FORCEINLINE
+		float GetWorkerMotivation() { return currentWorkerMoral; }
 
 	// Idle -> Open for work i.e roaming the world
 	// Employed_Unassigned -> Sollte slebes behaviour sein wie Idle, nur halt nicht open for workd
