@@ -22,6 +22,8 @@ AWorker::AWorker()
 	ZOffsetForSites = 700.f;
 	interactionRange = 200.f;
 
+	defaultWeightDivider = 1000.f;
+
 	desireDefaultMax = 100.f;
 	externalMoralModifier = 1.f;
 
@@ -94,7 +96,6 @@ void AWorker::Tick(float DeltaTime)
 		State_SomethingWentWrong();
 		break;;
 	}
-
 }
 
 void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, EWorkerStatus _cachedStatus, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase, 
@@ -107,17 +108,14 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	currentLuxuryGood = _saveData.GetCurrentLuxuryGood_S();
 	currentNutritionGood = _saveData.GetCurrentNutritionGood_S();
 	desireLuxury = _saveData.GetDesireLuxury_S();
-	desireNutrition = _saveData.GetDesireHunger_S();
+	desireNutrition = _saveData.GetDesireNutrition_S();
 	desireDefaultMax = _saveData.GetDesireDefaultMax_S();
-
-	//if (_saveData.GetWorkerOptionals_S().possibleStallIDs.IsSet() && _saveData.GetWorkerOptionals_S().possibleStallIDs.GetValue().Num() > 0)
-	//{
-	//	workerOptionals.possibleStallIDs = _saveData.GetWorkerOptionals_S().possibleStallIDs.GetValue();
-	//	InitPossibleSitesFromSave();
-	//}
+	currentWeightLuxury = _saveData.GetWeightLuxury_S();
+	currentWeightNutrition = _saveData.GetWeightNutrition_S();
+	ownedCurrency = _saveData.GetOwnedCurrency_S();
 
 	possibleStallIDs = _possibleStallsIDs;
-	InitPossibleSitesFromSave();
+	InitPossibleStallsFromSave();
 
 	workerOptionals.workProductionSiteID = _saveData.GetWorkerOptionals_S().workProductionSiteID;
 
@@ -135,9 +133,12 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	workerHitBox->OnComponentEndOverlap.AddDynamic(this, &AWorker::OnOverlapEnd);
 
 	FillBiasLists();
+
+	if (currentLuxuryGood == EResourceIdent::ERI_DEFAULT || currentNutritionGood == EResourceIdent::ERI_DEFAULT)
+		ChoseCurrentBiasWeightPair();
 }
 
-void AWorker::InitPossibleSitesFromSave()
+void AWorker::InitPossibleStallsFromSave()
 {
 	if (!marketManager)
 	{
@@ -182,10 +183,13 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 		workerDesireBases,
 		currentLuxuryGood,
 		currentNutritionGood,
+		desireDefaultMax,
 		desireLuxury,
 		desireNutrition,
-		desireDefaultMax,
 		possibleStallIDs,
+		currentWeightNutrition,
+		currentWeightLuxury,
+		ownedCurrency
 	};
 
 	return savedata;
@@ -285,11 +289,6 @@ void AWorker::State_FulfillingNeed()
 
 		workerOptionals.currentMarketStall = workerOptionals.possibleMarketStalls.GetValue()[0];
 
-		for(AMarketStall* stall : workerOptionals.possibleMarketStalls.GetValue())
-		{
-			UE_LOG(LogTemp,Warning,TEXT("%i"), stall->GetStallID())
-		}
-
 		movePos = workerOptionals.currentMarketStall.GetValue()->GetMesh()->GetSocketLocation(possibleSockets[rndsocket]);
 		MoveWorker(movePos);
 
@@ -297,8 +296,6 @@ void AWorker::State_FulfillingNeed()
 	}
 	else if (workerOptionals.possibleMarketStalls.GetValue().Num() <= 0)
 		FinishFulfillNeed();
-
-	
 }
 
 TArray<AMarketStall*> AWorker::ChooseMarketStalls()
@@ -307,7 +304,6 @@ TArray<AMarketStall*> AWorker::ChooseMarketStalls()
 
 	// rnd für die individuelle order
 	ChoseCurrentBiasWeightPair();
-
 
 	// Das mit den bools könnt ich unter umständen noch etwas schöbner machen
 	bool bluxuryset = false;
@@ -428,12 +424,17 @@ FResourceTransactionTicket AWorker::CalculateTicket_Luxury()
 
 	if(ownedCurrency < (buyamount * resourcevalue))
 	{
-		for (size_t i = 0; i < buyamount; i++)
+		int iteratenum = buyamount;
+
+		for (size_t i = 0; i < iteratenum; i++)
 		{
 			buyamount--;
 
 			if (ownedCurrency >= (buyamount * resourcevalue))
+			{
+				capital = buyamount * resourcevalue;
 				break;
+			}
 		}
 	}
 	else
@@ -465,12 +466,17 @@ FResourceTransactionTicket AWorker::CalculateTicket_Nutrition()
 
 	if (ownedCurrency < (buyamount * resourcevalue))
 	{
-		for (size_t i = 0; i < buyamount; i++)
+		int iteratenum = buyamount;
+
+		for (size_t i = 0; i < iteratenum; i++)
 		{
 			buyamount--;
 
 			if (ownedCurrency >= (buyamount * resourcevalue))
+			{
+				capital = buyamount * resourcevalue;
 				break;
+			}
 		}
 	}
 	else
@@ -527,10 +533,13 @@ void AWorker::MoveWorker(FVector _movePos)
 void AWorker::TickWorkerDesire()
 {
 	if (desireLuxury > 0)
-		desireLuxury -= currentWeightLuxury / 1000.f;
+		desireLuxury -= currentWeightLuxury / defaultWeightDivider * 100;
 
 	if (desireNutrition > 0)
-		desireNutrition -= currentWeightNutrition / 1000.f;
+		desireNutrition -= currentWeightNutrition / defaultWeightDivider * 100;
+
+	if(desireLuxury <= 0 && desireNutrition <= 0)
+		SetWorkerState(EWorkerStatus::WS_FullfillNeed);
 }
 
 void AWorker::TickWorkerMotivation()

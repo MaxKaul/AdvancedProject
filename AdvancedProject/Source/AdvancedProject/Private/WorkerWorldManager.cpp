@@ -20,6 +20,8 @@ AWorkerWorldManager::AWorkerWorldManager()
 	stdWorkerSpawnAmount = 10;
 	capsuleHightValue = 100.f;
 
+	workerStartCurrency = 150.f;
+
 	maxSpawnTries = 10;
 	workerDesireDefaultMax = 100.f;
 	workerAttributeAmount = 3;
@@ -91,6 +93,7 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManag
 			rnddesirebase.Add(overloadOwner->GenerateWorkerAttribute());
 		}
 
+		// Ich Init die pseudo save data mit default resourceidents damit die preffered buy order aus dem worker init herraus force generated wird
 		FWorkerSaveData workersavedata =
 		{
 			spawnpos,
@@ -107,6 +110,9 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManag
 			overloadOwner->workerDesireDefaultMax,
 			overloadOwner->workerDesireDefaultMax,
 			TArray<int>(),
+			0,
+			0,
+			overloadOwner->workerStartCurrency
 		};
 
 		allworkersavedata.Add(workersavedata);

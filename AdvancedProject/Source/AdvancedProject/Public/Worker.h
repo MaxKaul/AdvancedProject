@@ -32,7 +32,7 @@ struct FWorkerSaveData
 	FWorkerSaveData(){};
 
 	FWorkerSaveData(FVector _position, FRotator _rotation, USkeletalMesh* _mesh, int _workerID, EWorkerStatus _employmentStatus, EWorkerStatus _cachedStatus, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase,
-					EResourceIdent _currentLuxuryGood, EResourceIdent _currentNutritionGood, float _desireDefaultMax, float _desireLuxury, float _desireNutrition, TArray<int> _possibleStallIDs)
+					EResourceIdent _currentLuxuryGood, EResourceIdent _currentNutritionGood, float _desireDefaultMax, float _desireLuxury, float _desireNutrition, TArray<int> _possibleStallIDs, float _currentWeightNutrition, float _currentWeightLuxury, float _ownedCurrency)
 	{
 		s_workerLocation = _position;
 		s_workerRotation = _rotation;
@@ -47,7 +47,9 @@ struct FWorkerSaveData
 		s_desireNutrition = _desireNutrition;
 		s_desireDefaultMax = _desireDefaultMax;
 		s_possibleStallIDs = _possibleStallIDs;
-		
+		s_currentWeightNutrition = _currentWeightNutrition;
+		s_currentWeightLuxury = _currentWeightLuxury;
+		s_ownedCurrency = _ownedCurrency;
 	}
 
 private:
@@ -83,6 +85,12 @@ private:
 		float s_desireNutrition;
 	UPROPERTY()
 		float s_desireDefaultMax;
+	UPROPERTY()
+		float s_currentWeightNutrition;
+	UPROPERTY()
+		float s_currentWeightLuxury;
+	UPROPERTY()
+		float s_ownedCurrency;
 
 	UPROPERTY()
 		TArray<int> s_possibleStallIDs;
@@ -113,11 +121,17 @@ public:
 	FORCEINLINE
 		float GetDesireLuxury_S() { return s_desireLuxury; }
 	FORCEINLINE
-		float GetDesireHunger_S() { return s_desireNutrition; }
+		float GetDesireNutrition_S() { return s_desireNutrition; }
 	FORCEINLINE
 		float GetDesireDefaultMax_S() { return s_desireDefaultMax; }
 	FORCEINLINE
+		float GetWeightNutrition_S() { return s_currentWeightNutrition; }
+	FORCEINLINE
+		float GetWeightLuxury_S() { return s_currentWeightLuxury; }
+	FORCEINLINE
 		TArray<int> GetPossibleStallIDs_S() { return s_possibleStallIDs; }
+	FORCEINLINE
+		float GetOwnedCurrency_S() { return s_ownedCurrency; }
 };
 
 UCLASS()
@@ -239,6 +253,9 @@ private:
 		float currentWeightNutrition;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		float currentWeightLuxury;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+		float defaultWeightDivider;
+
 	// Ich setzte diesen wert erst mal an von -10 bis 10
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		float externalMoralModifier;
@@ -346,7 +363,7 @@ public:
 		void AddCurrencyToWorker(float _amount){ownedCurrency += _amount;};
 
 	UFUNCTION()
-		void InitPossibleSitesFromSave();
+		void InitPossibleStallsFromSave();
 
 	// Der worker Init braucht nicht überladen zu werden da die worker, sollte kein save game vorliegen trozdem von WorkerWorldManager aus gespawned, dieser erstellt dann eine "pseudo" save data
 	// Hat den naxchteil das ich im moment die site id immer mit -1 ini weil die auch einen default braucht

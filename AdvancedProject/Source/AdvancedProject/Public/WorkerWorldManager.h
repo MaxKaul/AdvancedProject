@@ -157,6 +157,9 @@ private:
 		float workerDesireDefaultMax;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+		float workerStartCurrency;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		int maxSpawnTries;
 
 	UPROPERTY()
