@@ -36,7 +36,6 @@ AWorker::AWorker()
 	possibleSockets.Add("InteractionSocket_1");
 	possibleSockets.Add("InteractionSocket_2");
 
-	DEBUG = 0;
 }
 
 // Called when the game starts or when spawned
@@ -136,10 +135,6 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	workerHitBox->OnComponentEndOverlap.AddDynamic(this, &AWorker::OnOverlapEnd);
 
 	FillBiasLists();
-
-	FTimerHandle handle;
-
-	GetWorld()->GetTimerManager().SetTimer(handle, this, &AWorker::ChoseCurrentBiasWeightPair, 2.f, false);
 }
 
 void AWorker::InitPossibleSitesFromSave()
@@ -358,44 +353,39 @@ void AWorker::ChoseCurrentBiasWeightPair()
 {
 	int rndidx = 0;
 	int idx = 0;
-	rndidx = FMath::RandRange(0, luxuryBiasWeightPair.Num());
+	rndidx = FMath::RandRange(0, luxuryBiasWeightPair.Num() - 1);
 
 	for (TTuple<EResourceIdent, float> chosenattribute : luxuryBiasWeightPair)
 	{
-		if (idx != rndidx)
+		if (idx == rndidx)
 		{
-			idx++;
-			continue;
+			currentLuxuryGood = chosenattribute.Key;
+			currentWeightLuxury = chosenattribute.Value;
+			break;
 		}
-
-		currentLuxuryGood = chosenattribute.Key;
-		currentWeightLuxury = chosenattribute.Value;
-
-		break;
+		else
+			idx++;
 	}
 
+	rndidx = FMath::RandRange(0, nutritionBiasWeightPair.Num() - 1);
 	idx = 0;
-	rndidx = FMath::RandRange(0, luxuryBiasWeightPair.Num());
 
 	for (TTuple<EResourceIdent, float> chosenattribute : nutritionBiasWeightPair)
 	{
-		if (idx != rndidx)
+		if (idx == rndidx)
 		{
-			idx++;
-			continue;
+			currentNutritionGood = chosenattribute.Key;
+			currentWeightNutrition = chosenattribute.Value;
+			break;
 		}
-
-		currentNutritionGood = chosenattribute.Key;
-		currentWeightNutrition = chosenattribute.Value;
-
-		break;
+		else
+			idx++;
 	}
-
 }
 
 void AWorker::State_SomethingWentWrong()
 {
-	UE_LOG(LogTemp, Warning, TEXT("UFF"));
+	UE_LOG(LogTemp, Warning, TEXT("AWorker, State_SomethingWentWrong, UFF"));
 }
 
 void AWorker::BuyResources()
@@ -571,8 +561,6 @@ void AWorker::FillBiasLists()
 			nutritionBiasWeightPair.Add(item.Key, item.Value);
 		}
 	}
-
-	//ChoseCurrentBiasWeightPair();
 }
 
 

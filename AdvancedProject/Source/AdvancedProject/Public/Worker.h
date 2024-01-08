@@ -143,8 +143,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 		int GetWorkerID();
 
-	int DEBUG;
-
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		void SetWorkerOwner(EPlayerIdent _newOwner) { workerOwner = _newOwner; }
 
@@ -229,7 +227,7 @@ private:
 		float workerSalary;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
-	TMap<EResourceIdent, float> luxuryBiasWeightPair;
+		TMap<EResourceIdent, float> luxuryBiasWeightPair;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		TMap<EResourceIdent, float> nutritionBiasWeightPair;
 
