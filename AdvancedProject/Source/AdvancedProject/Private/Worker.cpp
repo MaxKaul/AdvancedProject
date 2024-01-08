@@ -106,9 +106,9 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	marketManager = _marketManager;
 	currentLuxuryGood = _saveData.GetCurrentLuxuryGood_S();
 	currentNutritionGood = _saveData.GetCurrentNutritionGood_S();
-	desireLuxury = _saveData.GetDesireLuxury();
-	desireNutrition = _saveData.GetDesireHunger();
-	desireDefaultMax = _saveData.GetDesireDefaultMax();
+	desireLuxury = _saveData.GetDesireLuxury_S();
+	desireNutrition = _saveData.GetDesireHunger_S();
+	desireDefaultMax = _saveData.GetDesireDefaultMax_S();
 
 	//if (_saveData.GetWorkerOptionals_S().possibleStallIDs.IsSet() && _saveData.GetWorkerOptionals_S().possibleStallIDs.GetValue().Num() > 0)
 	//{

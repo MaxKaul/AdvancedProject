@@ -171,7 +171,7 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			if (AActor* tospawn = world->SpawnActor(workerClass, &spawnpos, &spawnrot, params))
 			{
 				AWorker* worker = Cast<AWorker>(tospawn);
-				worker->InitWorker(workerdata, navigationSystem, allWorker_Ref.Num(), employementstatus, cachedstatus, workerowner, workerdesirebase, marketManager, workerdata.GetPossibleStallIDs());
+				worker->InitWorker(workerdata, navigationSystem, allWorker_Ref.Num(), employementstatus, cachedstatus, workerowner, workerdesirebase, marketManager, workerdata.GetPossibleStallIDs_S());
 
 				if(employementstatus == EWorkerStatus::WS_Assigned_MainJob)
 				{

@@ -111,13 +111,13 @@ public:
 	FORCEINLINE
 		FWorkerOptional GetWorkerOptionals_S() { return s_workerOptionals; }
 	FORCEINLINE
-		float GetDesireLuxury() { return s_desireLuxury; }
+		float GetDesireLuxury_S() { return s_desireLuxury; }
 	FORCEINLINE
-		float GetDesireHunger() { return s_desireNutrition; }
+		float GetDesireHunger_S() { return s_desireNutrition; }
 	FORCEINLINE
-		float GetDesireDefaultMax() { return s_desireDefaultMax; }
+		float GetDesireDefaultMax_S() { return s_desireDefaultMax; }
 	FORCEINLINE
-		TArray<int> GetPossibleStallIDs() { return s_possibleStallIDs; }
+		TArray<int> GetPossibleStallIDs_S() { return s_possibleStallIDs; }
 };
 
 UCLASS()
