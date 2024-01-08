@@ -533,11 +533,11 @@ void AWorker::MoveWorker(FVector _movePos)
 void AWorker::TickWorkerDesire()
 {
 	if (desireLuxury > 0)
-		desireLuxury -= currentWeightLuxury / defaultWeightDivider * 100;
-
+		desireLuxury -= currentWeightLuxury / defaultWeightDivider ;
+	
 	if (desireNutrition > 0)
-		desireNutrition -= currentWeightNutrition / defaultWeightDivider * 100;
-
+		desireNutrition -= currentWeightNutrition / defaultWeightDivider;
+	
 	if(desireLuxury <= 0 && desireNutrition <= 0)
 		SetWorkerState(EWorkerStatus::WS_FullfillNeed);
 }
