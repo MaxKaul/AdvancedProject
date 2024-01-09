@@ -36,7 +36,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		AProductionsite* GetViewProductionSiteInfo();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		void ToggleProdSiteInfoStatus();
 
 protected:

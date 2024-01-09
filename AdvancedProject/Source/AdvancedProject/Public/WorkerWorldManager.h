@@ -155,6 +155,8 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		float workerDesireDefaultMax;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category =  Comps, meta = (AllowPrivateAccess))
+		float workerDesireDefaultMin	;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		float workerStartCurrency;

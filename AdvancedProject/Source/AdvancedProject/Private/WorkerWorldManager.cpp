@@ -93,6 +93,9 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManag
 			rnddesirebase.Add(overloadOwner->GenerateWorkerAttribute());
 		}
 
+		float startdesireluxury = FMath::RandRange(overloadOwner->workerDesireDefaultMin, overloadOwner->workerDesireDefaultMax);
+		float startdesirenutrition = FMath::RandRange(overloadOwner->workerDesireDefaultMin, overloadOwner->workerDesireDefaultMax);
+
 		// Ich Init die pseudo save data mit default resourceidents damit die preffered buy order aus dem worker init herraus force generated wird
 		FWorkerSaveData workersavedata =
 		{
@@ -107,8 +110,8 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManag
 			EResourceIdent::ERI_DEFAULT,
 			EResourceIdent::ERI_DEFAULT,
 			overloadOwner->workerDesireDefaultMax,
-			overloadOwner->workerDesireDefaultMax,
-			overloadOwner->workerDesireDefaultMax,
+			startdesireluxury,
+			startdesirenutrition,
 			TArray<int>(),
 			0,
 			0,

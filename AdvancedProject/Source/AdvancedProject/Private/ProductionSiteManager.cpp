@@ -103,6 +103,28 @@ void UProductionSiteManager::SubscribeProductionsite(AProductionsite* _newProduc
 	allProductionSites.Add(_newProductionSite);
 }
 
+AProductionsite* UProductionSiteManager::GetSiteByID(int _id)
+{
+	if(allProductionSites.Num() <= 0)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("AProductionsite, allProductionSites.Num() <= 0"))
+		return nullptr;
+	}
+
+	AProductionsite* foundsite = allProductionSites[0];
+
+	for(AProductionsite* site : allProductionSites)
+	{
+		if(site->GetLocalProdSiteID() == _id)
+		{
+			foundsite = site;
+			break;
+		}
+	}
+
+	return foundsite;
+}
+
 FProductionSiteManagerSaveData UProductionSiteManager::GetProductionSiteManagerSaveData()
 {
 	TArray<FProductionSiteSaveData> allpssavedata;

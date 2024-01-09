@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ProductionSiteManager.h"
+#include "TransportManager.h"
 #include "GameFramework/Character.h"
 #include "PlayerBase.generated.h"
 
@@ -14,7 +15,7 @@ struct FPlayerSaveData
 
 	FPlayerSaveData() {}
 
-	void InitPlayerSaveData(FVector _location, FRotator _rotation, FProductionSiteManagerSaveData _siteManagerSaveData, EPlayerIdent _ident)
+	void InitPlayerSaveData(FVector _location, FRotator _rotation, FProductionSiteManagerSaveData _siteManagerSaveData, EPlayerIdent _ident, FTransportManagerSaveData _transportManagerSaveData)
 	{
 		location = _location;
 		rotation = _rotation;
@@ -31,6 +32,8 @@ private:
 		FProductionSiteManagerSaveData productionSiteManagerSaveData;
 	UPROPERTY()
 		EPlayerIdent playerIdent;
+	UPROPERTY()
+		FTransportManagerSaveData 	transportManagerSaveData;
 
 public:
 	FORCEINLINE
@@ -41,6 +44,8 @@ public:
 		FRotator GetRotation() { return rotation; }
 	FORCEINLINE
 		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData() { return productionSiteManagerSaveData; }
+	FORCEINLINE
+		FTransportManagerSaveData GeTransportManagerSaveData() { return transportManagerSaveData; }
 };
 
 UCLASS()
@@ -70,15 +75,18 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		AWorkerWorldManager* workerWorldManager;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
 		class UBuilder* builder;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))
-		class AMarketManager* marketManager;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+		AMarketManager* marketManager;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Comps, meta = (AllowPrivateAccess))
+		UTransportManager* transportManager;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = PlayerInfo, meta=(AllowPrivateAccess))
 		EPlayerIdent playerIdent;
+
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))

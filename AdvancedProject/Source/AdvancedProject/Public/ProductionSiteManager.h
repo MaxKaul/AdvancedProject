@@ -78,6 +78,8 @@ public:
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		TArray<AWorker*> GetAllHiredWorker(){ return subscribedWorker_HiredPool;};
 
+	UFUNCTION()
+		AProductionsite* GetSiteByID(int _id);
 
 	UFUNCTION()
 		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData();

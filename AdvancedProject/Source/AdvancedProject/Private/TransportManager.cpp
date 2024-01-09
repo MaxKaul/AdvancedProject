@@ -3,6 +3,8 @@
 
 #include "TransportManager.h"
 
+#include "Productionsite.h"
+
 // Sets default values for this component's properties
 UTransportManager::UTransportManager()
 {
@@ -14,13 +16,15 @@ UTransportManager::UTransportManager()
 }
 
 
-// Called when the game starts
-void UTransportManager::BeginPlay()
-{
-	Super::BeginPlay();
 
-	// ...
-	
+FTransportManagerSaveData UTransportManager::GetTransportManagerSaveData()
+{
+	FTransportManagerSaveData newsave = 
+	{
+		allTransportOrders
+	};
+
+	return newsave;
 }
 
 
@@ -28,7 +32,43 @@ void UTransportManager::BeginPlay()
 void UTransportManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
 
+void FTM_OverloadFuncs::InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager)
+{
+	overloadOwner->marketManager = _marketManager;
+	overloadOwner->productionSiteManager = _prodSiteManager;
+
+
+	overloadOwner->world = overloadOwner->GetWorld();
+}
+
+void FTM_OverloadFuncs::InitTransportManager(FTransportManagerSaveData _saveData, AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager)
+{
+	overloadOwner->marketManager = _marketManager;
+	overloadOwner->productionSiteManager = _prodSiteManager;
+
+	overloadOwner->world = overloadOwner->GetWorld();
+
+	for(TTuple<FTransportOrder, float> pair : _saveData.GetTransactrionTravelTimePair_S())
+	{
+		//if(pair.Key.GetGoalIsMarket())
+		//{
+		//	TArray<AMarketStall*> possibleStalls = overloadOwner->marketManager->GetAllMarketStalls();
+		//
+		//	int rndidx = FMath::RandRange(0, possibleStalls.Num());
+		//
+		//	AMarketStall* goalStall = possibleStalls[rndidx];
+		//
+		//	//CreateTransportOrder(pair.Key.GetTransactionOrder(), goalStall, pair.Value);
+		//}
+		
+	}
+}
+
+void FTM_OverloadFuncs::CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, FVector _startLocation, float _transitSpeed, bool _bGoalIsMarket, AProductionSite* _originSite, AProductionSite*, TOptional<AProductionSite*> _productionSite)
+{
+	FTransportOrder neworder;
+
+	//neworder.InitOrder()
+}

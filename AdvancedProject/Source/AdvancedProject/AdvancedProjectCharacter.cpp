@@ -98,7 +98,7 @@ FPlayerSaveData AAdvancedProjectCharacter::GetPlayerSaveData()
 {
 	FPlayerSaveData savedata;
 
-	savedata.InitPlayerSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData(), playerIdent);
+	savedata.InitPlayerSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData(), playerIdent, transportManager->GetTransportManagerSaveData());
 
 	return savedata;
 }
@@ -107,4 +107,3 @@ void AAdvancedProjectCharacter::ToggleProdSiteInfoStatus()
 {
 	bCanOpenProdSite = !bCanOpenProdSite;
 }
-

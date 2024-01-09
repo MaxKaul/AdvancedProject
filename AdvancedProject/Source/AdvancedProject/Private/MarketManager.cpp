@@ -104,25 +104,25 @@ TArray<FMarketStallSaveData> AMarketManager::GenerateStallTypes()
 	for (size_t i = 0; i < stallPositions.Num(); i++)
 	{
 		FMarketStallSaveData newsave;
-
+	
 		if(i <= allresources.Num() )
 		{
 			newsave.AddNewProductionType_S(allresources[i]);
 			usedresources.Add(allresources[i]);
 		}
-
+	
 		if (i + 2 < allresources.Num())
 		{
 			newsave.AddNewProductionType_S(allresources[i + 2]);
 			usedresources.Add(allresources[i + 2]);
 		}
-
+	
 		if (i + 3 < allresources.Num())
 		{
 			newsave.AddNewProductionType_S(allresources[i + 3]);
 			usedresources.Add(allresources[i + 3]);
 		}
-
+	
 		// Zum catchen von edgecases falls eine resource nicht richtig zugewiesen wurde
 		if(i >= stallPositions.Num() - 1)
 		{

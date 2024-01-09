@@ -170,7 +170,7 @@ bool ASaveGameManager::InitAllManager()
 			 FPlayerSaveData initsave;
 
 			 // Leere Prodsite save data weil dieser ja keine werte besitzen wird wenn wir neu starten
-			 initsave.InitPlayerSaveData(defaultStartPos, defaultStartRot, FProductionSiteManagerSaveData(), ident);
+			 initsave.InitPlayerSaveData(defaultStartPos, defaultStartRot, FProductionSiteManagerSaveData(), ident, FTransportManagerSaveData());
 			 allPlayer[i]->InitPlayerStart(initsave, spawnedMarketManager, spawnedWorkerWorldManager);
 		 }
 	 }
