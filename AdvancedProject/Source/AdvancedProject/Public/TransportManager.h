@@ -12,19 +12,12 @@ struct FTransportOrder
 {
 	GENERATED_BODY()
 
-	FTransportOrder(){}
-
-
-	void InitOrder()
-	{
-		
-	}
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
 		FString structName_Saved = FString("NONE");
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
 		FString productionSiteID_Saved = FString("NONE");
+
 public:
 	FORCEINLINE
 		bool operator==(const  FTransportOrder& _other) const
@@ -44,9 +37,67 @@ public:
 		return structName_Saved == _other.structName_Saved && productionSiteID_Saved == _other.productionSiteID_Saved;
 	}
 
+	FTransportOrder(){}
 
+
+	FTransportOrder(TArray<FResourceTransactionTicket> _transactionOrder, FTimerHandle _timerHandle, AActor* _goalActor, ETransportOrderStatus _transportOrderStatus, class AProductionsite* _owningProdSite,
+					ETransportatOrderDirecrtive _transportDirective)
+	{
+		transactionOrder = _transactionOrder;
+		timerHandle = _timerHandle;
+		transportOrderStatus = _transportOrderStatus;
+		goalActor = _goalActor;
+		owningProdSite = _owningProdSite;
+		transportDirective = _transportDirective;
+	}
+
+private:
 	UPROPERTY()
 		TArray<FResourceTransactionTicket> transactionOrder;
+
+	// Ich regel das saven der remainging time der transporter über deren individuelle handles 
+	UPROPERTY()
+		FTimerHandle timerHandle;
+
+	// Ich "weiß" ob mein goalactor der markt oder eine production site ist über den transportOrderStatus (nicht perfekt aber so muss ich die ganze buy und sell logik nicht refaktorieren)
+	UPROPERTY()
+		AActor* goalActor;
+
+	UPROPERTY()
+		ETransportOrderStatus transportOrderStatus;
+
+	UPROPERTY()
+		AProductionsite* owningProdSite;
+	UPROPERTY()
+		ETransportatOrderDirecrtive transportDirective;
+
+public:
+	FORCEINLINE
+		TArray<FResourceTransactionTicket> GetTransactionOrder() { return transactionOrder; };
+	FORCEINLINE
+		FTimerHandle GetTimerHandle() { return timerHandle; }
+	FORCEINLINE
+		AActor* GetGoalActor() { return goalActor; }
+	FORCEINLINE
+		ETransportOrderStatus GetTransportOrderStatus() { return transportOrderStatus; }
+	FORCEINLINE
+		AProductionsite* GetOwningProductionSite() { return owningProdSite; }
+	FORCEINLINE
+		ETransportatOrderDirecrtive GetOrderDirective() { return transportDirective; }
+};
+
+USTRUCT()
+struct FTransportManagerSaveData
+{
+	GENERATED_BODY()
+
+	FTransportManagerSaveData(){}
+
+	FTransportManagerSaveData(TArray<FTransportOrder> _currentTransportOrders)
+	{
+		
+	}
+
 };
 
 FORCEINLINE uint32 GetTypeHash(const  FTransportOrder& _this)
@@ -54,28 +105,6 @@ FORCEINLINE uint32 GetTypeHash(const  FTransportOrder& _this)
 	const uint32 Hash = FCrc::MemCrc32(&_this, sizeof(FTransportOrder));
 	return Hash;
 }
-
-USTRUCT()
-struct FTransportManagerSaveData
-{
-	GENERATED_BODY()
-
-	FTransportManagerSaveData() {}
-
-	FTransportManagerSaveData(TMap<FTransportOrder, float> _transactionTravelTimePair)
-	{
-		s_transactionTravelTimePair = _transactionTravelTimePair;
-	}
-
-private:
-	UPROPERTY()
-		TMap<FTransportOrder, float> s_transactionTravelTimePair;
-
-
-public:
-	FORCEINLINE
-		TMap<FTransportOrder, float> GetTransactrionTravelTimePair_S() { return s_transactionTravelTimePair; }
-};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ADVANCEDPROJECT_API UTransportManager : public UActorComponent
@@ -92,16 +121,12 @@ public:
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-
 private:
 	UPROPERTY(VisibleAnywhere,Category=info,meta=(AllowPrivateAccess))
-		TArray<FResourceTransactionTicket> currentTransaction;
+		TArray<FTransportOrder> allTransportOrders;
 
 	UPROPERTY()
 		class UProductionSiteManager* productionSiteManager;
-
-	UPROPERTY(VisibleAnywhere,meta=(AllowPrivateAccess))
-	TMap<FTransportOrder, float> allTransportOrders;
 
 	UPROPERTY()
 		UWorld* world;
@@ -109,30 +134,26 @@ private:
 	UPROPERTY()
 		AMarketManager* marketManager;
 
-	friend struct  FTM_OverloadFuncs;
-};
 
-// Kann unter umständen auch weg, ich bin mir grad nicht sicher ob ich das auch  machen will
-USTRUCT(BlueprintType)
-struct FTM_OverloadFuncs
-{
-	GENERATED_BODY()
-
-private:
-	UPROPERTY()
-	UTransportManager* overloadOwner;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
+		float transportSpeed;
 
 public:
-	FTM_OverloadFuncs(){}
+	UFUNCTION()
+	void InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager);
+
+	UFUNCTION(BlueprintCallable)
+		void TestOrder();
 
 private:
-	void InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager);
-	void InitTransportManager(FTransportManagerSaveData _saveData, AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager);
+	UFUNCTION(BlueprintCallable)
+	void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, AActor* _goalActor, ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective);
 
-	// Aus game herraus
-	void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, FVector _startLocation, float _transitSpeed, bool _bGoalIsMarket, class AProductionSite* _originSite, AProductionSite*,TOptional<AProductionSite*> _productionSite);
-
-	// Aus save herraus
-	// Erstaml auf hold bis ich den restlichen dreck habe 
-	//void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, AMarketStall* _goalMarketStall , class AProductionsite* _goalSite, float _remainingTime);
+	UFUNCTION()
+		void ManageTransaction(FTransportOrder _orderToHandle);
+	UFUNCTION()
+		void HandleMarketTransaction(FTransportOrder _orderToHandle);
+	UFUNCTION()
+		void HandleProdSiteTransaction(FTransportOrder _orderToHandle);
 };
+

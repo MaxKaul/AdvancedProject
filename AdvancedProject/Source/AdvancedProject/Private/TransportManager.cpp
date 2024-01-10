@@ -2,17 +2,14 @@
 
 
 #include "TransportManager.h"
-
 #include "Productionsite.h"
+#include "ProductionSiteManager.h"
 
-// Sets default values for this component's properties
 UTransportManager::UTransportManager()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	transportSpeed = 10.f;
 }
 
 
@@ -32,43 +29,159 @@ FTransportManagerSaveData UTransportManager::GetTransportManagerSaveData()
 void UTransportManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+
+	if (allTransportOrders.Num() <= 0)
+		return;
 }
 
-void FTM_OverloadFuncs::InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager)
+void UTransportManager::InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager)
 {
-	overloadOwner->marketManager = _marketManager;
-	overloadOwner->productionSiteManager = _prodSiteManager;
-
-
-	overloadOwner->world = overloadOwner->GetWorld();
+	marketManager = _marketManager;
+	productionSiteManager = _prodSiteManager;
+	world = GetWorld();
 }
 
-void FTM_OverloadFuncs::InitTransportManager(FTransportManagerSaveData _saveData, AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager)
+void UTransportManager::TestOrder()
 {
-	overloadOwner->marketManager = _marketManager;
-	overloadOwner->productionSiteManager = _prodSiteManager;
+	TArray<FResourceTransactionTicket> tickets;
 
-	overloadOwner->world = overloadOwner->GetWorld();
-
-	for(TTuple<FTransportOrder, float> pair : _saveData.GetTransactrionTravelTimePair_S())
+	// Test order Deliver to prod site
+	FResourceTransactionTicket newticket =
 	{
-		//if(pair.Key.GetGoalIsMarket())
-		//{
-		//	TArray<AMarketStall*> possibleStalls = overloadOwner->marketManager->GetAllMarketStalls();
-		//
-		//	int rndidx = FMath::RandRange(0, possibleStalls.Num());
-		//
-		//	AMarketStall* goalStall = possibleStalls[rndidx];
-		//
-		//	//CreateTransportOrder(pair.Key.GetTransactionOrder(), goalStall, pair.Value);
-		//}
-		
+		10,
+		0,
+		EResourceIdent::ERI_Fruit,
+		0,
+		 0
+	};
+
+	tickets.Add(newticket);
+
+	CreateTransportOrder(tickets, productionSiteManager->GetAllProductionSites()[1], ETransportOrderStatus::TOS_MoveToProdSite, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_DeliverToSite);
+}
+
+void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, AActor* _goalActor, ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective)
+{
+	FTimerHandle handle;
+
+	float traveltime = (_goalActor->GetActorLocation() / _owningSite->GetActorLocation()).Length();
+	traveltime *= transportSpeed;
+
+	UE_LOG(LogTemp,Warning,TEXT("Travel Time %f"), traveltime)
+
+	FTransportOrder neworder =
+	{
+		_transaction,
+		handle,
+		_goalActor,
+		_orderStatus,
+		_owningSite,
+		_transportDirective
+	};
+
+	allTransportOrders.Add(neworder);
+
+	auto transactionlambda = [this, neworder]()
+	{
+		ManageTransaction(neworder);
+	};
+
+	FTimerDelegate  currdelegate;
+	currdelegate.BindLambda(transactionlambda);
+
+	world->GetTimerManager().SetTimer(handle, currdelegate, traveltime, false);
+
+	//Cast<AProductionsite>(_goalActor)->RemoveResourcesFromLocalPool(_transaction);
+}
+
+void UTransportManager::ManageTransaction(FTransportOrder _orderToHandle)
+{
+	if(!marketManager || !productionSiteManager)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !marketManager || !productionSiteManager"));
+		return;
+	}
+
+	if(_orderToHandle.GetTransactionOrder().Num() <= 0)
+	{
+		// Wenn keine Transaction Order vorliegt und die Direktive TOD_DeliverToSite ist kehrt der tranporter zu der prod site zurück welche ihn owned nachdem er resourcen zu einer weiteren gesendent hat
+		// i.e er bekommt kein tatsächliches return ticket
+		if(_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_DeliverToSite)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Transporter arrived back at Owning Production Site"));
+		}
+		else
+			UE_LOG(LogTemp, Warning, TEXT("UTransportManager, _orderToHandle.GetTransactionOrder().Num() <= 0"));
+
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Order Was Completed"));
+
+	if(_orderToHandle.GetTransportOrderStatus() == ETransportOrderStatus::TOS_MoveToMarket)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Order arrrived at Market"));
+		HandleMarketTransaction(_orderToHandle);
+	}
+	else if(_orderToHandle.GetTransportOrderStatus() == ETransportOrderStatus::TOS_MoveToProdSite)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Order arrrived at Productionsite"));
+
+		HandleProdSiteTransaction(_orderToHandle);
 	}
 }
 
-void FTM_OverloadFuncs::CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, FVector _startLocation, float _transitSpeed, bool _bGoalIsMarket, AProductionSite* _originSite, AProductionSite*, TOptional<AProductionSite*> _productionSite)
+void UTransportManager::HandleMarketTransaction(FTransportOrder _orderToHandle)
 {
-	FTransportOrder neworder;
+	TArray<FResourceTransactionTicket> returnticket;
+	AActor* newgoal = _orderToHandle.GetOwningProductionSite();
+	AProductionsite* orderowner = _orderToHandle.GetOwningProductionSite();
 
-	//neworder.InitOrder()
+	if(_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_BuyResources)
+		returnticket = marketManager->BuyResources(_orderToHandle.GetTransactionOrder());
+	else if(_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_SellResources)
+		returnticket = marketManager->SellResources(_orderToHandle.GetTransactionOrder());
+
+	if(allTransportOrders.Contains(_orderToHandle))
+		allTransportOrders.Remove(_orderToHandle);
+	else
+		UE_LOG(LogTemp,Warning,TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"))
+
+	CreateTransportOrder(returnticket, newgoal, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_DeliverToSite);
+}
+
+void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle)
+{
+	TArray<FResourceTransactionTicket> returnticket;
+	AProductionsite* goalsite = Cast<AProductionsite>(_orderToHandle.GetGoalActor());
+	AProductionsite* orderowner = _orderToHandle.GetOwningProductionSite();
+
+	if (_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_DeliverToSite)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Deliver the resources of this transaction order to the goal site and return an empty ticket"));
+
+		goalsite->AddResourcesToLocalPool(_orderToHandle.GetTransactionOrder());
+
+		returnticket =
+		{
+			
+		};
+	}
+	else if (_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_FetchFromSite)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Remove the resources of this transaction order from the goal site and return the resulting return ticket"));
+
+		returnticket = goalsite->RemoveResourcesFromLocalPool(_orderToHandle.GetTransactionOrder());
+	}
+
+	AActor* newgoal = _orderToHandle.GetOwningProductionSite();
+
+	if (allTransportOrders.Contains(_orderToHandle))
+		allTransportOrders.Remove(_orderToHandle);
+	else
+		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"));
+
+
+	CreateTransportOrder(returnticket, newgoal, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_DeliverToSite);
 }

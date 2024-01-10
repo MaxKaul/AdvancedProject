@@ -13,7 +13,7 @@ struct FPlayerSaveData
 {
 	GENERATED_BODY()
 
-	FPlayerSaveData() {}
+	FPlayerSaveData(){ }
 
 	void InitPlayerSaveData(FVector _location, FRotator _rotation, FProductionSiteManagerSaveData _siteManagerSaveData, EPlayerIdent _ident, FTransportManagerSaveData _transportManagerSaveData)
 	{
@@ -48,7 +48,7 @@ public:
 		FTransportManagerSaveData GeTransportManagerSaveData() { return transportManagerSaveData; }
 };
 
-UCLASS()
+UCLASS(BlueprintType)
 class ADVANCEDPROJECT_API APlayerBase : public ACharacter
 {
 	GENERATED_BODY()

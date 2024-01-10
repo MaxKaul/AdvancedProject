@@ -184,7 +184,6 @@ struct FProductionSiteDisplayInfos
 
 		FProductionSiteDisplayInfos() {}
 
-
 public:
 	FORCEINLINE
 		void SetWorkerAmount(int _amount) { workerAmount = _amount; }
@@ -252,6 +251,12 @@ public:
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		TArray<AWorker*> GetAllWorkerAtSite() { return workerAtSite; }
 
+
+	UFUNCTION()
+		TArray<FResourceTransactionTicket> RemoveResourcesFromLocalPool(TArray<FResourceTransactionTicket> _transactionOrder);
+	UFUNCTION()
+		void AddResourcesToLocalPool(TArray<FResourceTransactionTicket> _transactionOrder);
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();
@@ -261,8 +266,8 @@ private:
 		void InitResources();
 
 private:
-	UPROPERTY()
-		bool bWasInit;
+	//UPROPERTY()
+	//	bool bWasInit;
 	UPROPERTY(EditAnywhere,meta=(AllowPrivateAccess))
 		UStaticMesh* actorMesh;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))

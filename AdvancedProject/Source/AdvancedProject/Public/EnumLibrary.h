@@ -82,3 +82,23 @@ enum class EWorkerAttributeIdentifier : uint8
 	WAI_A4,
 	WAI_ENTRY_AMOUNT
 };
+
+UENUM()
+enum class ETransportOrderStatus : uint8
+{
+	TOS_DEFAULT,
+	TOS_MoveToMarket,
+	TOS_MoveToProdSite,
+	TOS_ENTRY_AMOUNT
+};
+
+UENUM()
+enum class ETransportatOrderDirecrtive : uint8
+{
+	TOD_DEFAULT,
+	TOD_SellResources,
+	TOD_BuyResources,
+	TOD_DeliverToSite,
+	TOD_FetchFromSite,
+	TOD_ENTRY_AMOUNT
+};

@@ -23,8 +23,8 @@ void AProductionsite::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!bWasInit)
-		return;
+	//if (!bWasInit)
+	//	return;
 
 	if (!NullcheckDependencies())
 	{
@@ -90,6 +90,68 @@ FProductionSiteSaveData AProductionsite::GetProductionSiteSaveData()
 	};
 
 	return savedata;
+}
+
+TArray<FResourceTransactionTicket> AProductionsite::RemoveResourcesFromLocalPool( TArray<FResourceTransactionTicket> _transactionOrder)
+{
+	TArray<FResourceTransactionTicket> returntickets;
+
+	int resourceamount = 0;
+
+	for(FResourceTransactionTicket ticket : _transactionOrder)
+	{
+		for (TTuple<EResourceIdent, int> poolitem : productionSiteResourcePool)
+		{
+			if (poolitem.Key == ticket.resourceIdent)
+			{
+				if(poolitem.Value <= ticket.resourceAmount)
+				{
+					resourceamount = poolitem.Value;
+
+					productionSiteResourcePool.Add(poolitem.Key, 0);
+
+					break;
+				}
+				else if( poolitem.Value > ticket.resourceAmount)
+				{
+					resourceamount = ticket.resourceAmount;
+
+					productionSiteResourcePool.Add(poolitem.Key, poolitem.Value - ticket.resourceAmount);
+
+					break;
+				}
+			}
+		}
+
+		FResourceTransactionTicket newticket =
+		{
+			resourceamount,
+			0,
+			ticket.resourceIdent,
+			0,
+			0
+		};
+
+		returntickets.Add(newticket);
+	}
+
+
+	return returntickets;
+}
+
+void AProductionsite::AddResourcesToLocalPool(TArray<FResourceTransactionTicket> _transactionOrder)
+{
+	for(FResourceTransactionTicket ticket : _transactionOrder)
+	{
+		for (TTuple<EResourceIdent, int> poolitem : productionSiteResourcePool)
+		{
+			if (poolitem.Key == ticket.resourceIdent)
+			{
+				productionSiteResourcePool.Add(poolitem.Key, poolitem.Value + ticket.resourceAmount);
+				break;
+			}
+		}
+	}
 }
 
 bool AProductionsite::NullcheckDependencies()

@@ -70,6 +70,7 @@ void AAdvancedProjectCharacter::InitPlayerStart(FPlayerSaveData _saveData, AMark
 
 	builder->InitBuilder(productionSiteManager, marketManager, this, workerWorldManager);
 	productionSiteManager->InitProductionSiteManager(this, _saveData.GetProductionSiteManagerSaveData() ,marketManager, workerWorldManager);
+	transportManager->InitTransportManager(marketManager, productionSiteManager);
 }
 
 void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSite)
