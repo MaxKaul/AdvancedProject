@@ -47,7 +47,16 @@ void UTransportManager::TestOrder()
 	TArray<FResourceTransactionTicket> tickets;
 
 	// Test order Deliver to prod site
-	FResourceTransactionTicket newticket =
+	FResourceTransactionTicket newticket_1 =
+	{
+		5,
+		0,
+		EResourceIdent::ERI_Ambrosia,
+		0,
+		 0
+	};
+
+	FResourceTransactionTicket newticket_2 =
 	{
 		10,
 		0,
@@ -56,9 +65,10 @@ void UTransportManager::TestOrder()
 		 0
 	};
 
-	tickets.Add(newticket);
+	tickets.Add(newticket_1);
+	tickets.Add(newticket_2);
 
-	CreateTransportOrder(tickets, productionSiteManager->GetAllProductionSites()[1], ETransportOrderStatus::TOS_MoveToProdSite, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_DeliverToSite);
+	CreateTransportOrder(tickets, productionSiteManager->GetAllProductionSites()[1], ETransportOrderStatus::TOS_MoveToProdSite, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_FetchFromSite);
 }
 
 void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, AActor* _goalActor, ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective)
@@ -78,7 +88,14 @@ void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> 
 	// Ich muss bei den drei noch differenzieren, weil ich für meine tranport order den owner nicht switche
 	// Ist zwar jetzt nicht perfekt da ich auf ProductionSite casten muss, aber die transport directive darf eh nur für sites genutzt werden
 	if (_transportDirective == ETransportatOrderDirecrtive::TOD_SellResources || _transportDirective == ETransportatOrderDirecrtive::TOD_DeliverToSite)
+	{
 		sampletransaction = SampleSitePool(sampletransaction, _owningSite);
+
+		// HIER
+
+		//if (_transportDirective != ETransportatOrderDirecrtive::TOD_ReturnToSite)
+			_owningSite->RemoveResourcesFromLocalPool(sampletransaction);
+	}
 	else if (_transportDirective == ETransportatOrderDirecrtive::TOD_FetchFromSite)
 		sampletransaction = SampleSitePool(sampletransaction, Cast<AProductionsite>(_goalActor));
 
@@ -103,8 +120,6 @@ void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> 
 	currdelegate.BindLambda(transactionlambda);
 
 	world->GetTimerManager().SetTimer(handle, currdelegate, traveltime, false);
-
-	_owningSite->RemoveResourcesFromLocalPool(sampletransaction);
 }
 
 void UTransportManager::ManageTransaction(FTransportOrder _orderToHandle)
@@ -115,21 +130,28 @@ void UTransportManager::ManageTransaction(FTransportOrder _orderToHandle)
 		return;
 	}
 
+
 	if(_orderToHandle.GetTransactionOrder().Num() <= 0)
 	{
+		// Ich brauch das wohl net mehr weil ich die seperate direktive ETransportatOrderDirecrtive::TOD_ReturnToSite habe
 		// Wenn keine Transaction Order vorliegt und die Direktive TOD_DeliverToSite ist kehrt der tranporter zu der prod site zurück welche ihn owned nachdem er resourcen zu einer weiteren gesendent hat
 		// i.e er bekommt kein tatsächliches return ticket
-		if(_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_DeliverToSite)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Transporter arrived back at Owning Production Site"));
-		}
-		else
-			UE_LOG(LogTemp, Warning, TEXT("UTransportManager, _orderToHandle.GetTransactionOrder().Num() <= 0"));
+		//if(_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_DeliverToSite)
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("Transporter arrived back at Owning Production Site"));
 
+		//	if (allTransportOrders.Contains(_orderToHandle))
+		//		allTransportOrders.Remove(_orderToHandle);
+		//}
+		//else
+		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, _orderToHandle.GetTransactionOrder().Num() <= 0"));
+		if (allTransportOrders.Contains(_orderToHandle))
+			allTransportOrders.Remove(_orderToHandle);
 		return;
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Order Was Completed"));
+
 
 	if(_orderToHandle.GetTransportOrderStatus() == ETransportOrderStatus::TOS_MoveToMarket)
 	{
@@ -155,11 +177,12 @@ void UTransportManager::HandleMarketTransaction(FTransportOrder _orderToHandle)
 	else if(_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_SellResources)
 		returnticket = marketManager->SellResources(_orderToHandle.GetTransactionOrder());
 
+
 	if(allTransportOrders.Contains(_orderToHandle))
 		allTransportOrders.Remove(_orderToHandle);
 	else
 		UE_LOG(LogTemp,Warning,TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"))
-
+		
 	CreateTransportOrder(returnticket, newgoal, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_DeliverToSite);
 }
 
@@ -169,9 +192,9 @@ void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle
 	AProductionsite* goalsite = Cast<AProductionsite>(_orderToHandle.GetGoalActor());
 	AProductionsite* orderowner = _orderToHandle.GetOwningProductionSite();
 
-	if (_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_DeliverToSite)
+	if (_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_DeliverToSite || _orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_ReturnToSite)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Deliver the resources of this transaction order to the goal site and return an empty ticket"));
+		UE_LOG(LogTemp, Warning, TEXT("Deliver the resources of this transaction order to goal or owner site and return an empty ticket"));
 
 		goalsite->AddResourcesToLocalPool(_orderToHandle.GetTransactionOrder());
 
@@ -187,15 +210,19 @@ void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle
 		returnticket = goalsite->RemoveResourcesFromLocalPool(_orderToHandle.GetTransactionOrder());
 	}
 
+
 	AActor* newgoal = _orderToHandle.GetOwningProductionSite();
 
 	if (allTransportOrders.Contains(_orderToHandle))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Remove handlewd order"));
 		allTransportOrders.Remove(_orderToHandle);
+	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"));
 
-
-	CreateTransportOrder(returnticket, newgoal, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_DeliverToSite);
+	if(_orderToHandle.GetOrderDirective() != ETransportatOrderDirecrtive::TOD_ReturnToSite)
+		CreateTransportOrder(returnticket, newgoal, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_ReturnToSite);
 }
 
 TArray<FResourceTransactionTicket> UTransportManager::SampleSitePool(TArray<FResourceTransactionTicket> _ticketsToCheck, AProductionsite* _siteToSample)

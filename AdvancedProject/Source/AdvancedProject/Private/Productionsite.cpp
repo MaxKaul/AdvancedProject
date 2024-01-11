@@ -357,7 +357,7 @@ void AProductionsite::UnsubscribeWorker(AWorker* _toUnsub, bool _fromManager)
 			return;
 		}
 
-		int32 workerid = FMath::RandRange(0, subscribedWorker.Num() -1);
+		int32 workerid = FMath::RandRange(0, subscribedWorker.Num() - 1);
 
 		if (subscribedWorker[workerid] && subscribedWorker.Contains(subscribedWorker[workerid]))
 			_toUnsub = subscribedWorker[workerid];
@@ -401,7 +401,7 @@ void AProductionsite::InitResources()
 
 	for(TTuple<EResourceIdent, FIndividualResourceInfo> item: poolinfo)
 	{
-		productionSiteResourcePool.Add(item.Key, 100);
+		productionSiteResourcePool.Add(item.Key, 20);
 
 		if (productionSiteType == item.Value.GetAllowedProductionSites())
 		{

@@ -92,6 +92,10 @@ enum class ETransportOrderStatus : uint8
 	TOS_ENTRY_AMOUNT
 };
 
+/*
+ * Notizen zu dem TransportManager Problem vom 11.01.24 in Git ( Nur falls ich das vergesse )
+ */
+
 UENUM()
 enum class ETransportatOrderDirecrtive : uint8
 {
@@ -100,5 +104,6 @@ enum class ETransportatOrderDirecrtive : uint8
 	TOD_BuyResources,
 	TOD_DeliverToSite,
 	TOD_FetchFromSite,
+	TOD_ReturnToSite,
 	TOD_ENTRY_AMOUNT
 };
