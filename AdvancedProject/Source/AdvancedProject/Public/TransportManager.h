@@ -155,5 +155,8 @@ private:
 		void HandleMarketTransaction(FTransportOrder _orderToHandle);
 	UFUNCTION()
 		void HandleProdSiteTransaction(FTransportOrder _orderToHandle);
-};
 
+	// Ich will die menge an resourcen in meinem owner pool samplen wenn ich eine deduction order von ihr herraus sende und unter dem umstand die menge an resourcen <= 0 ist 0 geben u./o. < gewünschte menge den rest herrausgeben
+	UFUNCTION()
+		TArray<FResourceTransactionTicket> SampleSitePool(TArray<FResourceTransactionTicket> _ticketsToCheck, AProductionsite* _siteToSample);
+};

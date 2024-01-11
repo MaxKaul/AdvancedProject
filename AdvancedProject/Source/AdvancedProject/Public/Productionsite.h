@@ -257,6 +257,9 @@ public:
 	UFUNCTION()
 		void AddResourcesToLocalPool(TArray<FResourceTransactionTicket> _transactionOrder);
 
+	FORCEINLINE
+		TMap<EResourceIdent, int> GetProductionSitePoolInfo() { return productionSiteResourcePool; }
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();

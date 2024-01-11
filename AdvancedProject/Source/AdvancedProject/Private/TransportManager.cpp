@@ -63,16 +63,28 @@ void UTransportManager::TestOrder()
 
 void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, AActor* _goalActor, ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective)
 {
+	TArray<FResourceTransactionTicket> sampletransaction = _transaction;
+
 	FTimerHandle handle;
 
 	float traveltime = (_goalActor->GetActorLocation() / _owningSite->GetActorLocation()).Length();
 	traveltime *= transportSpeed;
 
-	UE_LOG(LogTemp,Warning,TEXT("Travel Time %f"), traveltime)
+	UE_LOG(LogTemp, Warning, TEXT("Travel Time %f"), traveltime);
+
+	// Bei TOD_SellResources u. TOD_DeliverToSite versuche ich jeweils resourcen aus meine owner production site zu deducten, dabei sample ich ob diese von den gewüsnschen resourrcen in der order auch die gewünschte menge hat
+	// Für TOD_FetchFromSite versuche ich resourcen aus einer anderen site zu holen
+	// Sollte dem nicht so sein sende ich entweder max. (also alle resourcen des jeweiligen idents) o. 0 falls ich von der resource <= 0 an menge habe
+	// Ich muss bei den drei noch differenzieren, weil ich für meine tranport order den owner nicht switche
+	// Ist zwar jetzt nicht perfekt da ich auf ProductionSite casten muss, aber die transport directive darf eh nur für sites genutzt werden
+	if (_transportDirective == ETransportatOrderDirecrtive::TOD_SellResources || _transportDirective == ETransportatOrderDirecrtive::TOD_DeliverToSite)
+		sampletransaction = SampleSitePool(sampletransaction, _owningSite);
+	else if (_transportDirective == ETransportatOrderDirecrtive::TOD_FetchFromSite)
+		sampletransaction = SampleSitePool(sampletransaction, Cast<AProductionsite>(_goalActor));
 
 	FTransportOrder neworder =
 	{
-		_transaction,
+		sampletransaction,
 		handle,
 		_goalActor,
 		_orderStatus,
@@ -92,7 +104,7 @@ void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> 
 
 	world->GetTimerManager().SetTimer(handle, currdelegate, traveltime, false);
 
-	//Cast<AProductionsite>(_goalActor)->RemoveResourcesFromLocalPool(_transaction);
+	_owningSite->RemoveResourcesFromLocalPool(sampletransaction);
 }
 
 void UTransportManager::ManageTransaction(FTransportOrder _orderToHandle)
@@ -184,4 +196,37 @@ void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle
 
 
 	CreateTransportOrder(returnticket, newgoal, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_DeliverToSite);
+}
+
+TArray<FResourceTransactionTicket> UTransportManager::SampleSitePool(TArray<FResourceTransactionTicket> _ticketsToCheck, AProductionsite* _siteToSample)
+{
+	TArray<FResourceTransactionTicket> sampledtickets;
+
+	for(FResourceTransactionTicket ticket : _ticketsToCheck)
+	{
+		int newamount = ticket.resourceAmount;
+		
+		for(TTuple<EResourceIdent, int> sitepoolitem : _siteToSample->GetProductionSitePoolInfo())
+		{
+			if(ticket.resourceIdent == sitepoolitem.Key)
+			{
+				if(sitepoolitem.Value <= 0)
+				{
+					newamount = 0;
+					break;
+				}
+				else if(ticket.resourceAmount > sitepoolitem.Value)
+				{
+					newamount = sitepoolitem.Value;
+					break;
+				}
+			}
+		}
+
+		FResourceTransactionTicket newticket = { newamount, ticket.exchangedCapital, ticket.resourceIdent, ticket.marketManagerOptionals.maxBuyPricePerResource, ticket.marketManagerOptionals.minSellPricePerResource};
+
+		sampledtickets.Add(newticket);
+	}
+
+	return  sampledtickets;
 }
