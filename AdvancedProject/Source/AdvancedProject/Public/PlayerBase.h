@@ -68,6 +68,9 @@ public:
 	UFUNCTION() FORCEINLINE
 		EPlayerIdent GetPlayerIdent() { return playerIdent; };
 
+	UFUNCTION()
+		void AddOrDeductCurrency(float _amount);
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

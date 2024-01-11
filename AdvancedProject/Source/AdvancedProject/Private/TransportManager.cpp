@@ -1,9 +1,11 @@
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "TransportManager.h"
 #include "Productionsite.h"
 #include "ProductionSiteManager.h"
+#include "AdvancedProject/AdvancedProjectCharacter.h"
 
 UTransportManager::UTransportManager()
 {
@@ -35,11 +37,12 @@ void UTransportManager::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		return;
 }
 
-void UTransportManager::InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager)
+void UTransportManager::InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager, AAdvancedProjectCharacter* _owningPlayer)
 {
 	marketManager = _marketManager;
 	productionSiteManager = _prodSiteManager;
 	world = GetWorld();
+	owningPlayer = _owningPlayer;
 }
 
 void UTransportManager::TestOrder()
@@ -50,25 +53,28 @@ void UTransportManager::TestOrder()
 	FResourceTransactionTicket newticket_1 =
 	{
 		5,
-		0,
+		250,
 		EResourceIdent::ERI_Ambrosia,
-		0,
+		99999,
 		 0
 	};
 
 	FResourceTransactionTicket newticket_2 =
 	{
 		10,
-		0,
+		50,
 		EResourceIdent::ERI_Fruit,
-		0,
+		99999,
 		 0
 	};
+
+	owningPlayer->AddOrDeductCurrency(-newticket_1.exchangedCapital);
+	owningPlayer->AddOrDeductCurrency(-newticket_2.exchangedCapital);
 
 	tickets.Add(newticket_1);
 	tickets.Add(newticket_2);
 
-	CreateTransportOrder(tickets, productionSiteManager->GetAllProductionSites()[1], ETransportOrderStatus::TOS_MoveToProdSite, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_FetchFromSite);
+	CreateTransportOrder(tickets, marketManager->GetAllMarketStalls()[0], ETransportOrderStatus::TOS_MoveToMarket, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_BuyResources);
 }
 
 void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, AActor* _goalActor, ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective)
@@ -177,13 +183,15 @@ void UTransportManager::HandleMarketTransaction(FTransportOrder _orderToHandle)
 	else if(_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_SellResources)
 		returnticket = marketManager->SellResources(_orderToHandle.GetTransactionOrder());
 
+	// Ich will das wenn eine markt transaction ausgeführt wird auch die currency erst addiert wird wenn der transporter die delivery gemacht hat, muss dann aber drauf achten das ich das auch auf den player machee
 
-	if(allTransportOrders.Contains(_orderToHandle))
+	if (allTransportOrders.Contains(_orderToHandle))
 		allTransportOrders.Remove(_orderToHandle);
 	else
-		UE_LOG(LogTemp,Warning,TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"))
-		
-	CreateTransportOrder(returnticket, newgoal, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_DeliverToSite);
+		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"));
+
+	if(_orderToHandle.GetOrderDirective() != ETransportatOrderDirecrtive::TOD_ReturnToSite)
+		CreateTransportOrder(returnticket, newgoal, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_ReturnToSite);
 }
 
 void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle)
@@ -197,6 +205,11 @@ void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle
 		UE_LOG(LogTemp, Warning, TEXT("Deliver the resources of this transaction order to goal or owner site and return an empty ticket"));
 
 		goalsite->AddResourcesToLocalPool(_orderToHandle.GetTransactionOrder());
+
+		for(FResourceTransactionTicket ticket : _orderToHandle.GetTransactionOrder())
+		{
+			owningPlayer->AddOrDeductCurrency(ticket.exchangedCapital);
+		}
 
 		returnticket =
 		{

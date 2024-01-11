@@ -133,14 +133,15 @@ private:
 
 	UPROPERTY()
 		AMarketManager* marketManager;
-
+	UPROPERTY()
+		class AAdvancedProjectCharacter* owningPlayer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
 		float transportSpeed;
 
 public:
 	UFUNCTION()
-	void InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager);
+	void InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager, AAdvancedProjectCharacter* _owningPlayer);
 
 	UFUNCTION(BlueprintCallable)
 		void TestOrder();

@@ -144,26 +144,36 @@ TArray<FMarketStallSaveData> AMarketManager::GenerateStallTypes()
 
 // Noch resourcen auf dem markt auf 0 checken
 // Obergrenzen müssen noch mit einfaktoriert werden
-TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResourceTransactionTicket> _resourcesToBuy)
+TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResourceTransactionTicket> _transactionOrder)
 {
 	TArray<FResourceTransactionTicket> returntickets;
 
-	for(FResourceTransactionTicket ticket : _resourcesToBuy)
+	for(FResourceTransactionTicket ticket : _transactionOrder)
 	{
 		FResourceTransactionTicket newticketentry;
 
 		EResourceIdent currident = ticket.resourceIdent;
 		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
 
-		if(resourcelistinfo.GetLastResourcePrice() <= ticket.marketManagerOptionals.maxBuyPricePerResource.GetValue())
+		int resourceamount = ticket.resourceAmount;
+
+		if(resourcelistinfo.GetLastResourcePrice() <= ticket.marketManagerOptionals.maxBuyPricePerResource.GetValue() && resourcelistinfo.GetResourceAmount() > 0)
 		{
-			resourceList.Find(ticket.resourceIdent)->SubtractResourceAmount(ticket.resourceAmount);
-			resourceList.Find(ticket.resourceIdent)->Subtract_K_Value(ticket.resourceAmount);
+			if (resourceamount > resourcelistinfo.GetResourceAmount())
+				resourceamount = resourcelistinfo.GetResourceAmount();
+
+			if(ticket.exchangedCapital < resourcelistinfo.GetLastResourcePrice() * ticket.resourceAmount)
+			{
+
+			}
+
+			resourceList.Find(ticket.resourceIdent)->SubtractResourceAmount(resourceamount);
+			resourceList.Find(ticket.resourceIdent)->Subtract_K_Value(resourceamount);
 
 			newticketentry.resourceIdent = ticket.resourceIdent;
-			newticketentry.resourceAmount = ticket.resourceAmount;
+			newticketentry.resourceAmount = resourceamount;
 
-			newticketentry.exchangedCapital = ticket.exchangedCapital - ticket.resourceAmount * resourcelistinfo.GetLastResourcePrice();
+			newticketentry.exchangedCapital = ticket.exchangedCapital - resourceamount * resourcelistinfo.GetLastResourcePrice();
 
 			returntickets.Add(newticketentry);
 		}
@@ -174,7 +184,8 @@ TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResource
 			newticketentry.exchangedCapital = ticket.exchangedCapital;
 
 			returntickets.Add(newticketentry);
-			UE_LOG(LogTemp, Warning, TEXT("AMarketManager, Resource could not be bought because the price is to high"));
+
+			UE_LOG(LogTemp, Warning, TEXT("AMarketManager, Resource could not be bought because the price is to high or there are no resources"));
 		}
 	}
 

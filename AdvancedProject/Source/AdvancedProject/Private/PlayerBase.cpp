@@ -77,6 +77,11 @@ void APlayerBase::TickWorkerPayement()
 	GetWorld()->GetTimerManager().SetTimer(handle, this, &APlayerBase::TickWorkerPayement, payementTickValue);
 }
 
+void APlayerBase::AddOrDeductCurrency(float _amount)
+{
+	playerCurrency += _amount;
+}
+
 // Called every frame
 void APlayerBase::Tick(float DeltaTime)
 {
