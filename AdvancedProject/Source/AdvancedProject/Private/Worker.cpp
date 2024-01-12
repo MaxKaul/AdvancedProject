@@ -50,8 +50,13 @@ void AWorker::BeginPlay()
 void AWorker::OnOverlapBegin(UPrimitiveComponent* _overlapComp, AActor* _otherActor, UPrimitiveComponent* _otherComp,
 	int32 _otherBodyIdx, bool _bFromSweep, const FHitResult& _sweepResult)
 {
+	UE_LOG(LogTemp,Warning,TEXT("%s"), *_otherActor->GetName())
+
 	if (subbedSite && currentStatus == EWorkerStatus::WS_Assigned_MainJob && Cast<AProductionsite>(_otherActor) == subbedSite)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("Collision"))
 		subbedSite->SubscribeWorkerToOnSite(this);
+	}
 }
 
 void AWorker::OnOverlapEnd(UPrimitiveComponent* _overlapComp, AActor* _otherActor, UPrimitiveComponent* _otherComp,
@@ -84,7 +89,7 @@ void AWorker::Tick(float DeltaTime)
 		break;
 
 	case EWorkerStatus::WS_FullfillNeed:
-			State_FulfillingNeed();
+		State_FulfillingNeed();
 		break;
 
 	case EWorkerStatus::WS_DEFAULT:
@@ -413,11 +418,13 @@ FResourceTransactionTicket AWorker::CalculateTicket_Luxury()
 	EResourceIdent ident = currentLuxuryGood;
 	FMarketManagerOptionals mmoptionals;
 
-	float desiretofill = desireDefaultMax - desireLuxury;
 	float fulfillmentvalue = marketManager->GetPoolInfo().FindRef(ident).GetFulfillmentValue();
 	float resourcevalue = marketManager->GetPoolInfo().FindRef(ident).GetLastResourcePrice();
 
-	buyamount = (int)(desiretofill / fulfillmentvalue);
+	buyamount = (int)(desireDefaultMax / fulfillmentvalue);
+
+	if (buyamount <= 0)
+		buyamount = 1;
 
 	if (marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount() < buyamount)
 		buyamount = marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount();
@@ -455,11 +462,13 @@ FResourceTransactionTicket AWorker::CalculateTicket_Nutrition()
 	EResourceIdent ident = currentNutritionGood;
 	FMarketManagerOptionals mmoptionals;
 
-	float desiretofill = desireDefaultMax - desireNutrition;
 	float fulfillmentvalue = marketManager->GetPoolInfo().FindRef(ident).GetFulfillmentValue();
 	float resourcevalue = marketManager->GetPoolInfo().FindRef(ident).GetLastResourcePrice();
 
-	buyamount = (int)(desiretofill / fulfillmentvalue);
+	buyamount = (int)(desireDefaultMax / fulfillmentvalue);
+
+	if (buyamount <= 0)
+		buyamount = 1;
 
 	if (marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount() < buyamount)
 		buyamount = marketManager->GetPoolInfo().FindRef(ident).GetResourceAmount();

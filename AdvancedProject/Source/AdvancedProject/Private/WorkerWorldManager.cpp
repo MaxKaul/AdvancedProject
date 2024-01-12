@@ -267,9 +267,16 @@ void AWorkerWorldManager::UpdateWorkerStatus(AWorker* _toSub, EPlayerIdent _newO
 		UE_LOG(LogTemp, Warning, TEXT("AWorkerWorldManager, UpdateWorkerStatus, Default -> Ignore if Init "))
 		break;
 
+	case EWorkerStatus::WS_FullfillNeed:
+		// Worker fullfills needs, and does not nedd to be managed seperately
+		break;
+
+	case EWorkerStatus::WS_FinishFullfillNeed:
+		// Worker finishing fullfills needs, and does not nedd to be managed seperately
+		break;
+
 	default:
-		UE_LOG(LogTemp,Error,TEXT("AWorkerWorldManager, UpdateWorkerStatus "))
-		;
+		UE_LOG(LogTemp, Error, TEXT("AWorkerWorldManager, UpdateWorkerStatus "));
 	}
 }
 

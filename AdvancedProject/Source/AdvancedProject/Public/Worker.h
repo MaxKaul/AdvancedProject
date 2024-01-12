@@ -253,7 +253,7 @@ private:
 		float currentWeightNutrition;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		float currentWeightLuxury;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		float defaultWeightDivider;
 
 	// Ich setzte diesen wert erst mal an von -10 bis 10
