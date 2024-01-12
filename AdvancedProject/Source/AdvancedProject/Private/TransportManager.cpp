@@ -97,10 +97,7 @@ void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> 
 	{
 		sampletransaction = SampleSitePool(sampletransaction, _owningSite);
 
-		// HIER
-
-		//if (_transportDirective != ETransportatOrderDirecrtive::TOD_ReturnToSite)
-			_owningSite->RemoveResourcesFromLocalPool(sampletransaction);
+		_owningSite->RemoveResourcesFromLocalPool(sampletransaction);
 	}
 	else if (_transportDirective == ETransportatOrderDirecrtive::TOD_FetchFromSite)
 		sampletransaction = SampleSitePool(sampletransaction, Cast<AProductionsite>(_goalActor));
@@ -153,6 +150,7 @@ void UTransportManager::ManageTransaction(FTransportOrder _orderToHandle)
 		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, _orderToHandle.GetTransactionOrder().Num() <= 0"));
 		if (allTransportOrders.Contains(_orderToHandle))
 			allTransportOrders.Remove(_orderToHandle);
+
 		return;
 	}
 
@@ -222,7 +220,6 @@ void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle
 
 		returnticket = goalsite->RemoveResourcesFromLocalPool(_orderToHandle.GetTransactionOrder());
 	}
-
 
 	AActor* newgoal = _orderToHandle.GetOwningProductionSite();
 

@@ -223,8 +223,8 @@ void AWorker::SetWorkerState(EWorkerStatus _employmentStatus, AProductionsite* _
 
 	if (_site && currentStatus == EWorkerStatus::WS_Assigned_MainJob)
 	{
-		workerOptionals.workProductionSiteID = subbedSite->GetLocalProdSiteID();
 		subbedSite = _site;
+		workerOptionals.workProductionSiteID = subbedSite->GetLocalProdSiteID();
 	}
 	else
 		subbedSite = nullptr;

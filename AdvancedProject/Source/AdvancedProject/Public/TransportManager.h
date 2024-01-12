@@ -148,7 +148,7 @@ public:
 
 private:
 	UFUNCTION(BlueprintCallable)
-	void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, AActor* _goalActor, ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective);
+		void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, AActor* _goalActor, ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective);
 
 	UFUNCTION()
 		void ManageTransaction(FTransportOrder _orderToHandle);

@@ -163,19 +163,27 @@ TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResource
 				resourceamount = resourcelistinfo.GetResourceAmount();
 
 			if(ticket.exchangedCapital < resourcelistinfo.GetLastResourcePrice() * ticket.resourceAmount)
-			{
+				resourceamount = ticket.exchangedCapital / resourcelistinfo.GetLastResourcePrice();
 
+			if(resourceamount > 0)
+			{
+				resourceList.Find(ticket.resourceIdent)->SubtractResourceAmount(resourceamount);
+				resourceList.Find(ticket.resourceIdent)->Subtract_K_Value(resourceamount);
+
+				newticketentry.resourceIdent = ticket.resourceIdent;
+				newticketentry.resourceAmount = resourceamount;
+
+				newticketentry.exchangedCapital = ticket.exchangedCapital - resourceamount * resourcelistinfo.GetLastResourcePrice();
+
+				returntickets.Add(newticketentry);
+			}
+			else
+			{
+				newticketentry.resourceIdent = ticket.resourceIdent;
+				newticketentry.resourceAmount = 0;
+				newticketentry.exchangedCapital = ticket.exchangedCapital;
 			}
 
-			resourceList.Find(ticket.resourceIdent)->SubtractResourceAmount(resourceamount);
-			resourceList.Find(ticket.resourceIdent)->Subtract_K_Value(resourceamount);
-
-			newticketentry.resourceIdent = ticket.resourceIdent;
-			newticketentry.resourceAmount = resourceamount;
-
-			newticketentry.exchangedCapital = ticket.exchangedCapital - resourceamount * resourcelistinfo.GetLastResourcePrice();
-
-			returntickets.Add(newticketentry);
 		}
 		else
 		{
