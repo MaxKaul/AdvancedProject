@@ -145,17 +145,11 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	virtual void OnOverlapBegin(UPrimitiveComponent* _overlapComp, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIdx, bool _bFromSweep, const FHitResult& _sweepResult) ;
-	UFUNCTION()
-	virtual void OnOverlapEnd(UPrimitiveComponent* _overlapComp, AActor* _otherActor, UPrimitiveComponent* _otherComp, int32 _otherBodyIdx) ;
-
-
 public:	
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-		int GetWorkerID();
+		int GetWorkerID(){ return workerID; };
 
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		void SetWorkerOwner(EPlayerIdent _newOwner) { workerOwner = _newOwner; }
@@ -164,6 +158,9 @@ private:
 	// Sollte in einer range von 0.005f bis 0.08f eingestellt werden (ERSTMAL), dieser wert wird nähmlich von der ResourceTick rate ABGEZOGEN
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerInfo, meta = (AllowPrivateAccess))
 		float productivity;
+
+	UPROPERTY()
+		UWorld* world;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerInfo, meta = (AllowPrivateAccess))
 		bool bProcessingTicket;
@@ -213,6 +210,9 @@ private:
 		EWorkerStatus currentStatus;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		EWorkerStatus previousStatus;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		bool bIsCachedInSite;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
 		EPlayerIdent workerOwner;
@@ -265,7 +265,14 @@ private:
 		FVector movePos;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
-		float interactionRange;
+		float interactionRangeStalls;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess))
+		float interactionRangeBuildings;
+
+	UPROPERTY()
+		FTimerHandle debugTimerHandle;
+
 
 	// Ich setzte die beiden gewichtungen jedes mal wenn der worker eine neue buy order ausführt
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
@@ -273,10 +280,24 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		EResourceIdent currentNutritionGood;
 
+	UPROPERTY()
+		UCharacterMovementComponent* characterMovementComp;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category= "DEBUG STATUS", meta = (AllowPrivateAccess))
+		bool bIsDebugActive;
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();
 
+
+	UFUNCTION()
+		void SetDebugTimer(FVector _endPos);
+	UFUNCTION()
+		void InvalidateDebugTimer();
+	UFUNCTION()
+		void ActivateDebugAction();
+	
 	UFUNCTION()
 		void State_Idle();
 	UFUNCTION()
@@ -373,3 +394,9 @@ public:
 
 
 };
+
+inline void AWorker::InvalidateDebugTimer()
+{
+	bIsDebugActive = false;
+	debugTimerHandle.Invalidate();
+}

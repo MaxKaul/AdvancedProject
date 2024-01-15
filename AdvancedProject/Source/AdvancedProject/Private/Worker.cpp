@@ -20,7 +20,9 @@ AWorker::AWorker()
 	productivity = 0.08f;
 
 	ZOffsetForSites = 700.f;
-	interactionRange = 200.f;
+
+	interactionRangeBuildings = 200.f;
+	interactionRangeStalls = 200.f;
 
 	defaultWeightDivider = 1000.f;
 
@@ -44,24 +46,6 @@ AWorker::AWorker()
 void AWorker::BeginPlay()
 {
 	Super::BeginPlay();
-
-}
-
-void AWorker::OnOverlapBegin(UPrimitiveComponent* _overlapComp, AActor* _otherActor, UPrimitiveComponent* _otherComp,
-	int32 _otherBodyIdx, bool _bFromSweep, const FHitResult& _sweepResult)
-{
-	UE_LOG(LogTemp,Warning,TEXT("%s"), *_otherActor->GetName())
-
-	if (subbedSite && currentStatus == EWorkerStatus::WS_Assigned_MainJob && Cast<AProductionsite>(_otherActor) == subbedSite)
-	{
-		UE_LOG(LogTemp,Warning,TEXT("Collision"))
-		subbedSite->SubscribeWorkerToOnSite(this);
-	}
-}
-
-void AWorker::OnOverlapEnd(UPrimitiveComponent* _overlapComp, AActor* _otherActor, UPrimitiveComponent* _otherComp,
-	int32 _otherBodyIdx)
-{
 
 }
 
@@ -101,6 +85,13 @@ void AWorker::Tick(float DeltaTime)
 		State_SomethingWentWrong();
 		break;;
 	}
+
+	if(debugTimerHandle.IsValid())
+	{
+		float debugTIme = world->GetTimerManager().GetTimerRemaining(debugTimerHandle);
+
+		UE_LOG(LogTemp, Warning, TEXT("%f"), debugTIme);
+	}
 }
 
 void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSystem, int _workerID, EWorkerStatus _employementStatus, EWorkerStatus _cachedStatus, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase, 
@@ -125,7 +116,9 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	workerOptionals.workProductionSiteID = _saveData.GetWorkerOptionals_S().workProductionSiteID;
 
 	skeletalMeshComponent = GetMesh();
-	
+	world = GetWorld();
+	characterMovementComp = GetCharacterMovement();
+
 	skeletalMesh = _saveData.GetWorkerMesh_S();
 
 	skeletalMeshComponent->SetSkeletalMesh(skeletalMesh, true);
@@ -133,9 +126,6 @@ void AWorker::InitWorker(FWorkerSaveData _saveData, UNavigationSystemV1* _navSys
 	navigationSystem = _navSystem;
 	workerOwner = _workerOwner;
 	workerDesireBases = _desireBase;
-
-	workerHitBox->OnComponentBeginOverlap.AddDynamic(this, &AWorker::OnOverlapBegin);
-	workerHitBox->OnComponentEndOverlap.AddDynamic(this, &AWorker::OnOverlapEnd);
 
 	FillBiasLists();
 
@@ -222,6 +212,7 @@ void AWorker::SetWorkerState(EWorkerStatus _employmentStatus, AProductionsite* _
 
 	workerOptionals.possibleMarketStalls.Reset();
 	workerOptionals.currentMarketStall.Reset();
+
 	movePos = FVector(0);
 
 	workerController->StopMovement();
@@ -237,24 +228,34 @@ void AWorker::SetWorkerState(EWorkerStatus _employmentStatus, AProductionsite* _
 
 void AWorker::State_Idle()
 {
-	if (GetMovementComponent()->Velocity.Length() > 0)
-		return;
+	if (bIsDebugActive || GetMovementComponent()->Velocity.Length() <= 0)
+	{
+		FNavLocation rndloc;
 
-	FNavLocation rndloc;
-	navigationSystem->GetRandomPoint(rndloc);
+		navigationSystem->GetRandomPoint(rndloc);
 
-	workerController->MoveToLocation(rndloc);
+		workerController->MoveToLocation(rndloc);
+
+		// Ich Invalidiere den debugger im state da ich keinen state change habe wenn die conditions aus erfüllt sind
+		InvalidateDebugTimer();
+		SetDebugTimer(rndloc);
+	}
 }
 
 void AWorker::State_Employed_Unassigned()
 {
-	if (GetMovementComponent()->Velocity.Length() > 0)
-		return;
+	if (bIsDebugActive || GetMovementComponent()->Velocity.Length() <= 0)
+	{
+		FNavLocation rndloc;
 
-	FNavLocation rndloc;
-	navigationSystem->GetRandomPoint(rndloc);
+		navigationSystem->GetRandomPoint(rndloc);
 
-	workerController->MoveToLocation(rndloc);
+		workerController->MoveToLocation(rndloc);
+
+		// Ich Invalidiere den debugger im state da ich keinen state change habe wenn die conditions aus erfüllt sind
+		InvalidateDebugTimer();
+		SetDebugTimer(rndloc);
+	}
 }
 
 void AWorker::State_Employed_SideJob()
@@ -264,21 +265,34 @@ void AWorker::State_Employed_SideJob()
 
 void AWorker::State_Employed_Assigned()
 {
-	if (!subbedSite)
+	if (!subbedSite || bIsCachedInSite)
 		return;
 
 	FVector loc = subbedSite->GetActorLocation();
 	loc.Z += ZOffsetForSites;
 
 	workerController->MoveToLocation(loc);
+
+	if (bIsDebugActive || (loc - this->GetActorLocation()).Length() <= interactionRangeBuildings * 2)
+	{
+		subbedSite->SubscribeWorkerToOnSite(this);
+
+		// Ich Invalidiere hier nur den timer da mit dem erfüllen der conditions in diesem state keien weitere movement order vorhanden sein wird und ein state change einen neuen timer triggern würde
+		InvalidateDebugTimer();
+	}
 }
 
 void AWorker::State_FulfillingNeed()
 {
 	if (workerOptionals.possibleMarketStalls.IsSet() && bProcessingTicket)
 	{
-		if ((GetActorLocation() - movePos).Length() <= interactionRange)
+		if (bIsDebugActive || (GetActorLocation() - movePos).Length() <= interactionRangeStalls)
+		{
 			BuyResources();
+
+			// Ich Invalidiere hier nur den timer da mit dem erfüllen der conditions in diesem state keien weitere movement order vorhanden sein wird und ein state change einen neuen timer triggern würde
+			InvalidateDebugTimer();
+		}
 	}
 	else if (!workerOptionals.possibleMarketStalls.IsSet() || !bProcessingTicket)
 		workerOptionals.possibleMarketStalls = ChooseMarketStalls();
@@ -533,9 +547,6 @@ void AWorker::FinishFulfillNeed()
 
 void AWorker::MoveWorker(FVector _movePos)
 {
-	//if (GetMovementComponent()->Velocity.Length() > 0)
-	//	return;
-
 	workerController->MoveToLocation(_movePos);
 }
 
@@ -588,6 +599,7 @@ void AWorker::UncacheWorkerFromSite()
 	workerHitBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	GetMesh()->SetVisibility(true);
+	bIsCachedInSite = false;
 }
 
 void AWorker::CacheWorkerToSite()
@@ -597,6 +609,7 @@ void AWorker::CacheWorkerToSite()
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetVisibility(false);
 	workerController->StopMovement();
+	bIsCachedInSite = true;
 }
 
 bool AWorker::NullcheckDependencies()
@@ -606,4 +619,36 @@ bool AWorker::NullcheckDependencies()
 	return status;
 }
 
-int AWorker::GetWorkerID() {return workerID;}
+void AWorker::SetDebugTimer(FVector _endPos)
+{
+	if(debugTimerHandle.IsValid())
+
+	if (!world)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWorker, !world"));
+		return;
+	}
+
+	if(characterMovementComp)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWorker, !world"));
+		return;
+	}
+
+	double pathlenght = UNavigationSystemV1::GetPathLength(world, GetActorLocation(), _endPos, pathlenght);
+	pathlenght = (float)pathlenght;
+
+	float speed = GetMovementComponent()->GetMaxSpeed();
+
+	float time = pathlenght / speed;
+
+
+	world->GetTimerManager().SetTimer(debugTimerHandle,this , &AWorker::ActivateDebugAction, time, false);
+}
+
+void AWorker::ActivateDebugAction()
+{
+	bIsDebugActive = true;
+
+	UE_LOG(LogTemp,Warning,TEXT("Debug Action was Activated form %s"), *this->GetName())
+}
