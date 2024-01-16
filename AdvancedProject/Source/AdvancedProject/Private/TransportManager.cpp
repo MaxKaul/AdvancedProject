@@ -37,12 +37,19 @@ void UTransportManager::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		return;
 }
 
-void UTransportManager::InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager, AAdvancedProjectCharacter* _owningPlayer)
+void UTransportManager::InitTransportManager(FTransportManagerSaveData _saveData, AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager, AAdvancedProjectCharacter* _owningPlayer)
 {
 	marketManager = _marketManager;
 	productionSiteManager = _prodSiteManager;
 	world = GetWorld();
 	owningPlayer = _owningPlayer;
+
+
+	if (_saveData.GetAllTransportOrders_S().Num() <= 0)
+		return;
+
+
+
 }
 
 void UTransportManager::TestOrder()

@@ -93,11 +93,18 @@ struct FTransportManagerSaveData
 
 	FTransportManagerSaveData(){}
 
-	FTransportManagerSaveData(TArray<FTransportOrder> _currentTransportOrders)
+	FTransportManagerSaveData(TArray<FTransportOrder> _allransportOrders)
 	{
-		
+		s_allTransportOrders = _allransportOrders;
 	}
 
+private:
+	UPROPERTY()
+		TArray<FTransportOrder> s_allTransportOrders;
+
+public:
+	FORCEINLINE
+		TArray<FTransportOrder> GetAllTransportOrders_S() { return s_allTransportOrders; }
 };
 
 FORCEINLINE uint32 GetTypeHash(const  FTransportOrder& _this)
@@ -141,7 +148,7 @@ private:
 
 public:
 	UFUNCTION()
-	void InitTransportManager(AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager, AAdvancedProjectCharacter* _owningPlayer);
+	void InitTransportManager(FTransportManagerSaveData _saveData, AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager, AAdvancedProjectCharacter* _owningPlayer);
 
 	UFUNCTION(BlueprintCallable)
 		void TestOrder();
