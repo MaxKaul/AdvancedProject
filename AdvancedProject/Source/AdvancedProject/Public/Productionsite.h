@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BuildingSite.h"
 #include "EnumLibrary.h"
 #include "MarketManager.h"
 #include "Engine/DataTable.h"
@@ -251,6 +252,8 @@ public:
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		TArray<AWorker*> GetAllWorkerAtSite() { return workerAtSite; }
 
+	FORCEINLINE
+		FVector GetInteractionPos() { if (buildingSite) return buildingSite->GetInteractionPos(); else return FVector(0); }
 
 	UFUNCTION()
 		TArray<FResourceTransactionTicket> RemoveResourcesFromLocalPool(TArray<FResourceTransactionTicket> _transactionOrder);
@@ -319,7 +322,7 @@ private:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=WorkerInfo,meta=(AllowPrivateAccess))
 		TArray<AWorker*> workerAtSite;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Category=siteInfo,meta=(AllowPrivateAccess))
 		int siteID;
 
 	// Value by which the resource gets added per tick

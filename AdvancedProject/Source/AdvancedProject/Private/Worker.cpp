@@ -9,6 +9,7 @@
 #include "WorkerMoodManager.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/StaticMeshSocket.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 
 // Sets default values
@@ -56,7 +57,7 @@ void AWorker::Tick(float DeltaTime)
 
 	TickWorkerDesire();
 	TickWorkerMotivation();
-	
+
 	switch (currentStatus)
 	{
 	case EWorkerStatus::WS_Unemployed:
@@ -84,13 +85,6 @@ void AWorker::Tick(float DeltaTime)
 	default:
 		State_SomethingWentWrong();
 		break;;
-	}
-
-	if(debugTimerHandle.IsValid())
-	{
-		float debugTIme = world->GetTimerManager().GetTimerRemaining(debugTimerHandle);
-
-		UE_LOG(LogTemp, Warning, TEXT("%f"), debugTIme);
 	}
 }
 
@@ -166,6 +160,12 @@ void AWorker::InitPossibleStallsFromSave()
 
 FWorkerSaveData AWorker::GetWorkerSaveData()
 {
+	int prodid = 0;
+
+	if (workerOptionals.workProductionSiteID.IsSet())
+		prodid = workerOptionals.workProductionSiteID.GetValue();
+
+
 	FWorkerSaveData savedata =
 	{
 		GetActorLocation(),
@@ -184,7 +184,8 @@ FWorkerSaveData AWorker::GetWorkerSaveData()
 		possibleStallIDs,
 		currentWeightNutrition,
 		currentWeightLuxury,
-		ownedCurrency
+		ownedCurrency,
+		prodid
 	};
 
 	return savedata;
@@ -268,13 +269,18 @@ void AWorker::State_Employed_Assigned()
 	if (!subbedSite || bIsCachedInSite)
 		return;
 
-	FVector loc = subbedSite->GetActorLocation();
-	loc.Z += ZOffsetForSites;
+	FVector loc = subbedSite->GetInteractionPos();
+	//loc.Z += ZOffsetForSites;
 
 	workerController->MoveToLocation(loc);
 
-	if (bIsDebugActive || (loc - this->GetActorLocation()).Length() <= interactionRangeBuildings * 2)
+	SetDebugTimer(loc);
+
+	if (bIsDebugActive || (loc - this->GetActorLocation()).Length() <= interactionRangeBuildings)
 	{
+		if ((loc - this->GetActorLocation()).Length() > interactionRangeBuildings)
+			SetActorLocation(loc);
+
 		subbedSite->SubscribeWorkerToOnSite(this);
 
 		// Ich Invalidiere hier nur den timer da mit dem erfüllen der conditions in diesem state keien weitere movement order vorhanden sein wird und ein state change einen neuen timer triggern würde
@@ -308,10 +314,15 @@ void AWorker::State_FulfillingNeed()
 
 		workerOptionals.currentMarketStall = workerOptionals.possibleMarketStalls.GetValue()[0];
 
+		UE_LOG(LogTemp,Warning,TEXT("DDDDD"))
+
 		movePos = workerOptionals.currentMarketStall.GetValue()->GetMesh()->GetSocketLocation(possibleSockets[rndsocket]);
 		MoveWorker(movePos);
 
 		bProcessingTicket = true;
+
+		InvalidateDebugTimer();
+		SetDebugTimer(movePos);
 	}
 	else if (workerOptionals.possibleMarketStalls.GetValue().Num() <= 0)
 		FinishFulfillNeed();
@@ -542,6 +553,7 @@ void AWorker::ProcessBuyReturn(TArray<FResourceTransactionTicket> _tickets)
 void AWorker::FinishFulfillNeed()
 {
 	SetWorkerState(EWorkerStatus::WS_FinishFullfillNeed);
+	InvalidateDebugTimer();
 }
 
 
@@ -553,7 +565,7 @@ void AWorker::MoveWorker(FVector _movePos)
 void AWorker::TickWorkerDesire()
 {
 	if (desireLuxury > 0)
-		desireLuxury -= currentWeightLuxury / defaultWeightDivider ;
+		desireLuxury -= currentWeightLuxury / defaultWeightDivider;
 	
 	if (desireNutrition > 0)
 		desireNutrition -= currentWeightNutrition / defaultWeightDivider;
@@ -591,8 +603,7 @@ void AWorker::FillBiasLists()
 		}
 	}
 }
-
-
+	
 void AWorker::UncacheWorkerFromSite()
 {
 	capsuleComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -621,7 +632,8 @@ bool AWorker::NullcheckDependencies()
 
 void AWorker::SetDebugTimer(FVector _endPos)
 {
-	if(debugTimerHandle.IsValid())
+	if (debugTimerHandle.IsValid())
+		return;
 
 	if (!world)
 	{
@@ -629,21 +641,28 @@ void AWorker::SetDebugTimer(FVector _endPos)
 		return;
 	}
 
-	if(characterMovementComp)
+	if(!characterMovementComp)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AWorker, !world"));
+		UE_LOG(LogTemp, Warning, TEXT("AWorker, !characterMovementComp"));
 		return;
 	}
 
-	double pathlenght = UNavigationSystemV1::GetPathLength(world, GetActorLocation(), _endPos, pathlenght);
+	double pathlenght = 0;
+	UNavigationSystemV1::GetPathLength(world, GetActorLocation(), _endPos, pathlenght);
 	pathlenght = (float)pathlenght;
 
-	float speed = GetMovementComponent()->GetMaxSpeed();
+
+	float speed = characterMovementComp->GetMaxSpeed();
 
 	float time = pathlenght / speed;
 
+	time += debugAddTime;
+
+	DrawDebugSphere(world, _endPos, 16, 16, FColor::Red, true, -1);
 
 	world->GetTimerManager().SetTimer(debugTimerHandle,this , &AWorker::ActivateDebugAction, time, false);
+
+
 }
 
 void AWorker::ActivateDebugAction()
@@ -651,4 +670,11 @@ void AWorker::ActivateDebugAction()
 	bIsDebugActive = true;
 
 	UE_LOG(LogTemp,Warning,TEXT("Debug Action was Activated form %s"), *this->GetName())
+}
+
+void AWorker::InvalidateDebugTimer()
+{
+	UE_LOG(LogTemp, Warning, TEXT("InvalidateDebugTimer"));
+	bIsDebugActive = false;
+	world->GetTimerManager().ClearTimer(debugTimerHandle);
 }

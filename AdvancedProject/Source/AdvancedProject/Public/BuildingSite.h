@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "EnumLibrary.h"
+#include "Components/SphereComponent.h"
 #include "BuildingSite.generated.h"
 
 UCLASS()
@@ -31,6 +32,9 @@ public:
 		bool GetBuildStatus() { return bHasBeenBuildOn; }
 
 	FORCEINLINE
+		FVector GetInteractionPos() { return interactionPoint->GetComponentLocation(); }
+
+	FORCEINLINE
 		TArray<EProductionSiteType> GetAllowedTypes() { return allowedTypes; }
 
 private:
@@ -42,6 +46,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess))
 		UMaterialInterface* translucentMat;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess))
+		class USphereComponent* interactionPoint;
 
 	UPROPERTY()
 		bool bHasBeenBuildOn;

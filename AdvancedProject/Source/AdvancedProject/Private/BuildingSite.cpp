@@ -3,6 +3,8 @@
 
 #include "BuildingSite.h"
 
+#include "Components/SphereComponent.h"
+
 // Sets default values
 ABuildingSite::ABuildingSite()
 {
@@ -11,6 +13,9 @@ ABuildingSite::ABuildingSite()
 
 	actorMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Actor Mesh");
 	RootComponent = actorMeshComponent;
+
+	interactionPoint = CreateDefaultSubobject<USphereComponent>("Interaction Point");
+	interactionPoint->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned

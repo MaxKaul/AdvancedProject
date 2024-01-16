@@ -96,6 +96,7 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManag
 		float startdesireluxury = FMath::RandRange(overloadOwner->workerDesireDefaultMin, overloadOwner->workerDesireDefaultMax);
 		float startdesirenutrition = FMath::RandRange(overloadOwner->workerDesireDefaultMin, overloadOwner->workerDesireDefaultMax);
 
+
 		// Ich Init die pseudo save data mit default resourceidents damit die preffered buy order aus dem worker init herraus force generated wird
 		FWorkerSaveData workersavedata =
 		{
@@ -115,7 +116,8 @@ void FWWM_OverloadFuncs::InitWorkerWorldManager(ASaveGameManager* _saveGameManag
 			TArray<int>(),
 			0,
 			0,
-			overloadOwner->workerStartCurrency
+			overloadOwner->workerStartCurrency,
+			-1
 		};
 
 		allworkersavedata.Add(workersavedata);
@@ -169,10 +171,10 @@ void AWorkerWorldManager::SpawnAllWorker(FWorkerWorldManagerSaveData _saveData)
 			EPlayerIdent workerowner = workerdata.GetWorkerOwner_S();
 			TArray<FWorkerDesireBase> workerdesirebase = workerdata.GetDesireBase_S();
 
-			int siteid = 0;
+			int siteid = workerdata.GetProdSiteID_S();
 
-			if(workerdata.GetWorkerOptionals_S().workProductionSiteID.IsSet())
-				siteid = workerdata.GetWorkerOptionals_S().workProductionSiteID.GetValue();
+			//if(workerdata.GetWorkerOptionals_S().workProductionSiteID.IsSet())
+			//	siteid = workerdata.GetWorkerOptionals_S().workProductionSiteID.GetValue();
 
 			FActorSpawnParameters params;
 			params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;

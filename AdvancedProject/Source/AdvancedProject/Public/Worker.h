@@ -32,7 +32,8 @@ struct FWorkerSaveData
 	FWorkerSaveData(){};
 
 	FWorkerSaveData(FVector _position, FRotator _rotation, USkeletalMesh* _mesh, int _workerID, EWorkerStatus _employmentStatus, EWorkerStatus _cachedStatus, EPlayerIdent _workerOwner, TArray<FWorkerDesireBase> _desireBase,
-					EResourceIdent _currentLuxuryGood, EResourceIdent _currentNutritionGood, float _desireDefaultMax, float _desireLuxury, float _desireNutrition, TArray<int> _possibleStallIDs, float _currentWeightNutrition, float _currentWeightLuxury, float _ownedCurrency)
+					EResourceIdent _currentLuxuryGood, EResourceIdent _currentNutritionGood, float _desireDefaultMax, float _desireLuxury, float _desireNutrition, TArray<int> _possibleStallIDs, float _currentWeightNutrition, 
+					float _currentWeightLuxury, float _ownedCurrency, int _workProdID)
 	{
 		s_workerLocation = _position;
 		s_workerRotation = _rotation;
@@ -50,6 +51,8 @@ struct FWorkerSaveData
 		s_currentWeightNutrition = _currentWeightNutrition;
 		s_currentWeightLuxury = _currentWeightLuxury;
 		s_ownedCurrency = _ownedCurrency;
+
+		s_productionSiteSaveID = _workProdID;
 	}
 
 private:
@@ -132,6 +135,8 @@ public:
 		TArray<int> GetPossibleStallIDs_S() { return s_possibleStallIDs; }
 	FORCEINLINE
 		float GetOwnedCurrency_S() { return s_ownedCurrency; }
+	FORCEINLINE
+		int GetProdSiteID_S() { return s_productionSiteSaveID; }
 };
 
 UCLASS()
@@ -283,8 +288,11 @@ private:
 	UPROPERTY()
 		UCharacterMovementComponent* characterMovementComp;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category= "DEBUG STATUS", meta = (AllowPrivateAccess))
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category= DEBUG, meta = (AllowPrivateAccess))
 		bool bIsDebugActive;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = DEBUG, meta = (AllowPrivateAccess))
+		float debugAddTime;
 
 private:
 	UFUNCTION()
@@ -297,6 +305,7 @@ private:
 		void InvalidateDebugTimer();
 	UFUNCTION()
 		void ActivateDebugAction();
+
 	
 	UFUNCTION()
 		void State_Idle();
@@ -338,7 +347,6 @@ private:
 		void TickWorkerMotivation();
 	UFUNCTION()
 		void FillBiasLists();
-
 
 	UFUNCTION(BlueprintCallable) FORCEINLINE
 		float GetWorkerMotivation() { return currentWorkerMoral; }
@@ -394,9 +402,3 @@ public:
 
 
 };
-
-inline void AWorker::InvalidateDebugTimer()
-{
-	bIsDebugActive = false;
-	debugTimerHandle.Invalidate();
-}
