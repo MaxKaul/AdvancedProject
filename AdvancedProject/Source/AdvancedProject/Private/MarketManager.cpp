@@ -157,7 +157,7 @@ TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResource
 
 		int resourceamount = ticket.resourceAmount;
 
-		if(resourcelistinfo.GetLastResourcePrice() <= ticket.marketManagerOptionals.maxBuyPricePerResource.GetValue() && resourcelistinfo.GetResourceAmount() > 0)
+		if(resourcelistinfo.GetLastResourcePrice() <= ticket.maxBuyPricePerResource && resourcelistinfo.GetResourceAmount() > 0)
 		{
 			if (resourceamount > resourcelistinfo.GetResourceAmount())
 				resourceamount = resourcelistinfo.GetResourceAmount();
@@ -213,7 +213,7 @@ TArray<FResourceTransactionTicket> AMarketManager::SellResources(TArray<FResourc
 		EResourceIdent currident = ticket.resourceIdent;
 		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
 
-		if (resourcelistinfo.GetLastResourcePrice() >= ticket.marketManagerOptionals.minSellPricePerResource.GetValue())
+		if (resourcelistinfo.GetLastResourcePrice() >= ticket.minSellPricePerResource)
 		{
 			resourceList.Find(ticket.resourceIdent)->AddResourceAmount(ticket.resourceAmount);
 			resourceList.Find(ticket.resourceIdent)->Add_K_Value(ticket.resourceAmount);

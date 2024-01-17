@@ -66,9 +66,9 @@ void UTransportManager::TestOrder()
 
 	TMap<EBuildingType, int> testpair_GOAL;
 
-	testpair_GOAL.Add(EBuildingType::BT_MarketStall, 2);
+	testpair_GOAL.Add(EBuildingType::BT_ProductionSite, 2);
 
-	CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToMarket, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_SellResources, testpair_GOAL);
+	CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToProdSite, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_DeliverToSite, testpair_GOAL);
 }
 
 
@@ -108,8 +108,6 @@ void UTransportManager::LoadOrderFromSave(FTransportManagerSaveData _saveData)
 
 	for (FTransportOrder order : loadedorders) 
 	{
-		allTransportOrders.Add(order);
-		
 		auto transactionlambda = [this, order]()
 		{
 			ManageTransaction(order);
@@ -122,6 +120,7 @@ void UTransportManager::LoadOrderFromSave(FTransportManagerSaveData _saveData)
 		float remainingtime = order.GetTimeRemaining();
 
 		world->GetTimerManager().SetTimer(newhandle, currdelegate, remainingtime, false);
+		allTransportOrders.Add(order,newhandle);
 	}
 }
 
@@ -264,7 +263,7 @@ void UTransportManager::HandleMarketTransaction(FTransportOrder _orderToHandle)
 	}
 }
 
-void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle)
+void UTransportManager:: HandleProdSiteTransaction(FTransportOrder _orderToHandle)
 {
 	TArray<FResourceTransactionTicket> returnticket;
 
@@ -359,7 +358,7 @@ TArray<FResourceTransactionTicket> UTransportManager::SampleSitePool(TArray<FRes
 			}
 		}
 
-		FResourceTransactionTicket newticket = { newamount, ticket.exchangedCapital, ticket.resourceIdent, ticket.marketManagerOptionals.maxBuyPricePerResource, ticket.marketManagerOptionals.minSellPricePerResource};
+		FResourceTransactionTicket newticket = { newamount, ticket.exchangedCapital, ticket.resourceIdent, ticket.maxBuyPricePerResource, ticket.minSellPricePerResource};
 
 		sampledtickets.Add(newticket);
 	}

@@ -9,16 +9,6 @@
 #include "MarketManager.generated.h"
 
 
-USTRUCT()
-struct FMarketManagerOptionals
-{
-	GENERATED_BODY()
-
-		TOptional<float> maxBuyPricePerResource;
-		TOptional<float> minSellPricePerResource;
-};
-
-
 // Resource Info für den Markt, FProduktionResources ist für die individuellen Produktionsites, muss eventuell noch eine bessere lösung her um encapsulation ein wenig zu verbessern
 USTRUCT(BlueprintType)
 struct FIndividualResourceInfo
@@ -160,16 +150,18 @@ struct FResourceTransactionTicket
 	UPROPERTY()
 	EResourceIdent resourceIdent;
 	UPROPERTY()
-	FMarketManagerOptionals marketManagerOptionals;
+	float maxBuyPricePerResource;
+	UPROPERTY()
+	float minSellPricePerResource;
 
-	FResourceTransactionTicket(int _resourceAmount, float _exchangedCapital, EResourceIdent _resourceIdent, TOptional<float> _maxBuyPricePricePerResource, TOptional<float> _minSellPricePricePerResource)
+	FResourceTransactionTicket(int _resourceAmount, float _exchangedCapital, EResourceIdent _resourceIdent, float _maxBuyPricePricePerResource, float _minSellPricePricePerResource)
 	{
 		resourceAmount = _resourceAmount;
 		exchangedCapital = _exchangedCapital;
 		resourceIdent = _resourceIdent;
 
-		marketManagerOptionals.maxBuyPricePerResource = _maxBuyPricePricePerResource;
-		marketManagerOptionals.minSellPricePerResource = _minSellPricePricePerResource;
+		maxBuyPricePerResource = _maxBuyPricePricePerResource;
+		minSellPricePerResource = _minSellPricePricePerResource;
 	}
 
 	FResourceTransactionTicket() {}

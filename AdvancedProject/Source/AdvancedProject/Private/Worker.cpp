@@ -441,7 +441,6 @@ FResourceTransactionTicket AWorker::CalculateTicket_Luxury()
 	int buyamount = 0;
 	float capital = 0;
 	EResourceIdent ident = currentLuxuryGood;
-	FMarketManagerOptionals mmoptionals;
 
 	float fulfillmentvalue = marketManager->GetPoolInfo().FindRef(ident).GetFulfillmentValue();
 	float resourcevalue = marketManager->GetPoolInfo().FindRef(ident).GetLastResourcePrice();
@@ -474,10 +473,10 @@ FResourceTransactionTicket AWorker::CalculateTicket_Luxury()
 
 	ownedCurrency -= capital;
 
-	mmoptionals.maxBuyPricePerResource = 99999.f;
-	mmoptionals.minSellPricePerResource = 0.f;
+	float maxBuyPricePerResource = 99999.f;
+	float minSellPricePerResource = 0.f;
 
-	return FResourceTransactionTicket(buyamount, capital, ident, mmoptionals.maxBuyPricePerResource, mmoptionals.minSellPricePerResource);
+	return FResourceTransactionTicket(buyamount, capital, ident, maxBuyPricePerResource, minSellPricePerResource);
 }
 
 FResourceTransactionTicket AWorker::CalculateTicket_Nutrition()
@@ -485,7 +484,6 @@ FResourceTransactionTicket AWorker::CalculateTicket_Nutrition()
 	int buyamount = 0;
 	float capital = 0;
 	EResourceIdent ident = currentNutritionGood;
-	FMarketManagerOptionals mmoptionals;
 
 	float fulfillmentvalue = marketManager->GetPoolInfo().FindRef(ident).GetFulfillmentValue();
 	float resourcevalue = marketManager->GetPoolInfo().FindRef(ident).GetLastResourcePrice();
@@ -518,10 +516,10 @@ FResourceTransactionTicket AWorker::CalculateTicket_Nutrition()
 
 	ownedCurrency -= capital;
 
-	mmoptionals.maxBuyPricePerResource = 99999.f;
-	mmoptionals.minSellPricePerResource = 0.f;
+	float maxBuyPricePerResource = 99999.f;
+	float minSellPricePerResource = 0.f;
 
-	return FResourceTransactionTicket(buyamount, capital, ident, mmoptionals.maxBuyPricePerResource, mmoptionals.minSellPricePerResource);
+	return FResourceTransactionTicket(buyamount, capital, ident, maxBuyPricePerResource, minSellPricePerResource);
 }
 
 void AWorker::ProcessBuyReturn(TArray<FResourceTransactionTicket> _tickets)
