@@ -198,6 +198,9 @@ public:
 	UFUNCTION() FORCEINLINE
 		TArray<class AMarketStall*> GetAllMarketStalls() { return spawnedStalls; }
 
+	UFUNCTION() FORCEINLINE
+		AMarketStall* GetStallByID(int _IDToFind);
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();

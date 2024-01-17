@@ -17,35 +17,36 @@ struct FPlayerSaveData
 
 	void InitPlayerSaveData(FVector _location, FRotator _rotation, FProductionSiteManagerSaveData _siteManagerSaveData, EPlayerIdent _ident, FTransportManagerSaveData _transportManagerSaveData)
 	{
-		location = _location;
-		rotation = _rotation;
-		productionSiteManagerSaveData = _siteManagerSaveData;
-		playerIdent = _ident;
+		s_location = _location;
+		s_rotation = _rotation;
+		s_productionSiteManagerSaveData = _siteManagerSaveData;
+		s_playerIdent = _ident;
+		s_transportManagerSaveData = _transportManagerSaveData;
 	}
 
 private:
 	UPROPERTY()
-		FVector location;
+		FVector s_location;
 	UPROPERTY()
-		FRotator rotation;
+		FRotator s_rotation;
 	UPROPERTY()
-		FProductionSiteManagerSaveData productionSiteManagerSaveData;
+		FProductionSiteManagerSaveData s_productionSiteManagerSaveData;
 	UPROPERTY()
-		EPlayerIdent playerIdent;
+		EPlayerIdent s_playerIdent;
 	UPROPERTY()
-		FTransportManagerSaveData 	transportManagerSaveData;
+		FTransportManagerSaveData 	s_transportManagerSaveData;
 
 public:
 	FORCEINLINE
-		FVector GetLoaction() { return location; }
+		FVector GetLoaction_S() { return s_location; }
 	FORCEINLINE
-		EPlayerIdent GetIdent() { return playerIdent; }
+		EPlayerIdent GetIdent_S() { return s_playerIdent; }
 	FORCEINLINE
-		FRotator GetRotation() { return rotation; }
+		FRotator GetRotation_S() { return s_rotation; }
 	FORCEINLINE
-		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData() { return productionSiteManagerSaveData; }
+		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData_S() { return s_productionSiteManagerSaveData; }
 	FORCEINLINE
-		FTransportManagerSaveData GeTransportManagerSaveData() { return transportManagerSaveData; }
+		FTransportManagerSaveData GeTransportManagerSaveData_S() { return s_transportManagerSaveData; }
 };
 
 UCLASS(BlueprintType)

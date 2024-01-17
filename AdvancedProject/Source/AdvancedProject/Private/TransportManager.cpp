@@ -15,29 +15,13 @@ UTransportManager::UTransportManager()
 }
 
 
-
-FTransportManagerSaveData UTransportManager::GetTransportManagerSaveData()
-{
-	FTransportManagerSaveData newsave = 
-	{
-		allTransportOrders
-	};
-
-	return newsave;
-}
-
-
 // Called every frame
 void UTransportManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-
-	if (allTransportOrders.Num() <= 0)
-		return;
 }
 
-void UTransportManager::InitTransportManager(FTransportManagerSaveData _saveData, AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager, AAdvancedProjectCharacter* _owningPlayer)
+void UTransportManager::InitTransportManager(APlayerBase* _owningPlayer, FTransportManagerSaveData _saveData, AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager)
 {
 	marketManager = _marketManager;
 	productionSiteManager = _prodSiteManager;
@@ -48,8 +32,7 @@ void UTransportManager::InitTransportManager(FTransportManagerSaveData _saveData
 	if (_saveData.GetAllTransportOrders_S().Num() <= 0)
 		return;
 
-
-
+	LoadOrderFromSave(_saveData);
 }
 
 void UTransportManager::TestOrder()
@@ -75,23 +58,90 @@ void UTransportManager::TestOrder()
 		 0
 	};
 
-	owningPlayer->AddOrDeductCurrency(-newticket_1.exchangedCapital);
-	owningPlayer->AddOrDeductCurrency(-newticket_2.exchangedCapital);
+	//owningPlayer->AddOrDeductCurrency(-newticket_1.exchangedCapital);
+	//owningPlayer->AddOrDeductCurrency(-newticket_2.exchangedCapital);
 
 	tickets.Add(newticket_1);
 	tickets.Add(newticket_2);
 
-	CreateTransportOrder(tickets, marketManager->GetAllMarketStalls()[0], ETransportOrderStatus::TOS_MoveToMarket, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_BuyResources);
+	TMap<EBuildingType, int> testpair_GOAL;
+
+	testpair_GOAL.Add(EBuildingType::BT_MarketStall, 2);
+
+	CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToMarket, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_SellResources, testpair_GOAL);
 }
 
-void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, AActor* _goalActor, ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective)
+
+FTransportManagerSaveData UTransportManager::GetTransportManagerSaveData()
+{
+	TArray<FTransportOrder> saveorders;
+
+	for (TTuple<FTransportOrder, FTimerHandle> order : allTransportOrders)
+	{
+		float newtime = world->GetTimerManager().GetTimerRemaining(order.Value);
+	
+		FTransportOrder neworder =
+		{
+			order.Key.GetTransactionOrder(),
+			newtime,
+			order.Key.GetGoalActorTypeIDPair(),
+			order.Key.GetTransportOrderStatus(),
+			order.Key.GetOwningProductionSiteID(),
+			order.Key.GetOrderDirective(),
+			world
+		};
+
+		saveorders.Add(neworder);
+	}
+
+	FTransportManagerSaveData newsave =
+	{
+		saveorders
+	};
+
+	return newsave;
+}
+
+void UTransportManager::LoadOrderFromSave(FTransportManagerSaveData _saveData)
+{
+	TArray<FTransportOrder> loadedorders = _saveData.GetAllTransportOrders_S();
+
+	for (FTransportOrder order : loadedorders) 
+	{
+		allTransportOrders.Add(order);
+		
+		auto transactionlambda = [this, order]()
+		{
+			ManageTransaction(order);
+		};
+
+		FTimerDelegate  currdelegate;
+		currdelegate.BindLambda(transactionlambda);
+
+		FTimerHandle newhandle;
+		float remainingtime = order.GetTimeRemaining();
+
+		world->GetTimerManager().SetTimer(newhandle, currdelegate, remainingtime, false);
+	}
+}
+
+void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction,
+	ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective,
+	TMap<EBuildingType, int> _goalTypeIDPair, FVector _overridePos)
 {
 	TArray<FResourceTransactionTicket> sampletransaction = _transaction;
 
-	FTimerHandle handle;
+	AActor* goalActor = GetGoalActor(_goalTypeIDPair);
 
-	float traveltime = (_goalActor->GetActorLocation() / _owningSite->GetActorLocation()).Length();
-	traveltime *= transportSpeed;
+	// Das problem welches ich hier habe ist das ich eine ref auf mein vorheriges ziel bnenötige um die länge zu errechnen
+	// goal und owner sind hier ja gleich
+
+	float pathlenght = (goalActor->GetActorLocation() - _owningSite->GetActorLocation()).Length();
+
+	if(_transportDirective == ETransportatOrderDirecrtive::TOD_ReturnToSite)
+		pathlenght = (_overridePos - _owningSite->GetActorLocation()).Length();
+
+	float traveltime = pathlenght / transportSpeed;
 
 	UE_LOG(LogTemp, Warning, TEXT("Travel Time %f"), traveltime);
 
@@ -107,19 +157,21 @@ void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> 
 		_owningSite->RemoveResourcesFromLocalPool(sampletransaction);
 	}
 	else if (_transportDirective == ETransportatOrderDirecrtive::TOD_FetchFromSite)
-		sampletransaction = SampleSitePool(sampletransaction, Cast<AProductionsite>(_goalActor));
+		sampletransaction = SampleSitePool(sampletransaction, Cast<AProductionsite>(goalActor));
+
+	FTimerHandle newhandle;
 
 	FTransportOrder neworder =
 	{
 		sampletransaction,
-		handle,
-		_goalActor,
+		traveltime,
+		_goalTypeIDPair,
 		_orderStatus,
-		_owningSite,
-		_transportDirective
+		_owningSite->GetLocalProdSiteID(),
+		_transportDirective,
+		world
 	};
 
-	allTransportOrders.Add(neworder);
 
 	auto transactionlambda = [this, neworder]()
 	{
@@ -129,32 +181,38 @@ void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> 
 	FTimerDelegate  currdelegate;
 	currdelegate.BindLambda(transactionlambda);
 
-	world->GetTimerManager().SetTimer(handle, currdelegate, traveltime, false);
+	world->GetTimerManager().SetTimer(newhandle, currdelegate, traveltime, false);
+	allTransportOrders.Add(neworder, newhandle);
 }
 
 void UTransportManager::ManageTransaction(FTransportOrder _orderToHandle)
 {
-	if(!marketManager || !productionSiteManager)
+	if (!marketManager || !productionSiteManager)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !marketManager || !productionSiteManager"));
 		return;
 	}
 
 
-	if(_orderToHandle.GetTransactionOrder().Num() <= 0)
+	if (_orderToHandle.GetTransactionOrder().Num() <= 0)
 	{
 		// Ich brauch das wohl net mehr weil ich die seperate direktive ETransportatOrderDirecrtive::TOD_ReturnToSite habe
 		// Wenn keine Transaction Order vorliegt und die Direktive TOD_DeliverToSite ist kehrt der tranporter zu der prod site zurück welche ihn owned nachdem er resourcen zu einer weiteren gesendent hat
 		// i.e er bekommt kein tatsächliches return ticket
 		//if(_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_DeliverToSite)
 		//{
-		//	UE_LOG(LogTemp, Warning, TEXT("Transporter arrived back at Owning Production Site"));
+
+		UE_LOG(LogTemp, Warning, TEXT("Transporter arrived empty at Goal"));
 
 		//	if (allTransportOrders.Contains(_orderToHandle))
 		//		allTransportOrders.Remove(_orderToHandle);
 		//}
 		//else
-		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, _orderToHandle.GetTransactionOrder().Num() <= 0"));
+
+
+		// Ich hab den log jetz tmal rausgenommen da dieser case auch eintreten kann wenn ich von einert prodsite to prodsite deliverie zurückl komme
+		//UE_LOG(LogTemp, Warning, TEXT("UTransportManager, _orderToHandle.GetTransactionOrder().Num() <= 0"));
+
 		if (allTransportOrders.Contains(_orderToHandle))
 			allTransportOrders.Remove(_orderToHandle);
 
@@ -164,12 +222,12 @@ void UTransportManager::ManageTransaction(FTransportOrder _orderToHandle)
 	UE_LOG(LogTemp, Warning, TEXT("Order Was Completed"));
 
 
-	if(_orderToHandle.GetTransportOrderStatus() == ETransportOrderStatus::TOS_MoveToMarket)
+	if (_orderToHandle.GetTransportOrderStatus() == ETransportOrderStatus::TOS_MoveToMarket)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Order arrrived at Market"));
 		HandleMarketTransaction(_orderToHandle);
 	}
-	else if(_orderToHandle.GetTransportOrderStatus() == ETransportOrderStatus::TOS_MoveToProdSite)
+	else if (_orderToHandle.GetTransportOrderStatus() == ETransportOrderStatus::TOS_MoveToProdSite)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Order arrrived at Productionsite"));
 
@@ -180,8 +238,8 @@ void UTransportManager::ManageTransaction(FTransportOrder _orderToHandle)
 void UTransportManager::HandleMarketTransaction(FTransportOrder _orderToHandle)
 {
 	TArray<FResourceTransactionTicket> returnticket;
-	AActor* newgoal = _orderToHandle.GetOwningProductionSite();
-	AProductionsite* orderowner = _orderToHandle.GetOwningProductionSite();
+
+	AProductionsite* orderowner = productionSiteManager->GetSiteByID(_orderToHandle.GetOwningProductionSiteID());
 
 	if(_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_BuyResources)
 		returnticket = marketManager->BuyResources(_orderToHandle.GetTransactionOrder());
@@ -196,14 +254,22 @@ void UTransportManager::HandleMarketTransaction(FTransportOrder _orderToHandle)
 		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"));
 
 	if(_orderToHandle.GetOrderDirective() != ETransportatOrderDirecrtive::TOD_ReturnToSite)
-		CreateTransportOrder(returnticket, newgoal, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_ReturnToSite);
+	{
+		TMap<EBuildingType, int> newgoaltypeid;
+		newgoaltypeid.Add(EBuildingType::BT_ProductionSite, _orderToHandle.GetOwningProductionSiteID());
+
+		FVector oldgoal = GetGoalActor(_orderToHandle.GetGoalActorTypeIDPair())->GetActorLocation();
+
+		CreateTransportOrder(returnticket, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_ReturnToSite, newgoaltypeid, oldgoal);
+	}
 }
 
 void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle)
 {
 	TArray<FResourceTransactionTicket> returnticket;
-	AProductionsite* goalsite = Cast<AProductionsite>(_orderToHandle.GetGoalActor());
-	AProductionsite* orderowner = _orderToHandle.GetOwningProductionSite();
+
+	AProductionsite* goalsite = Cast<AProductionsite>(GetGoalActor(_orderToHandle.GetGoalActorTypeIDPair()));
+	AProductionsite* orderowner = productionSiteManager->GetSiteByID(_orderToHandle.GetOwningProductionSiteID());
 
 	if (_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_DeliverToSite || _orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_ReturnToSite)
 	{
@@ -228,8 +294,6 @@ void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle
 		returnticket = goalsite->RemoveResourcesFromLocalPool(_orderToHandle.GetTransactionOrder());
 	}
 
-	AActor* newgoal = _orderToHandle.GetOwningProductionSite();
-
 	if (allTransportOrders.Contains(_orderToHandle))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Remove handlewd order"));
@@ -239,7 +303,35 @@ void UTransportManager::HandleProdSiteTransaction(FTransportOrder _orderToHandle
 		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"));
 
 	if(_orderToHandle.GetOrderDirective() != ETransportatOrderDirecrtive::TOD_ReturnToSite)
-		CreateTransportOrder(returnticket, newgoal, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_ReturnToSite);
+	{
+		TMap<EBuildingType, int> newgoaltypeid;
+		newgoaltypeid.Add(EBuildingType::BT_ProductionSite, _orderToHandle.GetOwningProductionSiteID());
+
+		FVector oldgoal = GetGoalActor(_orderToHandle.GetGoalActorTypeIDPair())->GetActorLocation();
+
+		CreateTransportOrder(returnticket, ETransportOrderStatus::TOS_MoveToProdSite, orderowner, ETransportatOrderDirecrtive::TOD_ReturnToSite, newgoaltypeid, oldgoal);
+	}
+}
+
+AActor* UTransportManager::GetGoalActor(TMap<EBuildingType, int> _goalTypeIDPair)
+{
+	AActor* goalactor = productionSiteManager->GetSiteByID(0);
+
+	for(auto typeidxpair : _goalTypeIDPair)
+	{
+		if (typeidxpair.Key == EBuildingType::BT_MarketStall)
+		{
+			goalactor = marketManager->GetStallByID(typeidxpair.Value);
+			break;
+		}
+		else if (typeidxpair.Key == EBuildingType::BT_ProductionSite)
+		{
+			goalactor = productionSiteManager->GetSiteByID(typeidxpair.Value);
+			break;
+		}
+	}
+
+	return goalactor;
 }
 
 TArray<FResourceTransactionTicket> UTransportManager::SampleSitePool(TArray<FResourceTransactionTicket> _ticketsToCheck, AProductionsite* _siteToSample)

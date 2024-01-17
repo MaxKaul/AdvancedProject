@@ -107,3 +107,12 @@ enum class ETransportatOrderDirecrtive : uint8
 	TOD_ReturnToSite,
 	TOD_ENTRY_AMOUNT
 };
+
+UENUM()
+enum class EBuildingType : uint8
+{
+	BT_DEFAULT,
+	BT_ProductionSite,
+	BT_MarketStall,
+	BT_ENTRY_AMOUNT 
+};

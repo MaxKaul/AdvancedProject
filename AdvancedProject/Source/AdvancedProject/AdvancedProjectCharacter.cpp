@@ -65,12 +65,15 @@ void AAdvancedProjectCharacter::InitPlayerStart(FPlayerSaveData _saveData, AMark
 	marketManager = _marketManager;
 	workerWorldManager = _workerWorldManager;
 
-	SetActorLocation(_saveData.GetLoaction());
-	SetActorRotation(_saveData.GetRotation());
+	SetActorLocation(_saveData.GetLoaction_S());
+	SetActorRotation(_saveData.GetRotation_S());
+
+	FTransportManagerSaveData testsavedata;
 
 	builder->InitBuilder(productionSiteManager, marketManager, this, workerWorldManager);
-	productionSiteManager->InitProductionSiteManager(this, _saveData.GetProductionSiteManagerSaveData() ,marketManager, workerWorldManager);
-	transportManager->InitTransportManager(marketManager, productionSiteManager, this);
+
+	productionSiteManager->InitProductionSiteManager(this, _saveData.GetProductionSiteManagerSaveData_S(), marketManager, workerWorldManager);
+	transportManager->InitTransportManager(this, _saveData.GeTransportManagerSaveData_S(), marketManager, productionSiteManager);
 }
 
 void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSite)

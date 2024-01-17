@@ -40,52 +40,57 @@ public:
 	FTransportOrder(){}
 
 
-	FTransportOrder(TArray<FResourceTransactionTicket> _transactionOrder, FTimerHandle _timerHandle, AActor* _goalActor, ETransportOrderStatus _transportOrderStatus, class AProductionsite* _owningProdSite,
-					ETransportatOrderDirecrtive _transportDirective)
+	FTransportOrder(TArray<FResourceTransactionTicket> _transactionOrder, float _timeRemaining, TMap<EBuildingType, int> _goalTypeIDPair, ETransportOrderStatus _transportOrderStatus, int _owningSiteID,
+					ETransportatOrderDirecrtive _transportDirective , UWorld* _world)
 	{
 		transactionOrder = _transactionOrder;
-		timerHandle = _timerHandle;
+		timeRemaining = _timeRemaining;
 		transportOrderStatus = _transportOrderStatus;
-		goalActor = _goalActor;
-		owningProdSite = _owningProdSite;
+		goalTypeIDPair = _goalTypeIDPair;
+		owningSiteID = _owningSiteID;
 		transportDirective = _transportDirective;
+		world = _world;
 	}
 
 private:
 	UPROPERTY()
 		TArray<FResourceTransactionTicket> transactionOrder;
 
-	// Ich regel das saven der remainging time der transporter über deren individuelle handles 
 	UPROPERTY()
-		FTimerHandle timerHandle;
+		float timeRemaining;
 
 	// Ich "weiß" ob mein goalactor der markt oder eine production site ist über den transportOrderStatus (nicht perfekt aber so muss ich die ganze buy und sell logik nicht refaktorieren)
 	UPROPERTY()
-		AActor* goalActor;
+		TMap<EBuildingType, int> goalTypeIDPair;
 
 	UPROPERTY()
 		ETransportOrderStatus transportOrderStatus;
 
 	UPROPERTY()
-		AProductionsite* owningProdSite;
+		int owningSiteID;
+
 	UPROPERTY()
 		ETransportatOrderDirecrtive transportDirective;
+
+	UPROPERTY()
+		UWorld* world;
 
 public:
 	FORCEINLINE
 		TArray<FResourceTransactionTicket> GetTransactionOrder() { return transactionOrder; };
 	FORCEINLINE
-		FTimerHandle GetTimerHandle() { return timerHandle; }
+		float GetTimeRemaining() { return timeRemaining; }
 	FORCEINLINE
-		AActor* GetGoalActor() { return goalActor; }
+		TMap<EBuildingType, int> GetGoalActorTypeIDPair() { return goalTypeIDPair; }
 	FORCEINLINE
 		ETransportOrderStatus GetTransportOrderStatus() { return transportOrderStatus; }
 	FORCEINLINE
-		AProductionsite* GetOwningProductionSite() { return owningProdSite; }
+		int GetOwningProductionSiteID() { return owningSiteID; }
 	FORCEINLINE
 		ETransportatOrderDirecrtive GetOrderDirective() { return transportDirective; }
 };
 
+// Ich glaub ich muss das um ein layer weiter nach oben legen da mir die refs zu den ownern und goals sonst zu converluded sind
 USTRUCT()
 struct FTransportManagerSaveData
 {
@@ -121,7 +126,6 @@ class ADVANCEDPROJECT_API UTransportManager : public UActorComponent
 public:	
 	UTransportManager();
 
-
 	UFUNCTION()
 		FTransportManagerSaveData GetTransportManagerSaveData();
 
@@ -129,8 +133,10 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-	UPROPERTY(VisibleAnywhere,Category=info,meta=(AllowPrivateAccess))
-		TArray<FTransportOrder> allTransportOrders;
+	UPROPERTY(VisibleAnywhere,Category=Transporter,meta=(AllowPrivateAccess))
+		TMap<FTransportOrder, FTimerHandle> allTransportOrders;
+	//UPROPERTY(VisibleAnywhere, Category = Transporter, meta = (AllowPrivateAccess))
+	//	TArray<FTimerHandle> fuckthisshit;
 
 	UPROPERTY()
 		class UProductionSiteManager* productionSiteManager;
@@ -141,22 +147,19 @@ private:
 	UPROPERTY()
 		AMarketManager* marketManager;
 	UPROPERTY()
-		class AAdvancedProjectCharacter* owningPlayer;
+		class APlayerBase* owningPlayer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stats, meta = (AllowPrivateAccess))
 		float transportSpeed;
 
 public:
 	UFUNCTION()
-	void InitTransportManager(FTransportManagerSaveData _saveData, AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager, AAdvancedProjectCharacter* _owningPlayer);
+	void InitTransportManager(APlayerBase* _owningPlayer, FTransportManagerSaveData _saveData, AMarketManager* _marketManager, UProductionSiteManager* _prodSiteManager);
 
 	UFUNCTION(BlueprintCallable)
 		void TestOrder();
 
 private:
-	UFUNCTION(BlueprintCallable)
-		void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, AActor* _goalActor, ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective);
-
 	UFUNCTION()
 		void ManageTransaction(FTransportOrder _orderToHandle);
 	UFUNCTION()
@@ -164,7 +167,21 @@ private:
 	UFUNCTION()
 		void HandleProdSiteTransaction(FTransportOrder _orderToHandle);
 
+	// Ich schau mal das ich den goal actor dann auf die erste prod site defaulte, das SOLLTE eigentliche als debugger fungieren falls was schief läuft beim loaden da dies die tarnsportation order zurücksetzt
+	// (hoff ich mal (Ich hoff aber auch mal das nichts schief läuft))
+	// Ich könnte auch malo drüber nachdenken dies auf den origin zu defaulten
+	UFUNCTION()
+		AActor* GetGoalActor(TMap<EBuildingType, int> _goalTypeIDPair);
+
+	// Ich nehmen den goal actor raus und mache diesen dann komplett abhängig von der tranportation directive
+	// Ich mach das jetzt etwas dreckig weil ich mit dem overload struct probleme habe persistenz für den owner sicher zu stellen
+	// _overridePos = Wenn ich ein Order mit TOD_ReturnToSite erstellen will brauch ich meine momentane pos (mein erstes goal) für die path länge
+	UFUNCTION()
+	void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, ETransportOrderStatus _orderStatus, AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective, TMap<EBuildingType, int> _goalTypeIDPair, FVector _overridePos = FVector());
+	UFUNCTION()
+		void LoadOrderFromSave(FTransportManagerSaveData _saveData);
+
 	// Ich will die menge an resourcen in meinem owner pool samplen wenn ich eine deduction order von ihr herraus sende und unter dem umstand die menge an resourcen <= 0 ist 0 geben u./o. < gewünschte menge den rest herrausgeben
 	UFUNCTION()
-		TArray<FResourceTransactionTicket> SampleSitePool(TArray<FResourceTransactionTicket> _ticketsToCheck, AProductionsite* _siteToSample);
+		TArray<FResourceTransactionTicket> SampleSitePool(TArray<FResourceTransactionTicket> _ticketsToCheck, class AProductionsite* _siteToSample);
 };

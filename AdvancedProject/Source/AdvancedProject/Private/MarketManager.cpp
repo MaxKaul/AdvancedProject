@@ -364,6 +364,22 @@ FMarketManagerSaveData AMarketManager::GetMarketManagerSaveData()
 	return newsavefile;
 }
 
+AMarketStall* AMarketManager::GetStallByID(int _IDToFind)
+{
+	AMarketStall* foundstall = spawnedStalls[0];
+
+	for(AMarketStall* stall : spawnedStalls)
+	{
+		if(stall->GetStallID() == _IDToFind)
+		{
+			foundstall = stall;
+			break;
+		}
+	}
+
+	return foundstall;
+}
+
 bool AMarketManager::NullcheckDependencies()
 {
 	bool status = true;
