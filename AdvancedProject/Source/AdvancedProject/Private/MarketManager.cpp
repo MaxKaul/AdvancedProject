@@ -11,7 +11,6 @@ AMarketManager::AMarketManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	resourcePriceTick = .1f;
 	resourceMinValue = 1.f;
 }
 
@@ -29,12 +28,6 @@ void FMM_OverloadFuncs::InitMarketManager(FMarketManagerSaveData _saveData)
 
 	overloadOwner->InitResources(_saveData);
 	overloadOwner->InitMarketStalls(_saveData.GetMarketStallSaveData());
-
-	FTimerHandle timerhandle;
-	FTimerDelegate timerdelegate;
-	timerdelegate.BindUFunction(overloadOwner, FName("UpdateResourcePrices"));
-
-	overloadOwner->world->GetTimerManager().SetTimer(timerhandle, timerdelegate, overloadOwner->resourcePriceTick, false);
 }
 
 void FMM_OverloadFuncs::InitMarketManager()
@@ -58,19 +51,14 @@ void FMM_OverloadFuncs::InitMarketManager()
 
 	for (size_t i = 0; i < resourcebasevalues.Num(); i++)
 	{
-		overloadOwner->InitIndividualResource(resourcebasevalues[i]->Resource.GetLastResourcePrice(), resourcebasevalues[i]->Resource.GetResourceAmount(), resourcebasevalues[i]->Resource.GetResourceIdent(), resourcebasevalues[i]->Resource.GetAllowedProductionSites(), resourcebasevalues[i]->Resource.GetResourceTickRate(),
+		overloadOwner->InitIndividualResource(resourcebasevalues[i]->Resource.GetLastResourcePrice(), resourcebasevalues[i]->Resource.GetResourceAmount(), resourcebasevalues[i]->Resource.GetResourceIdent(), 
+			resourcebasevalues[i]->Resource.GetAllowedProductionSites(), resourcebasevalues[i]->Resource.GetLastUpdated(),
 			resourcebasevalues[i]->Resource.GetHasCost(), resourcebasevalues[i]->Resource.GetResourceCost(), resourcebasevalues[i]->Resource.GetFulfillmentValue());
 	}
 
 	TArray<FMarketStallSaveData> newstallsave = overloadOwner->GenerateStallTypes();
 
 	overloadOwner->InitMarketStalls(newstallsave);
-
-	FTimerHandle timerhandle;
-	FTimerDelegate timerdelegate;
-	timerdelegate.BindUFunction(overloadOwner, FName("UpdateResourcePrices"));
-
-	overloadOwner->world->GetTimerManager().SetTimer(timerhandle, timerdelegate, overloadOwner->resourcePriceTick, false);
 }
 
 
@@ -225,6 +213,8 @@ TArray<FResourceTransactionTicket> AMarketManager::SellResources(TArray<FResourc
 			newticketentry.exchangedCapital = ticket.resourceAmount * resourcelistinfo.GetLastResourcePrice();
 
 			returntickets.Add(newticketentry);
+
+			UpdateResourcePrice(resourcelistinfo);
 		}
 		else
 		{
@@ -259,6 +249,19 @@ void AMarketManager::InitMarketStalls(TArray<FMarketStallSaveData> _stallSaveDat
 		else
 			UE_LOG(LogTemp, Warning, TEXT("AMarketManager, !tospawn"))
 	}
+
+
+	auto transactionlambda = [this ]()
+	{
+		TickResources();
+	};
+
+	FTimerDelegate  currdelegate;
+	currdelegate.BindLambda(transactionlambda);
+
+	FTimerHandle newhandle;
+
+	world->GetTimerManager().SetTimer(newhandle, currdelegate, 1.f, false);
 }
 
 void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
@@ -269,71 +272,42 @@ void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
 	for (FIndividualResourceInfo resource : allresources)
 	{
 		InitIndividualResource(resource.GetLastResourcePrice(), resource.GetResourceAmount(), resource.GetResourceIdent(), resource.GetAllowedProductionSites(), 
-							   resource.GetResourceTickRate(), resource.GetHasCost(), resource.GetResourceCost(), resource.GetFulfillmentValue());
+							   resource.GetLastUpdated(), resource.GetHasCost(), resource.GetResourceCost(), resource.GetFulfillmentValue());
 	}
 }
 
-void AMarketManager::UpdateResourcePrices()
+void AMarketManager::UpdateResourcePrice(FIndividualResourceInfo _resourceToUpdate)
 {
-	TArray<FIndividualResourceInfo> allresources;
-	resourceList.GenerateValueArray(allresources);
+	float lastresourceprice = _resourceToUpdate.GetLastResourcePrice();
+	float k_value = _resourceToUpdate.Get_K_Value();
+	float timeframe = _resourceToUpdate.GetLastUpdated();
+	float newPrice = lastresourceprice;
 
-	for(FIndividualResourceInfo resource : allresources)
+
+	if (k_value > 0)
+		newPrice = lastresourceprice * FMath::Exp(k_value * timeframe);
+	else if (k_value < 0)
+		newPrice = lastresourceprice * FMath::Exp(-k_value * timeframe);
+
+	if (newPrice < resourceMinValue)
+		newPrice = resourceMinValue;
+
+
+	resourceList.Find(_resourceToUpdate.GetResourceIdent())->SetLastResourcePrice(newPrice);
+	resourceList.Find(_resourceToUpdate.GetResourceIdent())->SetLastUpdated(0.f);
+	resourceList.Find(_resourceToUpdate.GetResourceIdent())->Set_K_Value(0.f);
+}
+
+void AMarketManager::TickResources()
+{
+	for(TTuple<EResourceIdent, FIndividualResourceInfo> resource : resourceList)
 	{
-		float lastresourceprize = resource.GetLastResourcePrice();
-		float k_value = resource.Get_K_Value();
-		float timeframe = resourcePriceTick;
-		// Timeframe sollte unter umsatänden durch einen wert ersetzt werden welcher die meneg an zeit zwischen der letzten und dieser tranaktion darstellt
-		float newPrice = lastresourceprize;
-		
-
-		if (k_value > 0)
-			newPrice = lastresourceprize * FMath::Exp(k_value * timeframe);
-		else if (k_value < 0)
-			newPrice = lastresourceprize * FMath::Exp(-k_value * timeframe);
-		
-		if (newPrice < resourceMinValue)
-			newPrice = resourceMinValue;
-
-
-		resourceList.Find(resource.GetResourceIdent())->SetLastResourcePrice(newPrice);
-		resourceList.Find(resource.GetResourceIdent())->Set_K_Value(0.f);
+		resourceList.Find(resource.Key)->TickLastUpdated();
 	}
-
-	/* Kauf und verkauf test zum checken ob die formel richtig funzt
-	 *UE_LOG(LogTemp, Warning, TEXT("%f"), newPrice);
-	TOptional<float> nomaxminprice;
-
-	TArray<FResourceTransactionTicket> buycall =
-	{
-		FResourceTransactionTicket(1, 10, EResourceIdent::ERI_Gold, 100,nomaxminprice),
-	};
-
-	TArray<FResourceTransactionTicket> sellcall =
-	{
-		FResourceTransactionTicket(4, 10, EResourceIdent::ERI_Gold, nomaxminprice,0),
-	};
-
-	test++;
-
-	if (test % 5 == 0)
-	{
-		BuyResources(buycall);
-		UE_LOG(LogTemp, Warning, TEXT("BUY"));
-	}
-
-	if (test % 10 == 0)
-	{
-		SellResources(sellcall);
-		UE_LOG(LogTemp, Warning, TEXT("SELL"));
-	}*/
-
-	FTimerHandle handle;
-	world->GetTimerManager().SetTimer(handle, this, &AMarketManager::UpdateResourcePrices, resourcePriceTick, false);
 }
 
 void AMarketManager::InitIndividualResource(float _lastResourcePrice, int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate, 
-											bool _bHasCost, TMap<EResourceIdent, int> _resourceCost, float _desirefulfillmentValue)
+                                            bool _bHasCost, TMap<EResourceIdent, int> _resourceCost, float _desirefulfillmentValue)
 {
 	FIndividualResourceInfo currentresource =
 	{

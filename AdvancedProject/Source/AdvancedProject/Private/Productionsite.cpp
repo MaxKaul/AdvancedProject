@@ -408,7 +408,7 @@ void AProductionsite::InitResources()
 			FProductionResources productionResource =
 			{
 				item.Key,
-				item.Value.GetResourceTickRate(),
+				item.Value.GetLastUpdated(),
 				FString::FromInt((int)item.Value.GetResourceIdent()),
 				FString::FromInt((int)item.Value.GetAllowedProductionSites()),
 				item.Value.GetHasCost(),

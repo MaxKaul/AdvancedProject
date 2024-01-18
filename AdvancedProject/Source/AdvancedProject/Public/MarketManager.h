@@ -15,7 +15,7 @@ struct FIndividualResourceInfo
 {
 	GENERATED_BODY()
 
-	FIndividualResourceInfo(EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSites, int _resourceAmount, float _lastResourcePrice, float _k_Value, float _resourceTickRate, bool _bHasCost,
+	FIndividualResourceInfo(EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSites, int _resourceAmount, float _lastResourcePrice, float _k_Value, float _lastUpdated, bool _bHasCost,
 							TMap<EResourceIdent, int> _resourceIdentCostPair, float _desireFulfillmentValue)
 	{
 		resourceIdent = _resourceIdent;
@@ -23,7 +23,7 @@ struct FIndividualResourceInfo
 		resourceAmount = _resourceAmount;
 		lastResourcePrice = _lastResourcePrice;
 		k_Value = _k_Value;
-		resourceTickRate = _resourceTickRate;
+		lastUpdated = _lastUpdated;
 		bHasResourceCost = _bHasCost;
 		desireFulfillmentValue = _desireFulfillmentValue;
 
@@ -55,10 +55,9 @@ private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float k_Value;
 
-	// The tick rate with which the resource amount in the ProductionSites will be updated
-	// Is currently being controlled uniformly by the market and not the individual resource tough
+	// Ich will den resourcen wert jetzt nach jeder transaction updaten
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		float resourceTickRate;
+		float lastUpdated;
 
 	// Bool to inidcate wether of not this resource is dependent, or has a cost in form of another resource
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
@@ -70,7 +69,7 @@ private:
 
 public:
 	FORCEINLINE
-		float GetResourceTickRate() { return resourceTickRate; }
+		float GetLastUpdated() { return lastUpdated; }
 	FORCEINLINE
 		int GetResourceAmount() { return resourceAmount; }
 	FORCEINLINE
@@ -89,7 +88,9 @@ public:
 		TMap<EResourceIdent, int> GetResourceCost() { return resourceIdentCostPair; };
 
 	FORCEINLINE
-		void SetResourceTickRate(float _newValue) { resourceTickRate = _newValue; }
+		void TickLastUpdated() { lastUpdated++ ; }
+	FORCEINLINE
+		void SetLastUpdated(float _newValue) { lastUpdated = _newValue; }
 	FORCEINLINE
 		void SetLastResourcePrice(float _newValue) { lastResourcePrice = _newValue; }
 	FORCEINLINE
@@ -202,8 +203,12 @@ private:
 	UFUNCTION()
 		void InitResources(FMarketManagerSaveData _saveData);
 
+	// To be called on resourceamountchange
 	UFUNCTION()
-		void  UpdateResourcePrices();
+		void  UpdateResourcePrice(FIndividualResourceInfo _resourceToUpdate);
+
+	UFUNCTION()
+		void TickResources();
 
 	UFUNCTION()
 	void InitIndividualResource(float _lastResourcePrice,int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate,
@@ -229,9 +234,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Resources, meta = (AllowPrivateAccess))
 		class UDataTable* resourceDefaultTable;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = MarketInfo, meta = (AllowPrivateAccess))
-		float resourcePriceTick;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = MarketInfo, meta = (AllowPrivateAccess))
 		float resourceMinValue;
