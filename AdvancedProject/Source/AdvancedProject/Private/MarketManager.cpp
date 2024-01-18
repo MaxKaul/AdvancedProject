@@ -11,7 +11,7 @@ AMarketManager::AMarketManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	resourcePriceTick = 1.f;
+	resourcePriceTick = .1f;
 	resourceMinValue = 1.f;
 }
 
@@ -285,17 +285,18 @@ void AMarketManager::UpdateResourcePrices()
 		float timeframe = resourcePriceTick;
 		// Timeframe sollte unter umsatänden durch einen wert ersetzt werden welcher die meneg an zeit zwischen der letzten und dieser tranaktion darstellt
 		float newPrice = lastresourceprize;
-
+		
 
 		if (k_value > 0)
-			newPrice = lastresourceprize * FMath::Exp(k_value * timeframe / 10);
+			newPrice = lastresourceprize * FMath::Exp(k_value * timeframe);
 		else if (k_value < 0)
-			newPrice = lastresourceprize * FMath::Exp(-k_value * timeframe / 10);
-
+			newPrice = lastresourceprize * FMath::Exp(-k_value * timeframe);
+		
 		if (newPrice < resourceMinValue)
 			newPrice = resourceMinValue;
 
-		resourceList.Find(resource.GetResourceIdent())->SetResourceTickRate(newPrice);
+
+		resourceList.Find(resource.GetResourceIdent())->SetLastResourcePrice(newPrice);
 		resourceList.Find(resource.GetResourceIdent())->Set_K_Value(0.f);
 	}
 

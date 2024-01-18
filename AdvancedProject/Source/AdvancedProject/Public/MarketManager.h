@@ -55,7 +55,8 @@ private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float k_Value;
 
-	// The tick rate with which the resource amount in the ProductionSites will be updated 
+	// The tick rate with which the resource amount in the ProductionSites will be updated
+	// Is currently being controlled uniformly by the market and not the individual resource tough
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float resourceTickRate;
 

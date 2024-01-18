@@ -58,6 +58,42 @@ void UTransportManager::TestOrder()
 		 0
 	};
 
+	owningPlayer->AddOrDeductCurrency(-newticket_1.exchangedCapital);
+	owningPlayer->AddOrDeductCurrency(-newticket_2.exchangedCapital);
+
+	tickets.Add(newticket_1);
+	tickets.Add(newticket_2);
+
+	TMap<EBuildingType, int> testpair_GOAL;
+
+	testpair_GOAL.Add(EBuildingType::BT_MarketStall, 2);
+
+	CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToMarket, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_BuyResources, testpair_GOAL);
+}
+
+void UTransportManager::TestOrder_0()
+{
+	TArray<FResourceTransactionTicket> tickets;
+
+	// Test order Deliver to prod site
+	FResourceTransactionTicket newticket_1 =
+	{
+		5,
+		250,
+		EResourceIdent::ERI_Ambrosia,
+		99999,
+		 0
+	};
+
+	FResourceTransactionTicket newticket_2 =
+	{
+		10,
+		50,
+		EResourceIdent::ERI_Fruit,
+		99999,
+		 0
+	};
+
 	//owningPlayer->AddOrDeductCurrency(-newticket_1.exchangedCapital);
 	//owningPlayer->AddOrDeductCurrency(-newticket_2.exchangedCapital);
 
@@ -66,10 +102,11 @@ void UTransportManager::TestOrder()
 
 	TMap<EBuildingType, int> testpair_GOAL;
 
-	testpair_GOAL.Add(EBuildingType::BT_ProductionSite, 2);
+	testpair_GOAL.Add(EBuildingType::BT_MarketStall, 2);
 
-	CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToProdSite, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_DeliverToSite, testpair_GOAL);
+	CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToMarket, productionSiteManager->GetAllProductionSites()[0], ETransportatOrderDirecrtive::TOD_SellResources, testpair_GOAL);
 }
+
 
 
 FTransportManagerSaveData UTransportManager::GetTransportManagerSaveData()
@@ -142,8 +179,6 @@ void UTransportManager::CreateTransportOrder(TArray<FResourceTransactionTicket> 
 
 	float traveltime = pathlenght / transportSpeed;
 
-	UE_LOG(LogTemp, Warning, TEXT("Travel Time %f"), traveltime);
-
 	// Bei TOD_SellResources u. TOD_DeliverToSite versuche ich jeweils resourcen aus meine owner production site zu deducten, dabei sample ich ob diese von den gewüsnschen resourrcen in der order auch die gewünschte menge hat
 	// Für TOD_FetchFromSite versuche ich resourcen aus einer anderen site zu holen
 	// Sollte dem nicht so sein sende ich entweder max. (also alle resourcen des jeweiligen idents) o. 0 falls ich von der resource <= 0 an menge habe
@@ -201,7 +236,7 @@ void UTransportManager::ManageTransaction(FTransportOrder _orderToHandle)
 		//if(_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_DeliverToSite)
 		//{
 
-		UE_LOG(LogTemp, Warning, TEXT("Transporter arrived empty at Goal"));
+		//UE_LOG(LogTemp, Warning, TEXT("Transporter arrived empty at Goal"));
 
 		//	if (allTransportOrders.Contains(_orderToHandle))
 		//		allTransportOrders.Remove(_orderToHandle);
@@ -218,17 +253,18 @@ void UTransportManager::ManageTransaction(FTransportOrder _orderToHandle)
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Order Was Completed"));
+	//UE_LOG(LogTemp, Warning, TEXT("Order Was Completed"));
 
 
 	if (_orderToHandle.GetTransportOrderStatus() == ETransportOrderStatus::TOS_MoveToMarket)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Order arrrived at Market"));
+		//UE_LOG(LogTemp, Warning, TEXT("Order arrrived at Market"));
+
 		HandleMarketTransaction(_orderToHandle);
 	}
 	else if (_orderToHandle.GetTransportOrderStatus() == ETransportOrderStatus::TOS_MoveToProdSite)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Order arrrived at Productionsite"));
+		//UE_LOG(LogTemp, Warning, TEXT("Order arrrived at Productionsite"));
 
 		HandleProdSiteTransaction(_orderToHandle);
 	}
@@ -272,7 +308,7 @@ void UTransportManager:: HandleProdSiteTransaction(FTransportOrder _orderToHandl
 
 	if (_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_DeliverToSite || _orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_ReturnToSite)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Deliver the resources of this transaction order to goal or owner site and return an empty ticket"));
+		//UE_LOG(LogTemp, Warning, TEXT("Deliver the resources of this transaction order to goal or owner site and return an empty ticket"));
 
 		goalsite->AddResourcesToLocalPool(_orderToHandle.GetTransactionOrder());
 
@@ -288,14 +324,14 @@ void UTransportManager:: HandleProdSiteTransaction(FTransportOrder _orderToHandl
 	}
 	else if (_orderToHandle.GetOrderDirective() == ETransportatOrderDirecrtive::TOD_FetchFromSite)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Remove the resources of this transaction order from the goal site and return the resulting return ticket"));
+		//UE_LOG(LogTemp, Warning, TEXT("Remove the resources of this transaction order from the goal site and return the resulting return ticket"));
 
 		returnticket = goalsite->RemoveResourcesFromLocalPool(_orderToHandle.GetTransactionOrder());
 	}
 
 	if (allTransportOrders.Contains(_orderToHandle))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Remove handlewd order"));
+		//UE_LOG(LogTemp, Warning, TEXT("Remove handlewd order"));
 		allTransportOrders.Remove(_orderToHandle);
 	}
 	else
