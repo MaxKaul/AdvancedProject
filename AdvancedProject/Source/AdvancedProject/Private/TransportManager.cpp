@@ -40,14 +40,6 @@ void UTransportManager::TestOrder()
 	TArray<FResourceTransactionTicket> tickets;
 
 	// Test order Deliver to prod site
-	FResourceTransactionTicket newticket_1 =
-	{
-		5,
-		250,
-		EResourceIdent::ERI_Ambrosia,
-		99999,
-		 0
-	};
 
 	FResourceTransactionTicket newticket_2 =
 	{
@@ -58,10 +50,8 @@ void UTransportManager::TestOrder()
 		 0
 	};
 
-	owningPlayer->AddOrDeductCurrency(-newticket_1.exchangedCapital);
 	owningPlayer->AddOrDeductCurrency(-newticket_2.exchangedCapital);
 
-	tickets.Add(newticket_1);
 	tickets.Add(newticket_2);
 
 	TMap<EBuildingType, int> testpair_GOAL;
@@ -75,16 +65,6 @@ void UTransportManager::TestOrder_0()
 {
 	TArray<FResourceTransactionTicket> tickets;
 
-	// Test order Deliver to prod site
-	FResourceTransactionTicket newticket_1 =
-	{
-		5,
-		250,
-		EResourceIdent::ERI_Ambrosia,
-		99999,
-		 0
-	};
-
 	FResourceTransactionTicket newticket_2 =
 	{
 		10,
@@ -94,10 +74,7 @@ void UTransportManager::TestOrder_0()
 		 0
 	};
 
-	//owningPlayer->AddOrDeductCurrency(-newticket_1.exchangedCapital);
-	//owningPlayer->AddOrDeductCurrency(-newticket_2.exchangedCapital);
 
-	tickets.Add(newticket_1);
 	tickets.Add(newticket_2);
 
 	TMap<EBuildingType, int> testpair_GOAL;
@@ -285,8 +262,8 @@ void UTransportManager::HandleMarketTransaction(FTransportOrder _orderToHandle)
 
 	if (allTransportOrders.Contains(_orderToHandle))
 		allTransportOrders.Remove(_orderToHandle);
-	else
-		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"));
+	//else
+	//	UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"));
 
 	if(_orderToHandle.GetOrderDirective() != ETransportatOrderDirecrtive::TOD_ReturnToSite)
 	{
@@ -334,8 +311,8 @@ void UTransportManager:: HandleProdSiteTransaction(FTransportOrder _orderToHandl
 		//UE_LOG(LogTemp, Warning, TEXT("Remove handlewd order"));
 		allTransportOrders.Remove(_orderToHandle);
 	}
-	else
-		UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"));
+	//else
+	//	UE_LOG(LogTemp, Warning, TEXT("UTransportManager, !allTransportOrders.Contains(_orderToHandle)"));
 
 	if(_orderToHandle.GetOrderDirective() != ETransportatOrderDirecrtive::TOD_ReturnToSite)
 	{

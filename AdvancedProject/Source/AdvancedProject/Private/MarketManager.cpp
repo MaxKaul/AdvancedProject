@@ -5,6 +5,7 @@
 #include "..\Public\TableBaseLibrary.h"
 #include "Engine/DataTable.h"
 #include "Kismet/KismetArrayLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 AMarketManager::AMarketManager()
@@ -53,7 +54,8 @@ void FMM_OverloadFuncs::InitMarketManager()
 	{
 		overloadOwner->InitIndividualResource(resourcebasevalues[i]->Resource.GetLastResourcePrice(), resourcebasevalues[i]->Resource.GetResourceAmount(), resourcebasevalues[i]->Resource.GetResourceIdent(), 
 			resourcebasevalues[i]->Resource.GetAllowedProductionSites(), resourcebasevalues[i]->Resource.GetLastUpdated(),
-			resourcebasevalues[i]->Resource.GetHasCost(), resourcebasevalues[i]->Resource.GetResourceCost(), resourcebasevalues[i]->Resource.GetFulfillmentValue());
+			resourcebasevalues[i]->Resource.GetHasCost(), resourcebasevalues[i]->Resource.GetResourceCost(), resourcebasevalues[i]->Resource.GetFulfillmentValue(), resourcebasevalues[i]->Resource.GetDelta(),
+			resourcebasevalues[i]->Resource.GetAlpha(), resourcebasevalues[i]->Resource.GetLambda());
 	}
 
 	TArray<FMarketStallSaveData> newstallsave = overloadOwner->GenerateStallTypes();
@@ -143,27 +145,45 @@ TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResource
 		EResourceIdent currident = ticket.resourceIdent;
 		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
 
-		int resourceamount = ticket.resourceAmount;
+		int resourcestobuy = ticket.resourceAmount;
 
 		if(resourcelistinfo.GetLastResourcePrice() <= ticket.maxBuyPricePerResource && resourcelistinfo.GetResourceAmount() > 0)
 		{
-			if (resourceamount > resourcelistinfo.GetResourceAmount())
-				resourceamount = resourcelistinfo.GetResourceAmount();
+			if (resourcestobuy > resourcelistinfo.GetResourceAmount())
+				resourcestobuy = resourcelistinfo.GetResourceAmount();
+
 
 			if(ticket.exchangedCapital < resourcelistinfo.GetLastResourcePrice() * ticket.resourceAmount)
-				resourceamount = ticket.exchangedCapital / resourcelistinfo.GetLastResourcePrice();
+				resourcestobuy = ticket.exchangedCapital / resourcelistinfo.GetLastResourcePrice();
 
-			if(resourceamount > 0)
+			if(resourcestobuy > 0)
 			{
-				resourceList.Find(ticket.resourceIdent)->SubtractResourceAmount(resourceamount);
-				resourceList.Find(ticket.resourceIdent)->Subtract_K_Value(resourceamount);
-
+				newticketentry.exchangedCapital = ticket.exchangedCapital;
+				newticketentry.resourceAmount = 0;
 				newticketentry.resourceIdent = ticket.resourceIdent;
-				newticketentry.resourceAmount = resourceamount;
 
-				newticketentry.exchangedCapital = ticket.exchangedCapital - resourceamount * resourcelistinfo.GetLastResourcePrice();
+				for (size_t i = 0; i < resourcestobuy; i++)
+				{
+					float amountonmarket = resourcelistinfo.GetResourceAmount();
 
-				returntickets.Add(newticketentry);
+					resourceList.Find(ticket.resourceIdent)->UpdateDelta(1.f + (ticket.resourceAmount - 1) / amountonmarket);
+
+
+					resourceList.Find(ticket.resourceIdent)->SubtractResourceAmount(1);
+
+					newticketentry.resourceAmount += 1;
+
+					newticketentry.exchangedCapital -= resourcelistinfo.GetLastResourcePrice();
+
+					UpdateResourcePrice(resourcelistinfo, false);
+
+					// Break condition after each iterartion to check wether or not there are stilol enough resources and the price aint to high
+					if (resourcelistinfo.GetResourceAmount() <= 0)
+						break;
+					else if (ticket.exchangedCapital < resourcelistinfo.GetLastResourcePrice() * ticket.resourceAmount - i)
+						break;
+				}
+
 			}
 			else
 			{
@@ -172,6 +192,7 @@ TArray<FResourceTransactionTicket> AMarketManager::BuyResources(TArray<FResource
 				newticketentry.exchangedCapital = ticket.exchangedCapital;
 			}
 
+			returntickets.Add(newticketentry);
 		}
 		else
 		{
@@ -201,20 +222,48 @@ TArray<FResourceTransactionTicket> AMarketManager::SellResources(TArray<FResourc
 		EResourceIdent currident = ticket.resourceIdent;
 		FIndividualResourceInfo resourcelistinfo = resourceList.FindRef(currident);
 
+		resourceList.Find(ticket.resourceIdent)->AddResourceAmount(ticket.resourceAmount);
+		newticketentry.resourceIdent = ticket.resourceIdent;
+
+		newticketentry.resourceAmount = 0;
+		newticketentry.exchangedCapital = 0;
+
+		for (size_t i = 0; i < ticket.resourceAmount; i++)
+		{
+			float amountonmarket = resourceList.Find(ticket.resourceIdent)->GetResourceAmount();
+
+			resourceList.Find(ticket.resourceIdent)->UpdateDelta(1.f + (ticket.resourceAmount - 1) / amountonmarket);
+
+			newticketentry.exchangedCapital += resourcelistinfo.GetLastResourcePrice();
+
+			UpdateResourcePrice(resourcelistinfo, true);
+		}
+
+		// Der markt hat keine currency pouch, resourcen sellen besitzzt dementsprechend noch keinen check in dieser richtung
+		returntickets.Add(newticketentry);
+
+		/* Ich benutze hier minSellPricePerResource, ich will das aber erstmal nicht benutzen
 		if (resourcelistinfo.GetLastResourcePrice() >= ticket.minSellPricePerResource)
 		{
 			resourceList.Find(ticket.resourceIdent)->AddResourceAmount(ticket.resourceAmount);
-			resourceList.Find(ticket.resourceIdent)->Add_K_Value(ticket.resourceAmount);
-
 			newticketentry.resourceIdent = ticket.resourceIdent;
+
 			newticketentry.resourceAmount = 0;
+			newticketentry.exchangedCapital = 0;
 
-			// Wir geben die differenz wieder zurück da jeder käufer immer all sein geld reinwirft
-			newticketentry.exchangedCapital = ticket.resourceAmount * resourcelistinfo.GetLastResourcePrice();
+			for (size_t i = 0; i < ticket.resourceAmount; i++)
+			{
+				float amountonmarket = resourceList.Find(ticket.resourceIdent)->GetResourceAmount();
 
+				resourceList.Find(ticket.resourceIdent)->UpdateDelta(1.f + (ticket.resourceAmount - 1) / amountonmarket);
+
+				newticketentry.exchangedCapital += resourcelistinfo.GetLastResourcePrice();
+
+				//UpdateResourcePrice(resourcelistinfo, true);
+			}
+
+			// Der markt hat keine currency pouch, resourcen sellen besitzzt dementsprechend noch keinen check in dieser richtung
 			returntickets.Add(newticketentry);
-
-			UpdateResourcePrice(resourcelistinfo);
 		}
 		else
 		{
@@ -225,6 +274,8 @@ TArray<FResourceTransactionTicket> AMarketManager::SellResources(TArray<FResourc
 			returntickets.Add(newticketentry);
 			UE_LOG(LogTemp, Warning, TEXT("AMarketManager, Resource could not be bought because the price is not high enough"));
 		}
+
+		*/
 	}
 
 	return returntickets;
@@ -261,7 +312,7 @@ void AMarketManager::InitMarketStalls(TArray<FMarketStallSaveData> _stallSaveDat
 
 	FTimerHandle newhandle;
 
-	world->GetTimerManager().SetTimer(newhandle, currdelegate, 1.f, false);
+	world->GetTimerManager().SetTimer(newhandle, currdelegate, 1.f, true);
 }
 
 void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
@@ -272,30 +323,38 @@ void AMarketManager::InitResources(FMarketManagerSaveData _saveData)
 	for (FIndividualResourceInfo resource : allresources)
 	{
 		InitIndividualResource(resource.GetLastResourcePrice(), resource.GetResourceAmount(), resource.GetResourceIdent(), resource.GetAllowedProductionSites(), 
-							   resource.GetLastUpdated(), resource.GetHasCost(), resource.GetResourceCost(), resource.GetFulfillmentValue());
+							   resource.GetLastUpdated(), resource.GetHasCost(), resource.GetResourceCost(), resource.GetFulfillmentValue(), 
+							   resource.GetDelta(), resource.GetAlpha(), resource.GetLambda());
 	}
 }
 
-void AMarketManager::UpdateResourcePrice(FIndividualResourceInfo _resourceToUpdate)
+void AMarketManager::UpdateResourcePrice(FIndividualResourceInfo _resourceToUpdate, bool _sell)
 {
-	float lastresourceprice = _resourceToUpdate.GetLastResourcePrice();
-	float k_value = _resourceToUpdate.Get_K_Value();
-	float timeframe = _resourceToUpdate.GetLastUpdated();
+	float lastresourceprice = resourceList.Find(_resourceToUpdate.GetResourceIdent())->GetLastResourcePrice();
+	float timeframe = resourceList.Find(_resourceToUpdate.GetResourceIdent())->GetLastUpdated();
+	float resourceamount = resourceList.Find(_resourceToUpdate.GetResourceIdent())->GetResourceAmount();
+	
+	float demanddelta = resourceList.Find(_resourceToUpdate.GetResourceIdent())->GetDelta();
+	float demandalpha = resourceList.Find(_resourceToUpdate.GetResourceIdent())->GetAlpha();
+	float demandlamdba = resourceList.Find(_resourceToUpdate.GetResourceIdent())->GetLambda();
+
 	float newPrice = lastresourceprice;
 
+	// This formula combines the supply and demand equilibrium model with an exponential decay term based on the time since the last transaction with the
+	// addition of a dynamic delta value on the basis of eachs transaction amount change
+	float decayterm = FMath::Exp(-demandlamdba * timeframe);
 
-	if (k_value > 0)
-		newPrice = lastresourceprice * FMath::Exp(k_value * timeframe);
-	else if (k_value < 0)
-		newPrice = lastresourceprice * FMath::Exp(-k_value * timeframe);
+	if(_sell)
+		newPrice = lastresourceprice + demandalpha * (demanddelta - resourceamount) * decayterm;
+	else
+		newPrice = lastresourceprice - demandalpha * (demanddelta - resourceamount) * decayterm;
+
 
 	if (newPrice < resourceMinValue)
 		newPrice = resourceMinValue;
 
-
 	resourceList.Find(_resourceToUpdate.GetResourceIdent())->SetLastResourcePrice(newPrice);
 	resourceList.Find(_resourceToUpdate.GetResourceIdent())->SetLastUpdated(0.f);
-	resourceList.Find(_resourceToUpdate.GetResourceIdent())->Set_K_Value(0.f);
 }
 
 void AMarketManager::TickResources()
@@ -307,19 +366,27 @@ void AMarketManager::TickResources()
 }
 
 void AMarketManager::InitIndividualResource(float _lastResourcePrice, int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate, 
-                                            bool _bHasCost, TMap<EResourceIdent, int> _resourceCost, float _desirefulfillmentValue)
+                                            bool _bHasCost, TMap<EResourceIdent, int> _resourceCost, float _desirefulfillmentValue, float _delta, float _alpha, float _lambda)
 {
+	if(_delta <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("_resourceDemandValue <= 0"));
+		_delta = 250.f;
+	}
+
 	FIndividualResourceInfo currentresource =
 	{
 		_resourceIdent,
 		_allowedProductionSite,
 		_resourceAmount,
 		_lastResourcePrice,
-		0.f,
 		_resourceTickRate,
 		_bHasCost,
 		_resourceCost,
-		_desirefulfillmentValue
+		_desirefulfillmentValue,
+		_delta,
+		_alpha,
+		_lambda
 	};
 
 	resourceList.Add(_resourceIdent, currentresource);

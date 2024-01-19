@@ -15,13 +15,14 @@ struct FPlayerSaveData
 
 	FPlayerSaveData(){ }
 
-	void InitPlayerSaveData(FVector _location, FRotator _rotation, FProductionSiteManagerSaveData _siteManagerSaveData, EPlayerIdent _ident, FTransportManagerSaveData _transportManagerSaveData)
+	void InitPlayerSaveData(FVector _location, FRotator _rotation, FProductionSiteManagerSaveData _siteManagerSaveData, EPlayerIdent _ident, FTransportManagerSaveData _transportManagerSaveData, float _currency)
 	{
 		s_location = _location;
 		s_rotation = _rotation;
 		s_productionSiteManagerSaveData = _siteManagerSaveData;
 		s_playerIdent = _ident;
 		s_transportManagerSaveData = _transportManagerSaveData;
+		s_currency = _currency;
 	}
 
 private:
@@ -35,6 +36,8 @@ private:
 		EPlayerIdent s_playerIdent;
 	UPROPERTY()
 		FTransportManagerSaveData 	s_transportManagerSaveData;
+	UPROPERTY()
+		float s_currency;
 
 public:
 	FORCEINLINE
@@ -47,6 +50,8 @@ public:
 		FProductionSiteManagerSaveData GetProductionSiteManagerSaveData_S() { return s_productionSiteManagerSaveData; }
 	FORCEINLINE
 		FTransportManagerSaveData GeTransportManagerSaveData_S() { return s_transportManagerSaveData; }
+	FORCEINLINE
+		float GetCurrency_S() { return s_currency; }
 };
 
 UCLASS(BlueprintType)

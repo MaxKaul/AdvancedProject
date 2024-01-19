@@ -15,22 +15,24 @@ struct FIndividualResourceInfo
 {
 	GENERATED_BODY()
 
-	FIndividualResourceInfo(EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSites, int _resourceAmount, float _lastResourcePrice, float _k_Value, float _lastUpdated, bool _bHasCost,
-							TMap<EResourceIdent, int> _resourceIdentCostPair, float _desireFulfillmentValue)
+		FIndividualResourceInfo(EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSites, int _resourceAmount, float _lastResourcePrice , float _lastUpdated, bool _bHasCost,
+			TMap<EResourceIdent, int> _resourceIdentCostPair, float _desireFulfillmentValue, float _delta, float _alpha, float _lambda)
 	{
 		resourceIdent = _resourceIdent;
 		allowedProductionSites = _allowedProductionSites;
 		resourceAmount = _resourceAmount;
 		lastResourcePrice = _lastResourcePrice;
-		k_Value = _k_Value;
 		lastUpdated = _lastUpdated;
 		bHasResourceCost = _bHasCost;
 		desireFulfillmentValue = _desireFulfillmentValue;
+		demandDelta = _delta;
+		demandAlpha = _alpha;
+		demandLambda = _lambda;
 
 		resourceIdentCostPair = _resourceIdentCostPair;
 	}
 
-	FIndividualResourceInfo(){}
+	FIndividualResourceInfo() {}
 
 private:
 	// Tehe unique ident of the Resource
@@ -51,13 +53,19 @@ private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float desireFulfillmentValue;
 
-	// Decay or Growth value of the individual resource, starts with 0 and is representativ for resources entering/leaving the market
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		float k_Value;
-
 	// Ich will den resourcen wert jetzt nach jeder transaction updaten
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float lastUpdated;
+
+	// Addative values representing the demand for a resource
+	// While alpha and lamba are static value per resource, delta is a dynamic value adding a layer based on a linear resource increase/decrease
+	// The dynamic in supply and demand will come from the decay term
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		float demandDelta;
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		float demandAlpha;
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		float demandLambda;
 
 	// Bool to inidcate wether of not this resource is dependent, or has a cost in form of another resource
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
@@ -67,6 +75,8 @@ private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess), meta = (EditCondition = "bHasResourceCost"))
 		TMap<EResourceIdent, int> resourceIdentCostPair;
 
+
+
 public:
 	FORCEINLINE
 		float GetLastUpdated() { return lastUpdated; }
@@ -74,8 +84,6 @@ public:
 		int GetResourceAmount() { return resourceAmount; }
 	FORCEINLINE
 		float GetLastResourcePrice() { return lastResourcePrice; }
-	FORCEINLINE
-		float Get_K_Value() { return k_Value; }
 	FORCEINLINE
 		float GetFulfillmentValue() { return desireFulfillmentValue; }
 	FORCEINLINE
@@ -86,29 +94,41 @@ public:
 		EProductionSiteType GetAllowedProductionSites() { return allowedProductionSites; }
 	FORCEINLINE
 		TMap<EResourceIdent, int> GetResourceCost() { return resourceIdentCostPair; };
+	FORCEINLINE
+		float GetResourceDemandValue() { return resourceAmount; };
 
 	FORCEINLINE
-		void TickLastUpdated() { lastUpdated++ ; }
+		void TickLastUpdated() { lastUpdated++; }
+
 	FORCEINLINE
 		void SetLastUpdated(float _newValue) { lastUpdated = _newValue; }
 	FORCEINLINE
 		void SetLastResourcePrice(float _newValue) { lastResourcePrice = _newValue; }
-	FORCEINLINE
-		void AddResourceAmount(int _addValue) { resourceAmount += _addValue; }
-	FORCEINLINE
-		void SubtractResourceAmount(int _subValue) { resourceAmount -= _subValue; }
+
 	FORCEINLINE
 		void SetResourceAmount(float _newValue) { resourceAmount = _newValue; }
-	FORCEINLINE
-		void Add_K_Value(float _addValue) { k_Value += _addValue; }
-	FORCEINLINE
-		void Subtract_K_Value(float _subValue) { k_Value -= _subValue; }
-	FORCEINLINE
-		void Set_K_Value(float _newValue) { k_Value = _newValue; }
+
+
 	FORCEINLINE
 		void SetResourceIdent(EResourceIdent _ident) { resourceIdent = _ident; }
 	FORCEINLINE
 		void GetFulfillmentValue(float _fulfillmentValue) { desireFulfillmentValue = _fulfillmentValue; }
+
+	FORCEINLINE
+		void AddResourceAmount(int _addValue) { resourceAmount += _addValue; }
+	FORCEINLINE
+		void SubtractResourceAmount(int _subValue) { resourceAmount -= _subValue; }
+
+	// _scalingFactor = 1.0 + (ResourceAmount - InitialResourceAmount) / InitialResourceAmount
+	FORCEINLINE
+		void UpdateDelta(float _scalingFactor) { demandDelta *= _scalingFactor; }
+
+	FORCEINLINE
+		float GetDelta() { return demandDelta; }
+	FORCEINLINE
+		float GetLambda() { return demandLambda; }
+	FORCEINLINE
+		float GetAlpha() { return demandAlpha; }
 };
 
 USTRUCT(BlueprintType)
@@ -205,14 +225,14 @@ private:
 
 	// To be called on resourceamountchange
 	UFUNCTION()
-		void  UpdateResourcePrice(FIndividualResourceInfo _resourceToUpdate);
+		void  UpdateResourcePrice(FIndividualResourceInfo _resourceToUpdate, bool _sell);
 
 	UFUNCTION()
 		void TickResources();
 
 	UFUNCTION()
 	void InitIndividualResource(float _lastResourcePrice,int _resourceAmount, EResourceIdent _resourceIdent, EProductionSiteType _allowedProductionSite, float _resourceTickRate,
-						        bool _bHasCost, TMap<EResourceIdent, int> _resourceCost, float _desirefulfillmentValue);
+						        bool _bHasCost, TMap<EResourceIdent, int> _resourceCost, float _desirefulfillmentValue, float _delta, float _alpha, float _lambda);
 
 	// Mit jedemn run werden die resourcen wwelche bei den stalls gekauft/verkauf werden können neu generiert
 	UFUNCTION()

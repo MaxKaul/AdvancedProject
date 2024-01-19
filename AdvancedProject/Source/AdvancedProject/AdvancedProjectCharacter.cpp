@@ -64,6 +64,7 @@ void AAdvancedProjectCharacter::InitPlayerStart(FPlayerSaveData _saveData, AMark
 
 	marketManager = _marketManager;
 	workerWorldManager = _workerWorldManager;
+	playerCurrency = _saveData.GetCurrency_S();
 
 	SetActorLocation(_saveData.GetLoaction_S());
 	SetActorRotation(_saveData.GetRotation_S());
@@ -102,7 +103,7 @@ FPlayerSaveData AAdvancedProjectCharacter::GetPlayerSaveData()
 {
 	FPlayerSaveData savedata;
 
-	savedata.InitPlayerSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData(), playerIdent, transportManager->GetTransportManagerSaveData());
+	savedata.InitPlayerSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData(), playerIdent, transportManager->GetTransportManagerSaveData(), playerCurrency);
 
 	return savedata;
 }
