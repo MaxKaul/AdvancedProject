@@ -53,6 +53,8 @@ private:
 		bool InitMarketManager();
 	UFUNCTION()
 		bool InitPlayer();
+	UFUNCTION()
+		void InitFreshPlayer(APlayerBase* _newplayer, EPlayerIdent _ident);
 
 	// Der WorkerWorldManager wird mit save data erst gespawned und dann nach dem spawnen aller spieler Init
 	// -> Der WorkerWorldManager benötigt eine Liste aller productionsites, diese spawnen mit der save data allerdings über den spieler und der spieler benötigt den
@@ -103,11 +105,22 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ManagerSpawns, meta = (AllowPrivateAccess))
 		TArray<FString> savedGames;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
+		TSubclassOf<APlayerBase> aiPlayer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
+		TSubclassOf<class ASpectatorPlayer> spectatorPlayer;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
 		TArray<class APlayerBase*> allPlayer;
 
+	// Max Player count should alwas be <= 4
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
 		int maxPlayerAmount;
+
+	// Set true to deactivate player
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
+		bool bPlayAsSimulated;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess))
 		FVector defaultStartPos;

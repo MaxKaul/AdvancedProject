@@ -58,7 +58,7 @@ void UProductionSiteManager::InitAllProductionSites(FProductionSiteManagerSaveDa
 
 	if (allsavedsites.Num() <= 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager, Init from save data was called, but no save data was found"))
+		//UE_LOG(LogTemp, Warning, TEXT("UProductionSiteManager, Init from save data was called, but no sites have been saved"))
 		return;
 	}
 

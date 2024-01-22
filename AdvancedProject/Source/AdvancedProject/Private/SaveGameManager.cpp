@@ -7,7 +7,11 @@
 #include "PlayerBase.h"
 #include "MarketManager.h"
 #include "Productionsite.h"
+#include "SpectatorPlayer.h"
 #include "AdvancedProject/AdvancedProjectCharacter.h"
+#include "AdvancedProject/AdvancedProjectPlayerController.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "GameFramework/SpectatorPawn.h"
 #include "Kismet/GameplayStatics.h"
 
 ASaveGameManager::ASaveGameManager()
@@ -115,10 +119,6 @@ bool ASaveGameManager::InitAllManager()
 	 FMM_OverloadFuncs* mm_overloadfuncs;
 	 mm_overloadfuncs = new FMM_OverloadFuncs(spawnedMarketManager);
 
-	 // Nur zum testen, der player hat manuel gespawned zu werden
-	 APlayerBase* testplayer = Cast<APlayerBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	 SubscribePlayer(testplayer);
-
 	 if (saveManagerOptionals.marketManagerSaveData.IsSet())
 		 mm_overloadfuncs->InitMarketManager(saveManagerOptionals.marketManagerSaveData.GetValue());
 	 else
@@ -135,25 +135,39 @@ bool ASaveGameManager::InitAllManager()
 
 	 bool status = true;
 
-	// Muss noch etwas geändert werden -> Manueller Spawn + der spieler braucht ein flag um ihn zu unterscheiden für den spawn
+
 	 if (saveManagerOptionals.allPlayerSaveData.IsSet())
 	 {
-		 for (size_t i = 0; i < allPlayer.Num(); i++)
+		 for(FPlayerSaveData data : saveManagerOptionals.allPlayerSaveData.GetValue())
 		 {
-			 allPlayer[i]->InitPlayerStart(saveManagerOptionals.allPlayerSaveData.GetValue()[i], spawnedMarketManager, spawnedWorkerWorldManager);
-
-			 for (AProductionsite* site : allPlayer[i]->GetProductionSiteManager()->GetAllProductionSites())
+			 if(data.GetIdent_S() != EPlayerIdent::PI_Player_1)
 			 {
-				 allSavedProductionsites.Add(site);
+				APlayerBase* aiplayer = world->SpawnActor<APlayerBase>(aiPlayer, defaultStartPos, defaultStartRot);
+				aiplayer->InitPlayerStart(data, spawnedMarketManager, spawnedWorkerWorldManager);
+				allPlayer.Add(aiplayer);
+			 }
+			 else
+			 {
+				 APlayerBase* player = Cast<APlayerBase>(UGameplayStatics::GetPlayerCharacter(world, 0));
+				 player->InitPlayerStart(data, spawnedMarketManager, spawnedWorkerWorldManager);
+				 allPlayer.Add(player);
 			 }
 		 }
 
-		 InitWorkerWorldManager();
+	 	 for(APlayerBase* player : allPlayer)
+	 	 {
+			for(AProductionsite* site : player->GetProductionSiteManager()->GetAllProductionSites())
+			{
+				allSavedProductionsites.Add(site);
+			}
+	 	 }
+	 
+	 	 InitWorkerWorldManager();
 	 }
 	 else
 	 { 
-		 for (size_t i = 0; i < maxPlayerAmount; i++)
-		 {
+	 	 for (size_t i = 0; i < maxPlayerAmount; i++)
+	 	 {
 			 EPlayerIdent ident = EPlayerIdent::PI_DEFAULT;
 
 			 if (i == 0)
@@ -167,15 +181,26 @@ bool ASaveGameManager::InitAllManager()
 			 else
 				 ident = EPlayerIdent::PI_DEFAULT;
 
-			 FPlayerSaveData initsave;
 
-			 // Leere Prodsite save data weil dieser ja keine werte besitzen wird wenn wir neu starten
-			 initsave.InitPlayerSaveData(defaultStartPos, defaultStartRot, FProductionSiteManagerSaveData(), ident, FTransportManagerSaveData(), 500.f);
-			 allPlayer[i]->InitPlayerStart(initsave, spawnedMarketManager, spawnedWorkerWorldManager);
-		 }
+			 if (ident == EPlayerIdent::PI_Player_1 )
+				 InitFreshPlayer(Cast<APlayerBase>(UGameplayStatics::GetPlayerCharacter(world, 0)), ident);
+			else
+				 InitFreshPlayer(world->SpawnActor<APlayerBase>(aiPlayer, defaultStartPos, defaultStartRot), ident);
+	 	 }
 	 }
 
 	 return status;
+ }
+
+ void ASaveGameManager::InitFreshPlayer(APlayerBase* _newplayer, EPlayerIdent _ident)
+ {
+	 FPlayerSaveData initsave;
+
+	 SubscribePlayer(_newplayer);
+
+	 // Leere Prodsite save data weil dieser ja keine werte besitzen wird wenn wir neu starten
+	 initsave.InitPlayerSaveData(defaultStartPos, defaultStartRot, FProductionSiteManagerSaveData(), _ident, FTransportManagerSaveData(), 500.f);
+	 _newplayer->InitPlayerStart(initsave, spawnedMarketManager, spawnedWorkerWorldManager);
  }
 
 
@@ -301,6 +326,12 @@ bool ASaveGameManager::NullcheckDependencies()
 	{
 		status = false;
 		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !workerWorldManagerClass"));
+	}
+
+	if (!aiPlayer)
+	{
+		status = false;
+		UE_LOG(LogTemp, Warning, TEXT("ASaveGameManager !aiPlayer"));
 	}
 
 	return status;

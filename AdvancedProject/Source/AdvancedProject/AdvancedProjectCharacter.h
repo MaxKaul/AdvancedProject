@@ -26,8 +26,6 @@ public:
 	UFUNCTION(BlueprintCallable)FORCEINLINE
 		bool GetOpenProdSitePanel() {return bCanOpenProdSite ;}
 
-	virtual void InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, class AWorkerWorldManager* _workerWorldManager) override;
-
 	UFUNCTION(BlueprintCallable)
 		void BuildTestProductionSite(class ABuildingSite* _chosenSite);
 	UFUNCTION(BlueprintCallable)
@@ -38,9 +36,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void ToggleProdSiteInfoStatus();
-
-protected:
-		virtual FPlayerSaveData GetPlayerSaveData() override;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess ))

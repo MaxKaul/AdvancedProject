@@ -3,6 +3,7 @@
 
 #include "PlayerBase.h"
 
+#include "Builder.h"
 #include "Worker.h"
 
 // Sets default values
@@ -12,13 +13,14 @@ APlayerBase::APlayerBase()
 	PrimaryActorTick.bCanEverTick = true;
 
 	transportManager = CreateDefaultSubobject<UTransportManager>("TransportManager");
+	builder = CreateDefaultSubobject<UBuilder>("Builder");
+	productionSiteManager = CreateDefaultSubobject<UProductionSiteManager>("ProductionSiteManager");
 }
 
 // Called when the game starts or when spawned
 void APlayerBase::BeginPlay()
 {
 	Super::BeginPlay();
-
 
 	FTimerHandle handle;
 	GetWorld()->GetTimerManager().SetTimer(handle, this, &APlayerBase::TickWorkerPayement, payementTickValue);
@@ -93,17 +95,34 @@ void APlayerBase::Tick(float DeltaTime)
 void APlayerBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 FPlayerSaveData APlayerBase::GetPlayerSaveData()
 {
-	return FPlayerSaveData();
+	FPlayerSaveData savedata;
+
+	savedata.InitPlayerSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData(), playerIdent, transportManager->GetTransportManagerSaveData(), playerCurrency);
+
+	return savedata;
 }
 
 void APlayerBase::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager)
 {
 	playerIdent = _saveData.GetIdent_S();
+
+	marketManager = _marketManager;
+	workerWorldManager = _workerWorldManager;
+	playerCurrency = _saveData.GetCurrency_S();
+
+	SetActorLocation(_saveData.GetLoaction_S());
+	SetActorRotation(_saveData.GetRotation_S());
+
+	FTransportManagerSaveData testsavedata;
+
+	builder->InitBuilder(productionSiteManager, marketManager, this, workerWorldManager);
+
+	productionSiteManager->InitProductionSiteManager(this, _saveData.GetProductionSiteManagerSaveData_S(), marketManager, workerWorldManager);
+	transportManager->InitTransportManager(this, _saveData.GeTransportManagerSaveData_S(), marketManager, productionSiteManager);
 }
 
 UProductionSiteManager* APlayerBase::GetProductionSiteManager()

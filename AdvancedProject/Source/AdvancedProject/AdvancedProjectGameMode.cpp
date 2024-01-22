@@ -7,7 +7,6 @@
 
 AAdvancedProjectGameMode::AAdvancedProjectGameMode()
 {
-	// use our custom PlayerController class
 	PlayerControllerClass = AAdvancedProjectPlayerController::StaticClass();
 
 	// set default pawn class to our Blueprinted character
@@ -17,7 +16,6 @@ AAdvancedProjectGameMode::AAdvancedProjectGameMode()
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 
-	// set default controller to our Blueprinted controller
 	static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerBPClass(TEXT("/Game/GameContent/Blueprints/Player/BP_ASPPlayerController"));
 	if(PlayerControllerBPClass.Class != NULL)
 	{

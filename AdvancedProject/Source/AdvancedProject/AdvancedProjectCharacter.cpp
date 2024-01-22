@@ -39,9 +39,6 @@ AAdvancedProjectCharacter::AAdvancedProjectCharacter()
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
-
-	builder = CreateDefaultSubobject<UBuilder>("Builder");
-	productionSiteManager = CreateDefaultSubobject<UProductionSiteManager>("ProductionSiteManager");
 }
 
 void AAdvancedProjectCharacter::Tick(float DeltaSeconds)
@@ -55,26 +52,6 @@ void AAdvancedProjectCharacter::BeginPlay()
 
 	aspController = Cast<AAdvancedProjectPlayerController>(GetController());
 	aspController->InitPlayerController(this);
-}
-
-// Das meiste an Implementation könnte in die base rein
-void AAdvancedProjectCharacter::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager)
-{
-	Super::InitPlayerStart(_saveData, _marketManager, _workerWorldManager);
-
-	marketManager = _marketManager;
-	workerWorldManager = _workerWorldManager;
-	playerCurrency = _saveData.GetCurrency_S();
-
-	SetActorLocation(_saveData.GetLoaction_S());
-	SetActorRotation(_saveData.GetRotation_S());
-
-	FTransportManagerSaveData testsavedata;
-
-	builder->InitBuilder(productionSiteManager, marketManager, this, workerWorldManager);
-
-	productionSiteManager->InitProductionSiteManager(this, _saveData.GetProductionSiteManagerSaveData_S(), marketManager, workerWorldManager);
-	transportManager->InitTransportManager(this, _saveData.GeTransportManagerSaveData_S(), marketManager, productionSiteManager);
 }
 
 void AAdvancedProjectCharacter::BuildTestProductionSite(ABuildingSite* _chosenSite)
@@ -97,15 +74,6 @@ AProductionsite* AAdvancedProjectCharacter::GetViewProductionSiteInfo()
 	}
 
 	return viewProductionSite;
-}
-
-FPlayerSaveData AAdvancedProjectCharacter::GetPlayerSaveData()
-{
-	FPlayerSaveData savedata;
-
-	savedata.InitPlayerSaveData(GetActorLocation(), GetActorRotation(), productionSiteManager->GetProductionSiteManagerSaveData(), playerIdent, transportManager->GetTransportManagerSaveData(), playerCurrency);
-
-	return savedata;
 }
 
 void AAdvancedProjectCharacter::ToggleProdSiteInfoStatus()
