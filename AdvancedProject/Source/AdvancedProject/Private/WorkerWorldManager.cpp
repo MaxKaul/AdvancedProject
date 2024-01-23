@@ -233,10 +233,10 @@ FWorkerDesireBase AWorkerWorldManager::GenerateWorkerAttribute()
 		tablerowref.Add(reinterpret_cast<FAttributeEffetcTableRow*>(item.Value));
 	}
 
-	int rndidx = FMath::RandRange(1, tablerowref[0]->attributeBase.Num());
+	int rndidx = FMath::RandRange(1, tablerowref[0]->GetAttributeBase().Num());
 	EWorkerAttributeIdentifier rndident = (EWorkerAttributeIdentifier)rndidx;
 	
-	FWorkerDesireBase* base = tablerowref[0]->attributeBase.Find(rndident);
+	FWorkerDesireBase* base = tablerowref[0]->GetAttributeBase().Find(rndident);
 
 	return *base;
 }

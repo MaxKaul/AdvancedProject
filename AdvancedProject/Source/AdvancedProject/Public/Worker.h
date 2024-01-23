@@ -245,6 +245,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		float workerSalary;
 
+	// Ich hole mir beides aus dem data table damit ich einfacher mit denen arbeiten kann
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))
 		TMap<EResourceIdent, float> luxuryBiasWeightPair;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = WorkerDesires, meta = (AllowPrivateAccess))

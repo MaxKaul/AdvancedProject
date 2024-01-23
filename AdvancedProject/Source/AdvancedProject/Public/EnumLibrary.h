@@ -83,7 +83,7 @@ enum class EWorkerAttributeIdentifier : uint8
 	WAI_ENTRY_AMOUNT
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum class ETransportOrderStatus : uint8
 {
 	TOS_DEFAULT,
@@ -96,7 +96,7 @@ enum class ETransportOrderStatus : uint8
  * Notizen zu dem TransportManager Problem vom 11.01.24 in Git ( Nur falls ich das vergesse )
  */
 
-UENUM()
+UENUM(BlueprintType)
 enum class ETransportatOrderDirecrtive : uint8
 {
 	TOD_DEFAULT,
@@ -108,11 +108,49 @@ enum class ETransportatOrderDirecrtive : uint8
 	TOD_ENTRY_AMOUNT
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum class EBuildingType : uint8
 {
 	BT_DEFAULT,
 	BT_ProductionSite,
 	BT_MarketStall,
 	BT_ENTRY_AMOUNT 
+};
+
+UENUM(BlueprintType)
+enum class EAIBehaviourIdentifier : uint8
+{
+	AIBI_DEFAULT,
+	AIBI_A1,
+	AIBI_A2,
+	AIBI_A3,
+	AIBI_A4,
+	AIBI_ENTRY_AMOUNT,
+};
+
+UENUM(BlueprintType)
+enum class EAIStates : uint8
+{
+	AIS_DEFAULT,
+	AIS_Wait,
+	AIS_BuyResources,
+	AIS_SellResources,
+	AIS_TransportResources,
+	AIS_BuildSite,
+	AIS_FireWorker,
+	AIS_HireWorker,
+	AIS_AssignWorker,
+	AIS_UnassignWorker,
+	AIS_ENTRY_AMOUNT,
+};
+
+UENUM(BlueprintType)
+enum class EPreferenceType : uint8
+{
+	PT_DEFAULT,
+	PT_HasStatePreference,
+	PT_HasSitePreference,
+	PT_HasBuyPreference,
+	PT_HasSellPreference,
+	PT_ENTRY_AMOUNT
 };

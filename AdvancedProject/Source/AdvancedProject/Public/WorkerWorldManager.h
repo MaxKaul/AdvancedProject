@@ -80,7 +80,6 @@ protected:
 	UFUNCTION()
 		void SubscribeToAssignedPool(AWorker* _toSub);
 
-
 protected:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category=WorkerInfo,meta=(AllowPrivateAccess))
 		TArray<AWorker*> allWorker_Ref;

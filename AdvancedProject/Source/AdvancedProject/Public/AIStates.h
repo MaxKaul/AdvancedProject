@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EnumLibrary.h"
 #include "Components/ActorComponent.h"
 #include "AIStates.generated.h"
 
@@ -13,16 +14,30 @@ class ADVANCEDPROJECT_API UAIStates : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UAIStates();
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+	UFUNCTION()
+		void State_Wait();
+	UFUNCTION()
+		bool State_BuyResources();
+	UFUNCTION()
+		bool State_SellResources();
+	UFUNCTION()
+		bool State_TransportResources();
+	UFUNCTION()
+		bool State_BuildSite();
+	UFUNCTION()
+		bool State_FireWorker();
+	UFUNCTION()
+		bool State_HireWorker();
+	UFUNCTION()
+		bool State_AssignWorker();
+	UFUNCTION()
+		bool State_UnassignWorker();
 };

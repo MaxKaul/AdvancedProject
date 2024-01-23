@@ -75,8 +75,6 @@ private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess), meta = (EditCondition = "bHasResourceCost"))
 		TMap<EResourceIdent, int> resourceIdentCostPair;
 
-
-
 public:
 	FORCEINLINE
 		float GetLastUpdated() { return lastUpdated; }
