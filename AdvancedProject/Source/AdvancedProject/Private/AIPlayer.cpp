@@ -91,6 +91,8 @@ void AAIPlayer::IntiAIPlayer()
 {
 	world = GetWorld();
 
+	states->InitState(this);
+
 	currentState = EAIStates::AIS_Wait;
 
 	stateProbabilityPair =
@@ -105,6 +107,10 @@ void AAIPlayer::IntiAIPlayer()
 		{EAIStates::AIS_UnassignWorker,	0 }
 	};
 
+	validStatesToTick = stateProbabilityPair;
+
+	TickSamples();
+
 	GenerateAIBiases();
 	SetDecisionTimer();
 }
@@ -117,28 +123,27 @@ void AAIPlayer::TickDecision()
 	// Etwas harcode aber fuck it, drecks woche
 	// Alles AIDS hier
 
-
-	for (TTuple<EAIStates, float> updatestate : stateProbabilityPair)
+	for (TTuple<EAIStates, float> updatestate : validStatesToTick)
 	{
+		index++;
+
+		TickSamples();
+
 		float newvalue = updatestate.Value;
-		newvalue += decisionBaseValue;
+		newvalue += FMath::RandRange(decisionBaseValueMin , decisionBaseValueMax);
 		float prefvalue = 1.f;
 
 		if (float value = currentBehaviourBase.GetStatePreferences().Contains(updatestate.Key))
 			prefvalue *= value;
 
 		stateProbabilityPair.Add(updatestate.Key, newvalue);
-
+		
 		if(updatestate.Value >= decisionThreshold)
 		{
 			SetNewState(updatestate.Key);
 			bcanresetself = false;
 			break;
 		}
-
-		// Ich hab keine ahnung aber der ziet sich den dreck von irgendow her aus dem arsch
-		if (updatestate.Key == EAIStates::AIS_DEFAULT || updatestate.Key == EAIStates::AIS_ENTRY_AMOUNT)
-			break;
 	}
 
 	if(bcanresetself)
@@ -149,19 +154,31 @@ void AAIPlayer::TickDecision()
 // Und einmal vom StateChange in der switch, da jeder state damit endet das die ki wieder in den WaitingState zurück geht
 void AAIPlayer::SetDecisionTimer()
 {
+	// Keine ahnung warum, aber SetTimer klappt hier irgendwie net, wenn ich versuche eine UFunc zu binden
+	auto ticklambda = [this]()
+	{
+		TickDecision();
+	};
+
+	FTimerDelegate  currdelegate;
+	currdelegate.BindLambda(ticklambda);
+
 	FTimerHandle handle;
 
 	float time = FMath::RandRange(decicionTickRateMin, decicionTickRateMax);
 
-	world->GetTimerManager().SetTimer(handle, this, &AAIPlayer::TickDecision, time, false, 0);
+	world->GetTimerManager().SetTimer(handle, currdelegate, time, false);
 }
 
 void AAIPlayer::SetNewState(EAIStates _newState)
 {
-	UE_LOG(LogTemp, Warning, TEXT("SetNewState"));
-
 	previousState = currentState;
 	currentState = _newState;
+
+	for (TTuple<EAIStates, float> updatestate : stateProbabilityPair)
+	{
+		stateProbabilityPair.Add(updatestate.Key, 0);
+	}
 
 	SetDecisionTimer();
 }
@@ -188,4 +205,10 @@ void AAIPlayer::GenerateAIBiases()
 	int rnd = FMath::RandRange(1, allavailablebehaviours.Num() - 1);
 
 	currentBehaviourBase = allavailablebehaviours.FindRef((EAIBehaviourIdentifier)rnd);
+}
+
+void AAIPlayer::TickSamples()
+{
+	states->SampleBuyResources();
+	states->SampleBuildSite();
 }

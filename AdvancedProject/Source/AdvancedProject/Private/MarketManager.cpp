@@ -239,7 +239,7 @@ TArray<FResourceTransactionTicket> AMarketManager::SellResources(TArray<FResourc
 			UpdateResourcePrice(resourcelistinfo, true);
 		}
 
-		// Der markt hat keine currency pouch, resourcen sellen besitzzt dementsprechend noch keinen check in dieser richtung
+		// Der markt hat keine currency pouch, resourcen sellen besitzt dementsprechend noch keinen check in dieser richtung
 		returntickets.Add(newticketentry);
 
 		/* Ich benutze hier minSellPricePerResource, ich will das aber erstmal nicht benutzen

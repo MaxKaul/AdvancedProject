@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EnumLibrary.h"
+#include "MarketManager.h"
 #include "Components/ActorComponent.h"
 #include "AIStates.generated.h"
 
@@ -19,8 +20,18 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+private:
+	UPROPERTY()
+		class AAIPlayer* stateOwner;
+
+	UPROPERTY()
+		UWorld* world;
+
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION()
+		void InitState(AAIPlayer* _owner);
 
 	UFUNCTION()
 		void State_Wait();
@@ -40,4 +51,15 @@ public:
 		bool State_AssignWorker();
 	UFUNCTION()
 		bool State_UnassignWorker();
+
+
+	UFUNCTION()
+		void SampleBuyResources();
+	UFUNCTION()
+		TArray<FResourceTransactionTicket> CalculateBuyOrder();
+
+	UFUNCTION()
+		void SampleBuildSite();
+	UFUNCTION()
+		TMap<EProductionSiteType, class ABuildingSite*> ChooseSiteTypePair();
 };

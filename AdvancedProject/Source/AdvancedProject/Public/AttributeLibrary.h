@@ -42,6 +42,7 @@ struct FAIBehaviourBase
 		FAIBehaviourBase() {}
 
 private:
+	// Pref Tabel
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		bool bHasStatePreference;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
@@ -50,7 +51,6 @@ private:
 		bool bHasBuyPreference;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		bool bHasSellPreference;
-
 
 	// Preference weight pair
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess), meta = (EditCondition = "bHasStatePreference"))
@@ -61,6 +61,18 @@ private:
 		TMap<EResourceIdent, float> buyPreference;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess), meta = (EditCondition = "bHasSellPreference"))
 		TMap<EResourceIdent, float> sellPreference;
+
+	// Other stuff
+
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		float productivityGoal;
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		int resourceAmountGoal;
+	// Dividing value to determine what the highest expenditure per buy action in relation to the total amount of currency will be
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		float maxExpenditureDivider;
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		float siteConstructionCooldown;
 
 public:
 	// Mal Schauen ob ich das überhaupt brauche
@@ -91,6 +103,17 @@ public:
 		TMap<EResourceIdent, float>GetBuyPreferences() { return buyPreference; }
 	FORCEINLINE
 		TMap<EResourceIdent, float> GetSellPreferences() { return sellPreference; }
+
+
+	FORCEINLINE
+		float GetProductivityGoal() { return productivityGoal; }
+	FORCEINLINE
+		int GetResourceAmountGoal() { return resourceAmountGoal; }
+	FORCEINLINE
+		float GetExpenditureDivider() { return maxExpenditureDivider; }
+	FORCEINLINE
+		float GetSiteConstructionCooldown() { return siteConstructionCooldown; }
+
 };
 
 

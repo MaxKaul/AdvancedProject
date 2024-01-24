@@ -23,9 +23,6 @@ void AProductionsite::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//if (!bWasInit)
-	//	return;
-
 	if (!NullcheckDependencies())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AProductionsite, !NullcheckDependencies()"))
@@ -252,6 +249,8 @@ void FPS_OverloadFuncs::TickResourceProduction(EResourceIdent _resourceIdent)
 		currdelegate.BindLambda(ticklambda);
 
 		float tickrate = resourcehandlepair.Key.GetResourceTickRate() - overloadOwner->productionSiteProductivity;
+
+
 
 		overloadOwner->world->GetTimerManager().SetTimer(resourcehandlepair.Value, currdelegate, tickrate, false);
 

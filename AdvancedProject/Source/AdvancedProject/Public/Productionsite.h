@@ -263,6 +263,12 @@ public:
 	FORCEINLINE
 		TMap<EResourceIdent, int> GetProductionSitePoolInfo() { return productionSiteResourcePool; }
 
+	FORCEINLINE
+		float GetSiteProductivity() { return productionSiteProductivity; }
+
+	FORCEINLINE
+		EProductionSiteType GetProdSiteType() { return productionSiteType; }
+
 private:
 	UFUNCTION()
 		bool NullcheckDependencies();
