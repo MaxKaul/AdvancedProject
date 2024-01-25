@@ -179,7 +179,7 @@ private:
 	// Ich mach das jetzt etwas dreckig weil ich mit dem overload struct probleme habe persistenz für den owner sicher zu stellen
 	// _overridePos = Wenn ich ein Order mit TOD_ReturnToSite erstellen will brauch ich meine momentane pos (mein erstes goal) für die path länge
 	UFUNCTION()
-	void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, ETransportOrderStatus _orderStatus, class AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective, TMap<EBuildingType, int> _goalTypeIDPair, FVector _overridePos = FVector());
+		void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, ETransportOrderStatus _orderStatus, class AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective, TMap<EBuildingType, int> _goalTypeIDPair, FVector _overridePos = FVector());
 	UFUNCTION()
 		void LoadOrderFromSave(FTransportManagerSaveData _saveData);
 

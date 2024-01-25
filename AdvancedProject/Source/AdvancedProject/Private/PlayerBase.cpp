@@ -106,7 +106,7 @@ FPlayerSaveData APlayerBase::GetPlayerSaveData()
 	return savedata;
 }
 
-void APlayerBase::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager)
+void APlayerBase::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager, TArray<ABuildingSite*> _allBuildingSites)
 {
 	playerIdent = _saveData.GetIdent_S();
 
@@ -123,6 +123,8 @@ void APlayerBase::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _ma
 
 	productionSiteManager->InitProductionSiteManager(this, _saveData.GetProductionSiteManagerSaveData_S(), marketManager, workerWorldManager);
 	transportManager->InitTransportManager(this, _saveData.GeTransportManagerSaveData_S(), marketManager, productionSiteManager);
+
+	allBuildingSites = _allBuildingSites;
 }
 
 UProductionSiteManager* APlayerBase::GetProductionSiteManager()

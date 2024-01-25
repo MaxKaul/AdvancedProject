@@ -129,19 +129,19 @@ enum class EAIBehaviourIdentifier : uint8
 };
 
 UENUM(BlueprintType)
-enum class EAIStates : uint8
+enum class EPossibleAIStates : uint8
 {
-	AIS_DEFAULT,
-	AIS_Wait,
-	AIS_BuyResources,
-	AIS_SellResources,
-	AIS_TransportResources,
-	AIS_BuildSite,
-	AIS_FireWorker,
-	AIS_HireWorker,
-	AIS_AssignWorker,
-	AIS_UnassignWorker,
-	AIS_ENTRY_AMOUNT,
+	PAIS_DEFAULT,
+	PAIS_Wait,
+	PAIS_BuyResources,
+	PAIS_SellResources,
+	PAIS_TransportResources,
+	PAIS_BuildSite,
+	PAIS_FireWorker,
+	PAIS_HireWorker,
+	PAIS_AssignWorker,
+	PAIS_UnassignWorker,
+	PAIS_ENTRY_AMOUNT,
 };
 
 UENUM(BlueprintType)

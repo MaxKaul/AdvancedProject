@@ -54,7 +54,7 @@ private:
 
 	// Preference weight pair
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess), meta = (EditCondition = "bHasStatePreference"))
-		TMap<EAIStates, float> statePreference;
+		TMap<EPossibleAIStates, float> statePreference;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess), meta = (EditCondition = "bHasSitePreference"))
 		TMap<EProductionSiteType, float> sitePreference;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess), meta = (EditCondition = "bHasBuyPreference"))
@@ -73,6 +73,9 @@ private:
 		float maxExpenditureDivider;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		float siteConstructionCooldown;
+	// Hierbei sollte sich die reichweite an dem decision threshold orientieren, dieser wird nähmlich genbutzt um abzurechnen
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+		TMap<EProductionSiteType, float> sitePreferencePair;
 
 public:
 	// Mal Schauen ob ich das überhaupt brauche
@@ -96,7 +99,7 @@ public:
 	}
 
 	FORCEINLINE
-		TMap<EAIStates, float> GetStatePreferences() { return statePreference; }
+		TMap<EPossibleAIStates, float> GetStatePreferences() { return statePreference; }
 	FORCEINLINE
 		TMap<EProductionSiteType, float> GetSitePreferences() { return sitePreference; }
 	FORCEINLINE
@@ -113,6 +116,8 @@ public:
 		float GetExpenditureDivider() { return maxExpenditureDivider; }
 	FORCEINLINE
 		float GetSiteConstructionCooldown() { return siteConstructionCooldown; }
+	FORCEINLINE
+		TMap<EProductionSiteType, float> GetSitePreferenceValuePair() { return sitePreferencePair; }
 
 };
 

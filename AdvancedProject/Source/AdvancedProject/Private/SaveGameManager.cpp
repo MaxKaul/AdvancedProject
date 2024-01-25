@@ -143,13 +143,13 @@ bool ASaveGameManager::InitAllManager()
 			 if(data.GetIdent_S() != EPlayerIdent::PI_Player_1)
 			 {
 				APlayerBase* aiplayer = world->SpawnActor<APlayerBase>(aiPlayer, defaultStartPos, defaultStartRot);
-				aiplayer->InitPlayerStart(data, spawnedMarketManager, spawnedWorkerWorldManager);
+				aiplayer->InitPlayerStart(data, spawnedMarketManager, spawnedWorkerWorldManager, allBuildingSites);
 				allPlayer.Add(aiplayer);
 			 }
 			 else
 			 {
 				 APlayerBase* player = Cast<APlayerBase>(UGameplayStatics::GetPlayerCharacter(world, 0));
-				 player->InitPlayerStart(data, spawnedMarketManager, spawnedWorkerWorldManager);
+				 player->InitPlayerStart(data, spawnedMarketManager, spawnedWorkerWorldManager, allBuildingSites);
 				 allPlayer.Add(player);
 			 }
 		 }
@@ -200,7 +200,7 @@ bool ASaveGameManager::InitAllManager()
 
 	 // Leere Prodsite save data weil dieser ja keine werte besitzen wird wenn wir neu starten
 	 initsave.InitPlayerSaveData(defaultStartPos, defaultStartRot, FProductionSiteManagerSaveData(), _ident, FTransportManagerSaveData(), 500.f);
-	 _newplayer->InitPlayerStart(initsave, spawnedMarketManager, spawnedWorkerWorldManager);
+	 _newplayer->InitPlayerStart(initsave, spawnedMarketManager, spawnedWorkerWorldManager, allBuildingSites);
  }
 
 

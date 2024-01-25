@@ -4,6 +4,7 @@
 #include "AIStates.h"
 
 #include "AIPlayer.h"
+#include "Builder.h"
 
 UAIStates::UAIStates()
 {
@@ -64,6 +65,38 @@ bool UAIStates::State_BuildSite()
 {
 	bool status = true;
 
+	if(stateOwner->allBuildingMeshes.Num() <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UAIStates, stateOwner->allBuildingMeshes.Num() <= 0"));
+		return false;
+	}
+
+	if(!stateOwner->sampleResult_BuildSite.GetValidity())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UAIStates, !stateOwner->sampleResult_BuildSite.GetValidity()"));
+		return false;
+	}
+
+	int rnd = FMath::RandRange(0, stateOwner->allBuildingMeshes.Num());
+
+	UStaticMesh* mesh = stateOwner->allBuildingMeshes[rnd];
+
+	// Jetzt nicht perfekt gibt mir aber die möglichkeit einige errors an der stelle abzufangen
+
+	TMap<EProductionSiteType, ABuildingSite*> typesitepair = stateOwner->sampleResult_BuildSite.GetTypeSitePair();
+
+	if(typesitepair.Num() > 1)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("typesitepair.Num() > 1"));
+		return false;
+	}
+
+	EProductionSiteType type = typesitepair.begin().Key();
+	ABuildingSite* site = typesitepair.begin().Value();
+
+
+	stateOwner->builder->BuildProductionSite(mesh, type, site, stateOwner->marketManager, stateOwner->productionSiteManager->GetAllProductionSites().Num() + 1);
+
 	world->GetTimerManager().SetTimer(stateOwner->buildCooldownHandle, stateOwner->currentBehaviourBase.GetSiteConstructionCooldown(), false);
 
 	return status;
@@ -115,21 +148,21 @@ void UAIStates::SampleBuyResources()
 {
 	if (stateOwner->productionSiteManager->GetAllProductionSites().Num() <= 0 || stateOwner->playerCurrency <= 0)
 	{
-		if (stateOwner->validStatesToTick.Contains(EAIStates::AIS_BuyResources))
-			stateOwner->validStatesToTick.Remove(EAIStates::AIS_BuyResources);
+		if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuyResources))
+			stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_BuyResources);
 	}
 	else
 	{
-		if (!stateOwner->validStatesToTick.Contains(EAIStates::AIS_BuyResources))
-			stateOwner->validStatesToTick.Add(EAIStates::AIS_BuyResources);
+		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuyResources))
+			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_BuyResources);
 
 
 		TArray<FResourceTransactionTicket> calculatedOrder = CalculateBuyOrder();
 
 		if (calculatedOrder.Num() <= 0)
 		{
-			if (stateOwner->validStatesToTick.Contains(EAIStates::AIS_BuyResources))
-				stateOwner->validStatesToTick.Remove(EAIStates::AIS_BuyResources);
+			if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuyResources))
+				stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_BuyResources);
 
 			stateOwner->sampleResult_BuyResources = FStateStatusTicket_BuyResources(false, calculatedOrder);
 		}
@@ -241,28 +274,107 @@ TArray<FResourceTransactionTicket> UAIStates::CalculateBuyOrder()
 	}
 
 	if (returnorder.Num() <= 0)
-		UE_LOG(LogTemp, Warning, TEXT("AAIPlayer, CalculateBuyOrder send out zero orders"))
+		UE_LOG(LogTemp, Warning, TEXT("AAIPlayer, CalculateBuyOrder send out zero orders"));
 
-		return returnorder;
+	return returnorder;
 }
 
 void UAIStates::SampleBuildSite()
 {
-	if (world->GetTimerManager().GetTimerRemaining(stateOwner->buildCooldownHandle) > 0)
+	bool bfreesitesavailable = true;
+	TArray<ABuildingSite*> buildingsites = stateOwner->allBuildingSites;
+	int allinvalids = 0;
+
+	for(ABuildingSite* site : buildingsites)
 	{
-		if (stateOwner->validStatesToTick.Contains(EAIStates::AIS_BuildSite))
-			stateOwner->validStatesToTick.Remove(EAIStates::AIS_BuildSite);
+		if (site->GetBuildStatus())
+			allinvalids++;
+	}
+
+	if (allinvalids >= buildingsites.Num())
+		bfreesitesavailable = false;
+
+	if (world->GetTimerManager().GetTimerRemaining(stateOwner->buildCooldownHandle) > 0 || buildingsites.Num() <= 0 || !bfreesitesavailable)
+	{
+		if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuildSite))
+			stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_BuildSite);
 	}
 	else
 	{
-		if (!stateOwner->validStatesToTick.Contains(EAIStates::AIS_BuildSite))
-			stateOwner->validStatesToTick.Add(EAIStates::AIS_BuildSite);
+		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuildSite))
+			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_BuildSite);
+
+		TMap<EProductionSiteType, ABuildingSite*> chosentypesitepair = ChooseSiteTypePair();
+
+		if(chosentypesitepair.Num() <= 0)
+		{
+			if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuildSite))
+				stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_BuildSite);
+
+			stateOwner->sampleResult_BuildSite = FStateStatusTicket_BuildProdSite(false, ChooseSiteTypePair());
+		}
+
+		stateOwner->sampleResult_BuildSite = FStateStatusTicket_BuildProdSite(true, ChooseSiteTypePair());
 	}
 }
 
+// Muss später vill nochmal überarbeitet werden
+// So wie ich das grasde mache sample ich nur die over all availability und nicht die spezifische, ich könnte wäre im vorhinein zwischen den inneren und äußeren build sites sample
 TMap<EProductionSiteType, ABuildingSite*> UAIStates::ChooseSiteTypePair()
 {
-	TMap<EProductionSiteType, ABuildingSite*> chosensitetype;
+	TMap<EProductionSiteType, ABuildingSite*> chosensitetypepair;
 
-	return chosensitetype;
+	TArray<ABuildingSite*> allbuildingsites = stateOwner->allBuildingSites;
+	TArray<EProductionSiteType> allprodsitetypes = stateOwner->allProdSiteTypes;
+	TMap<EProductionSiteType, float> prefvalues = stateOwner->currentBehaviourBase.GetSitePreferenceValuePair();
+
+
+	float threshold = stateOwner->decisionThreshold;
+
+	ABuildingSite* chosensite;
+	EProductionSiteType chosentype;
+
+
+	for (EProductionSiteType type : allprodsitetypes)
+	{
+		float loss =FMath::RandRange(stateOwner->decicionTickRateMin, stateOwner->decicionTickRateMax);
+
+		if (float prefvalue = prefvalues.Contains(type))
+			loss += prefvalue;
+
+		threshold -= loss;
+
+		if (threshold > 0)
+			continue;
+
+		chosentype = type;
+
+		break;
+	}
+
+	TArray<ABuildingSite*> possiblesites;
+
+
+	for(ABuildingSite* site : allbuildingsites)
+	{
+		if (site->GetAllowedTypes().Contains(chosentype))
+			possiblesites.Add(site);
+	}
+
+	int rnd = FMath::RandRange(0, allbuildingsites.Num());
+
+	for(ABuildingSite* site : allbuildingsites)
+	{
+		if (rnd <= 0)
+		{
+			chosensite = site;
+			break;
+		}
+
+		rnd--;
+	}
+
+	chosensitetypepair.Add(chosentype, chosensite);
+
+	return chosensitetypepair;
 }

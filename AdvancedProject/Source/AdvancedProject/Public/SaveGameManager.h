@@ -81,6 +81,9 @@ private:
 	UPROPERTY()
 		UWorld* world;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = World, meta = (AllowPrivateAccess))
+		TArray<class ABuildingSite*> allBuildingSites;
+
 	UPROPERTY(VisibleAnywhere)
 		TArray<AProductionsite*> allSavedProductionsites;
 

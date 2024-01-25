@@ -65,7 +65,7 @@ public:
 	UFUNCTION()
 		virtual FPlayerSaveData GetPlayerSaveData();
 	UFUNCTION()
-		virtual void InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, class AWorkerWorldManager* workerWorldManager);
+		virtual void InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, class AWorkerWorldManager* workerWorldManager, TArray<ABuildingSite*> _allBuildingSites);
 	UFUNCTION(BlueprintCallable)
 		virtual UProductionSiteManager* GetProductionSiteManager();
 	UFUNCTION(BlueprintCallable)
@@ -96,6 +96,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = PlayerInfo, meta=(AllowPrivateAccess))
 		EPlayerIdent playerIdent;
 
+	UPROPERTY()
+		TArray<ABuildingSite*> allBuildingSites;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess))

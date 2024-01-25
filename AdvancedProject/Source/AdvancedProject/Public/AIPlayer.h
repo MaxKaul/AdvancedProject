@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AttributeLibrary.h"
 #include "PlayerBase.h"
+#include "StateStatusTicketLibrary.h"
 #include "AIPlayer.generated.h"
 
 USTRUCT()
@@ -26,37 +27,8 @@ public:
 		void AddNewTicket(FResourceTransactionTicket _newTicket) { tickets.Add(_newTicket); }
 };
 
-USTRUCT()
-struct FStateStatusTicket_BuyResources
-{
-	GENERATED_BODY()
 
-	FStateStatusTicket_BuyResources(){}
-
-	FStateStatusTicket_BuyResources(bool _isSampleValid, TArray<FResourceTransactionTicket> _transactionTicket)
-	{
-		transactionTickets = _transactionTicket;
-		bIsSampleValid = _isSampleValid;
-	}
-
-private:
-	UPROPERTY()
-		TArray<FResourceTransactionTicket> transactionTickets;
-
-	UPROPERTY()
-		bool bIsSampleValid;
-
-public:
-	FORCEINLINE
-		TArray<FResourceTransactionTicket> GetTransactionTickets() { return transactionTickets; }
-
-	FORCEINLINE
-		bool GetValidity() { return bIsSampleValid; }
-};
-
-
-
-// Ich will mal schaeun das ich was die ai player angeht das so mache das die hier, in AAIPlayer errechnen sollen werlchen state sie erreichen sollen und in EAIStates diese ausführen
+// Ich will mal schaeun das ich was die ai player angeht das so mache das die hier, in AAIPlayer errechnen sollen werlchen state sie erreichen sollen und in EPossibleAIStates diese ausführen
 // bin mir grad nicht sicher obs andersherum nicht besser wäre, aber ich bin die letzten tage ein wenig ausgebrandt also mach ich das ertstmal und reevaluiere das später, muss das nur im hinterkopf behalten
 UCLASS()
 class ADVANCEDPROJECT_API AAIPlayer : public APlayerBase
@@ -66,22 +38,17 @@ class ADVANCEDPROJECT_API AAIPlayer : public APlayerBase
 public:
 	AAIPlayer();
 
-protected:
-	virtual void BeginPlay() override;
-
 public:	
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// Macht grade Init ohne save, muss noch umgebaut werden, soll halt erstmal alles funzen
-	UFUNCTION()
-		void IntiAIPlayer();
+	virtual void InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager, AWorkerWorldManager* _workerWorldManager, TArray<ABuildingSite*> _allBuildingSites) override;
 
 	FORCEINLINE
-		EAIStates GetCurrentState() { return currentState; }
+		EPossibleAIStates GetCurrentState() { return currentState; }
 	FORCEINLINE
-		EAIStates GetPreviousState() { return previousState; }
+		EPossibleAIStates GetPreviousState() { return previousState; }
 
 protected:
 	// Nicht perfekt, ersparrt mir aber jede menge getter und shit
@@ -89,6 +56,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = States, meta = (AllowPrivateAccess))
 		class UAIStates* states;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Building, meta = (AllowPrivateAccess))
+		TArray<UStaticMesh*> allBuildingMeshes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Behaviour, meta = (AllowPrivateAccess))
 		UDataTable* behaviourBaseTable;
@@ -98,16 +68,16 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AIStates, meta = (AllowPrivateAccess))
-		EAIStates currentState;
+		EPossibleAIStates currentState;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AIStates, meta = (AllowPrivateAccess))
-		EAIStates previousState;
+		EPossibleAIStates previousState;
 
 	// This Variable holds the value associated with each possible state that will be compared to the threshhold to progress to another state
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AIStates, meta = (AllowPrivateAccess))
-		TMap<EAIStates, float> stateProbabilityPair;
+		TMap<EPossibleAIStates, float> stateProbabilityPair;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AIStates, meta = (AllowPrivateAccess))
-		TMap<EAIStates, float> validStatesToTick;
+		TMap<EPossibleAIStates, float> validStatesToTick;
 
 	// The calculation will add up for each DecisionTick, should a value of one stateProbabilityPair exceed the decisionThreshold, the state will be executed, all other propabilities will reset and
 	// Once done, the state will be reset to the Wait_State
@@ -120,10 +90,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AIInfo, meta = (AllowPrivateAccess))
 		float decicionTickRateMax;
 
+	// Ich kann mal schauen das ich die decision values füer mehrere base values nehme und die dynamic durch die preferences der attributes regel
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AIInfo, meta = (AllowPrivateAccess))
 		float decisionBaseValueMin;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AIInfo, meta = (AllowPrivateAccess))
 		float decisionBaseValueMax;
+
 
 	UPROPERTY()
 		UWorld* world;
@@ -133,7 +105,10 @@ private:
 	UPROPERTY()
 		FStateStatusTicket_BuyResources sampleResult_BuyResources;
 	UPROPERTY()
-		TMap<EProductionSiteType, class ABuildingSite*> sampleResult_BuildSite;
+		FStateStatusTicket_BuildProdSite sampleResult_BuildSite;
+
+	UPROPERTY()
+		TArray<EProductionSiteType> allProdSiteTypes;
 
 	UPROPERTY()
 		FTimerHandle buildCooldownHandle;
@@ -147,7 +122,7 @@ private:
 		void SetDecisionTimer();
 
 	UFUNCTION()
-		void SetNewState(EAIStates _newState);
+		void SetNewState(EPossibleAIStates _newState);
 
 	UFUNCTION()
 		void GenerateAIBiases();

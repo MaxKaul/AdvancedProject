@@ -12,12 +12,6 @@ AAIPlayer::AAIPlayer()
 	states = CreateDefaultSubobject<UAIStates>("AIStates");
 }
 
-void AAIPlayer::BeginPlay()
-{
-	Super::BeginPlay();
-
-	IntiAIPlayer();
-}
 
 void AAIPlayer::Tick(float DeltaTime)
 {
@@ -31,53 +25,53 @@ void AAIPlayer::Tick(float DeltaTime)
 
 	switch (currentState)
 	{
-	case EAIStates::AIS_Wait:
+	case EPossibleAIStates::PAIS_Wait:
 		states->State_Wait();
 		
 		break;
-	case EAIStates::AIS_BuyResources:
+	case EPossibleAIStates::PAIS_BuyResources:
 		states->State_BuyResources();
-		SetNewState(EAIStates::AIS_Wait);
+		SetNewState(EPossibleAIStates::PAIS_Wait);
 		break;
-	case EAIStates::AIS_SellResources:
+	case EPossibleAIStates::PAIS_SellResources:
 		states->State_SellResources();
-		SetNewState(EAIStates::AIS_Wait);
+		SetNewState(EPossibleAIStates::PAIS_Wait);
 		break;
 
-	case EAIStates::AIS_TransportResources:
+	case EPossibleAIStates::PAIS_TransportResources:
 		states->State_TransportResources();
-		SetNewState(EAIStates::AIS_Wait);
+		SetNewState(EPossibleAIStates::PAIS_Wait);
 		break;
 
-	case EAIStates::AIS_BuildSite:
+	case EPossibleAIStates::PAIS_BuildSite:
 		states->State_BuildSite();
-		SetNewState(EAIStates::AIS_Wait);
+		SetNewState(EPossibleAIStates::PAIS_Wait);
 		break;
 
-	case EAIStates::AIS_FireWorker:
+	case EPossibleAIStates::PAIS_FireWorker:
 		states->State_FireWorker();
-		SetNewState(EAIStates::AIS_Wait);
+		SetNewState(EPossibleAIStates::PAIS_Wait);
 		break;
 
-	case EAIStates::AIS_HireWorker:
+	case EPossibleAIStates::PAIS_HireWorker:
 		states->State_HireWorker();
-		SetNewState(EAIStates::AIS_Wait);
+		SetNewState(EPossibleAIStates::PAIS_Wait);
 		break;
 
-	case EAIStates::AIS_AssignWorker:
+	case EPossibleAIStates::PAIS_AssignWorker:
 		states->State_AssignWorker();
-		SetNewState(EAIStates::AIS_Wait);
+		SetNewState(EPossibleAIStates::PAIS_Wait);
 		break;
 
-	case EAIStates::AIS_UnassignWorker:
+	case EPossibleAIStates::PAIS_UnassignWorker:
 		states->State_UnassignWorker();
-		SetNewState(EAIStates::AIS_Wait);
+		SetNewState(EPossibleAIStates::PAIS_Wait);
 		break;
 
-	case EAIStates::AIS_DEFAULT:
-	case EAIStates::AIS_ENTRY_AMOUNT:
+	case EPossibleAIStates::PAIS_DEFAULT:
+	case EPossibleAIStates::PAIS_ENTRY_AMOUNT:
 		default:
-		UE_LOG(LogTemp,Warning,TEXT("AAIPlayer, AIS_DEFAULT || AIS_ENTRY_AMOUNT || default"))
+		UE_LOG(LogTemp,Warning,TEXT("AAIPlayer, AIS_DEFAULT || PAIS_ENTRY_AMOUNT || default"))
 		break;
 	}
 }
@@ -87,26 +81,42 @@ void AAIPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void AAIPlayer::IntiAIPlayer()
+void AAIPlayer::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _marketManager,
+	AWorkerWorldManager* _workerWorldManager, TArray<ABuildingSite*> _allBuildingSites)
 {
+	Super::InitPlayerStart(_saveData, _marketManager, _workerWorldManager, _allBuildingSites);
+
 	world = GetWorld();
 
 	states->InitState(this);
 
-	currentState = EAIStates::AIS_Wait;
+	currentState = EPossibleAIStates::PAIS_Wait;
 
 	stateProbabilityPair =
 	{
-		{EAIStates::AIS_BuyResources,0 },
-		{EAIStates::AIS_SellResources, 0},
-		{EAIStates::AIS_TransportResources,0 },
-		{EAIStates::AIS_BuildSite, 0},
-		{EAIStates::AIS_FireWorker, 0 },
-		{EAIStates::AIS_HireWorker, 0 },
-		{EAIStates::AIS_AssignWorker, 0 },
-		{EAIStates::AIS_UnassignWorker,	0 }
+		{EPossibleAIStates::PAIS_BuyResources,0 },
+		{EPossibleAIStates::PAIS_SellResources, 0},
+		{EPossibleAIStates::PAIS_TransportResources,0 },
+		{EPossibleAIStates::PAIS_BuildSite, 0},
+		{EPossibleAIStates::PAIS_FireWorker, 0 },
+		{EPossibleAIStates::PAIS_HireWorker, 0 },
+		{EPossibleAIStates::PAIS_AssignWorker, 0 },
+		{EPossibleAIStates::PAIS_UnassignWorker,	0 }
 	};
+	
 
+	allProdSiteTypes =
+	{
+		EProductionSiteType::PST_Ambrosia,
+		EProductionSiteType::PST_Meat,
+		EProductionSiteType::PST_Fruits,
+		EProductionSiteType::PST_Wheat,
+		EProductionSiteType::PST_Hardwood_Resin,
+		EProductionSiteType::PST_Gold_Iron,
+		EProductionSiteType::PST_Furniture_Jewelry,
+		EProductionSiteType::PST_Ambrosia,
+	};						 	
+	
 	validStatesToTick = stateProbabilityPair;
 
 	TickSamples();
@@ -123,7 +133,7 @@ void AAIPlayer::TickDecision()
 	// Etwas harcode aber fuck it, drecks woche
 	// Alles AIDS hier
 
-	for (TTuple<EAIStates, float> updatestate : validStatesToTick)
+	for (TTuple<EPossibleAIStates, float> updatestate : validStatesToTick)
 	{
 		index++;
 
@@ -170,12 +180,12 @@ void AAIPlayer::SetDecisionTimer()
 	world->GetTimerManager().SetTimer(handle, currdelegate, time, false);
 }
 
-void AAIPlayer::SetNewState(EAIStates _newState)
+void AAIPlayer::SetNewState(EPossibleAIStates _newState)
 {
 	previousState = currentState;
 	currentState = _newState;
 
-	for (TTuple<EAIStates, float> updatestate : stateProbabilityPair)
+	for (TTuple<EPossibleAIStates, float> updatestate : stateProbabilityPair)
 	{
 		stateProbabilityPair.Add(updatestate.Key, 0);
 	}
