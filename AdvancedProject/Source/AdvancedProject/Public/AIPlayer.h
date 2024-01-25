@@ -27,7 +27,6 @@ public:
 		void AddNewTicket(FResourceTransactionTicket _newTicket) { tickets.Add(_newTicket); }
 };
 
-
 // Ich will mal schaeun das ich was die ai player angeht das so mache das die hier, in AAIPlayer errechnen sollen werlchen state sie erreichen sollen und in EPossibleAIStates diese ausführen
 // bin mir grad nicht sicher obs andersherum nicht besser wäre, aber ich bin die letzten tage ein wenig ausgebrandt also mach ich das ertstmal und reevaluiere das später, muss das nur im hinterkopf behalten
 UCLASS()

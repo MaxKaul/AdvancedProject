@@ -38,7 +38,19 @@ bool UAIStates::State_BuyResources()
 {
 	bool status = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("State_BuyResources"));
+	if (!stateOwner->sampleResult_BuyResources.GetValidity())
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("UAIStates, !stateOwner->sampleResult_BuyResources.GetValidity()"));
+		return false;
+	}
+
+	TArray<FResourceTransactionTicket> tickets = stateOwner->sampleResult_BuyResources.GetTransactionTickets();
+	AProductionsite* owningsite = stateOwner->sampleResult_BuyResources.GetOwningSite();
+
+	TMap<EBuildingType, int> goalidx;
+	goalidx.Add(EBuildingType::BT_MarketStall, 0);
+
+	stateOwner->transportManager->CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToMarket, owningsite, ETransportatOrderDirecrtive::TOD_BuyResources, goalidx);
 
 	return status;
 }
@@ -77,9 +89,8 @@ bool UAIStates::State_BuildSite()
 		return false;
 	}
 
-	int rnd = FMath::RandRange(0, stateOwner->allBuildingMeshes.Num());
 
-	UStaticMesh* mesh = stateOwner->allBuildingMeshes[rnd];
+	UStaticMesh* mesh = stateOwner->allBuildingMeshes[0];
 
 	// Jetzt nicht perfekt gibt mir aber die möglichkeit einige errors an der stelle abzufangen
 
@@ -154,33 +165,32 @@ void UAIStates::SampleBuyResources()
 	else
 	{
 		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuyResources))
-			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_BuyResources);
+			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_BuyResources, stateOwner->stateProbabilityPair.FindRef(EPossibleAIStates::PAIS_BuyResources));
 
+		FStateStatusTicket_BuyResources calculatedOrder = CalculateBuyOrder();
 
-		TArray<FResourceTransactionTicket> calculatedOrder = CalculateBuyOrder();
-
-		if (calculatedOrder.Num() <= 0)
+		if (calculatedOrder.GetTransactionTickets().Num() <= 0)
 		{
 			if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuyResources))
 				stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_BuyResources);
 
-			stateOwner->sampleResult_BuyResources = FStateStatusTicket_BuyResources(false, calculatedOrder);
+			stateOwner->sampleResult_BuyResources = FStateStatusTicket_BuyResources(false, calculatedOrder.GetTransactionTickets(), calculatedOrder.GetOwningSite());
 		}
 		else
-			stateOwner->sampleResult_BuyResources = FStateStatusTicket_BuyResources(true, calculatedOrder);
+			stateOwner->sampleResult_BuyResources = FStateStatusTicket_BuyResources(true, calculatedOrder.GetTransactionTickets(), calculatedOrder.GetOwningSite());
 	}
 }
 
 // Eine BuyAction ist EINE action, bedeutet ich kaufe resourcen für EINE Site aber rechne im vorhinein aus welche möglichen order ich für alle sites haben kann
 // Und nehme daruas dann ein zufällige
 // -> Ich muss für das kaufen ja auch noch in betracht ziehen das eine prod site unter umständen keine resourcen benötigt, sondern nur worker zum produzieren
-TArray<FResourceTransactionTicket> UAIStates::CalculateBuyOrder()
+FStateStatusTicket_BuyResources UAIStates::CalculateBuyOrder()
 {
 	TArray<AProductionsite*> allsite = stateOwner->productionSiteManager->GetAllProductionSites();
 	TMap<EResourceIdent, FIndividualResourceInfo> marketpoolinfo = stateOwner->marketManager->GetPoolInfo();
-	TArray<FResourceTransactionTicket> returnorder;
+	FStateStatusTicket_BuyResources returnticket;
 
-	// Das ist ja grade auch immer nur ein ticket prod site einrag, es können aber mehr pro site sein, also sollte ich das in ein struct *yay* wrappen
+	// Das ist ja grade auch immer nur ein ticket array prod site einrag, es können aber mehr pro site sein, also sollte ich das in ein struct *yay* wrappen
 	TMap<AProductionsite*, FPossibleBuyOrders> possiblesiteorderpairs;
 
 	float expendituredivider = stateOwner->currentBehaviourBase.GetExpenditureDivider();
@@ -208,12 +218,21 @@ TArray<FResourceTransactionTicket> UAIStates::CalculateBuyOrder()
 			if (resourceamount > stateOwner->currentBehaviourBase.GetResourceAmountGoal())
 				continue;
 
-			resourcestobuy.Add(resource.GetResourceIdent(), stateOwner->currentBehaviourBase.GetResourceAmountGoal() - resourceamount);
+			// ich loope durch alle resourcen durch welche ich brauche und adde diese dann für die buy order nachdem ich diese durch die menge an idents geteilt habe,
+			// Sollte in theorie dafür sorgen das die buy order gleichmäßig auf alle resourcen verteilt wird
+			// Das ist dann im moment noch nicht an die benötigte menge angepasst
+			for(TTuple<EResourceIdent, int> identcostpair : resource.GetResourceCost())
+			{
+				resourcestobuy.Add(identcostpair.Key, (stateOwner->currentBehaviourBase.GetResourceAmountGoal() - resourceamount) / resource.GetResourceCost().Num());
+			}
 		}
 
 		// Wenn auf dieser site keine resourcen benötigt werden, continue zur nächsten
 		if (resourcestobuy.Num() <= 0)
 			continue;
+
+		// On a per site thing
+		FPossibleBuyOrders possiblebuyorder;
 
 		// Value = Amount
 		for (TTuple<EResourceIdent, int> buyresource : resourcestobuy)
@@ -226,7 +245,10 @@ TArray<FResourceTransactionTicket> UAIStates::CalculateBuyOrder()
 			// Hierdurch sollte ich eign nichtmehr checken müssen ob ich genügend money habe im anschluss
 			float possibleexpenditure = availablecurrency / expendituredivider;
 
+			possibleexpenditure /= resourcestobuy.Num();
+
 			int amounttobuy = possibleexpenditure / lastprice;
+			// Ref kommentar Z. 221-223
 
 			if (amounttobuy <= 0)
 				continue;
@@ -240,43 +262,49 @@ TArray<FResourceTransactionTicket> UAIStates::CalculateBuyOrder()
 			// Jetzt habe ich eign meinen amount to buy u. die menge an currency welche mitgegebn werden muss
 			availablecurrency -= possibleexpenditure;
 
+			amounttobuy /= resourcestobuy.Num();
+
+			float exchangeamount = amounttobuy * lastprice;
+
 			FResourceTransactionTicket newticket =
 			{
 				amounttobuy,
-				possibleexpenditure,
+				exchangeamount,
 				buyresource.Key,
 				99999,
 				0
 			};
 
-			FPossibleBuyOrders possiblebuyorder;
-
 			possiblebuyorder.AddNewTicket(newticket);
-
-			possiblesiteorderpairs.Add(site, possiblebuyorder);
 		}
+
+		possiblesiteorderpairs.Add(site, possiblebuyorder);
 	}
 
-	if (possiblesiteorderpairs.Num() <= 0)
-		UE_LOG(LogTemp, Warning, TEXT("AAIPlayer ,possiblesiteorderpairs.Num() <= 0"));
-
-	int rnd = FMath::RandRange(0, possiblesiteorderpairs.Num());
-
-	for (TTuple<AProductionsite*, FPossibleBuyOrders> orderpair : possiblesiteorderpairs)
+	if (possiblesiteorderpairs.Num() > 0)
 	{
-		if (rnd <= 0)
+		int rnd = FMath::RandRange(0, possiblesiteorderpairs.Num());
+
+		for (TTuple<AProductionsite*, FPossibleBuyOrders> orderpair : possiblesiteorderpairs)
 		{
-			returnorder = orderpair.Value.GetTickets();
-			break;
+			if (rnd <= 0)
+			{
+				returnticket =
+				{
+					true,
+					orderpair.Value.GetTickets(),
+					orderpair.Key
+				};
+
+				break;
+			}
+
+			rnd--;
 		}
-
-		rnd--;
 	}
+	// else ist dann eh ein leeres ticket
 
-	if (returnorder.Num() <= 0)
-		UE_LOG(LogTemp, Warning, TEXT("AAIPlayer, CalculateBuyOrder send out zero orders"));
-
-	return returnorder;
+	return returnticket;
 }
 
 void UAIStates::SampleBuildSite()
@@ -302,7 +330,7 @@ void UAIStates::SampleBuildSite()
 	else
 	{
 		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuildSite))
-			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_BuildSite);
+			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_BuildSite, stateOwner->stateProbabilityPair.FindRef(EPossibleAIStates::PAIS_BuildSite));
 
 		TMap<EProductionSiteType, ABuildingSite*> chosentypesitepair = ChooseSiteTypePair();
 
@@ -335,22 +363,23 @@ TMap<EProductionSiteType, ABuildingSite*> UAIStates::ChooseSiteTypePair()
 	EProductionSiteType chosentype;
 
 
-	for (EProductionSiteType type : allprodsitetypes)
+	// Könnte unter umständen AIDS werden
+	while(threshold > 0)
 	{
-		float loss =FMath::RandRange(stateOwner->decicionTickRateMin, stateOwner->decicionTickRateMax);
+		for (EProductionSiteType type : allprodsitetypes)
+		{
+			float loss = FMath::RandRange(stateOwner->decicionTickRateMin, stateOwner->decicionTickRateMax);
 
-		if (float prefvalue = prefvalues.Contains(type))
-			loss += prefvalue;
+			if (float prefvalue = prefvalues.Contains(type))
+				loss += prefvalue;
 
-		threshold -= loss;
+			threshold -= loss;
 
-		if (threshold > 0)
-			continue;
-
-		chosentype = type;
-
-		break;
+			// Ich mach das mal so damit ich immer emit einem value aus der while gehe
+			chosentype = type;
+		}
 	}
+
 
 	TArray<ABuildingSite*> possiblesites;
 

@@ -672,7 +672,6 @@ void AWorker::ActivateDebugAction()
 
 void AWorker::InvalidateDebugTimer()
 {
-	UE_LOG(LogTemp, Warning, TEXT("InvalidateDebugTimer"));
-	bIsDebugActive = false;
+ 	bIsDebugActive = false;
 	world->GetTimerManager().ClearTimer(debugTimerHandle);
 }

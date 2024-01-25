@@ -11,10 +11,11 @@ struct FStateStatusTicket_BuyResources
 
 		FStateStatusTicket_BuyResources() {}
 
-	FStateStatusTicket_BuyResources(bool _isSampleValid, TArray<FResourceTransactionTicket> _transactionTicket)
+	FStateStatusTicket_BuyResources(bool _isSampleValid, TArray<FResourceTransactionTicket> _transactionTicket, class AProductionsite* _owningSite)
 	{
 		transactionTickets = _transactionTicket;
 		bIsSampleValid = _isSampleValid;
+		owningSite = _owningSite;
 	}
 
 private:
@@ -22,11 +23,16 @@ private:
 		TArray<FResourceTransactionTicket> transactionTickets;
 
 	UPROPERTY()
+		AProductionsite* owningSite;
+
+	UPROPERTY()
 		bool bIsSampleValid;
 
 public:
 	FORCEINLINE
 		TArray<FResourceTransactionTicket> GetTransactionTickets() { return transactionTickets; }
+	FORCEINLINE
+		AProductionsite* GetOwningSite() { return owningSite; }
 
 	FORCEINLINE
 		bool GetValidity() { return bIsSampleValid; }

@@ -53,23 +53,23 @@ public:
 	}
 
 private:
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
 		TArray<FResourceTransactionTicket> transactionOrder;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
 		float timeRemaining;
 
 	// Ich "weiß" ob mein goalactor der markt oder eine production site ist über den transportOrderStatus (nicht perfekt aber so muss ich die ganze buy und sell logik nicht refaktorieren)
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
 		TMap<EBuildingType, int> goalTypeIDPair;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
 		ETransportOrderStatus transportOrderStatus;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
 		int owningSiteID;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess))
 		ETransportatOrderDirecrtive transportDirective;
 
 	UPROPERTY()
@@ -175,15 +175,18 @@ private:
 	UFUNCTION()
 		AActor* GetGoalActor(TMap<EBuildingType, int> _goalTypeIDPair);
 
-	// Ich nehmen den goal actor raus und mache diesen dann komplett abhängig von der tranportation directive
-	// Ich mach das jetzt etwas dreckig weil ich mit dem overload struct probleme habe persistenz für den owner sicher zu stellen
-	// _overridePos = Wenn ich ein Order mit TOD_ReturnToSite erstellen will brauch ich meine momentane pos (mein erstes goal) für die path länge
-	UFUNCTION()
-		void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, ETransportOrderStatus _orderStatus, class AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective, TMap<EBuildingType, int> _goalTypeIDPair, FVector _overridePos = FVector());
+
 	UFUNCTION()
 		void LoadOrderFromSave(FTransportManagerSaveData _saveData);
 
 	// Ich will die menge an resourcen in meinem owner pool samplen wenn ich eine deduction order von ihr herraus sende und unter dem umstand die menge an resourcen <= 0 ist 0 geben u./o. < gewünschte menge den rest herrausgeben
 	UFUNCTION()
 		TArray<FResourceTransactionTicket> SampleSitePool(TArray<FResourceTransactionTicket> _ticketsToCheck, class AProductionsite* _siteToSample);
+
+public:
+	// Ich nehmen den goal actor raus und mache diesen dann komplett abhängig von der tranportation directive
+	// Ich mach das jetzt etwas dreckig weil ich mit dem overload struct probleme habe persistenz für den owner sicher zu stellen
+	// _overridePos = Wenn ich ein Order mit TOD_ReturnToSite erstellen will brauch ich meine momentane pos (mein erstes goal) für die path länge
+	UFUNCTION()
+		void CreateTransportOrder(TArray<FResourceTransactionTicket> _transaction, ETransportOrderStatus _orderStatus, class AProductionsite* _owningSite, ETransportatOrderDirecrtive _transportDirective, TMap<EBuildingType, int> _goalTypeIDPair, FVector _overridePos = FVector());
 };

@@ -90,7 +90,7 @@ void AAIPlayer::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _mark
 
 	states->InitState(this);
 
-	currentState = EPossibleAIStates::PAIS_Wait;
+	currentState = EPossibleAIStates::PAIS_BuildSite;
 
 	stateProbabilityPair =
 	{
@@ -127,27 +127,29 @@ void AAIPlayer::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _mark
 
 void AAIPlayer::TickDecision()
 {
-	int index = 0;
 	bool bcanresetself = true;
 
 	// Etwas harcode aber fuck it, drecks woche
 	// Alles AIDS hier
-
+	// Der wirft hier nen error, könnte sein das das wegen meiner runtime manipulation ist, aber lässt das programm jetzt auch nicht abschmieren
 	for (TTuple<EPossibleAIStates, float> updatestate : validStatesToTick)
 	{
-		index++;
-
 		TickSamples();
+
+		if(updatestate.Key != EPossibleAIStates::PAIS_BuyResources)
+			continue;
+
 
 		float newvalue = updatestate.Value;
 		newvalue += FMath::RandRange(decisionBaseValueMin , decisionBaseValueMax);
 		float prefvalue = 1.f;
 
+
 		if (float value = currentBehaviourBase.GetStatePreferences().Contains(updatestate.Key))
 			prefvalue *= value;
 
 		stateProbabilityPair.Add(updatestate.Key, newvalue);
-		
+
 		if(updatestate.Value >= decisionThreshold)
 		{
 			SetNewState(updatestate.Key);
@@ -185,9 +187,17 @@ void AAIPlayer::SetNewState(EPossibleAIStates _newState)
 	previousState = currentState;
 	currentState = _newState;
 
+	int idx = 0;
+
+	// Iterated auch +1, dreck
 	for (TTuple<EPossibleAIStates, float> updatestate : stateProbabilityPair)
 	{
 		stateProbabilityPair.Add(updatestate.Key, 0);
+
+		idx++;
+
+		if (idx >= stateProbabilityPair.Num())
+			break;
 	}
 
 	SetDecisionTimer();

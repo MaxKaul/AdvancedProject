@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "EnumLibrary.h"
 #include "MarketManager.h"
+#include "StateStatusTicketLibrary.h"
 #include "Components/ActorComponent.h"
 #include "AIStates.generated.h"
 
@@ -56,7 +57,7 @@ public:
 	UFUNCTION()
 		void SampleBuyResources();
 	UFUNCTION()
-		TArray<FResourceTransactionTicket> CalculateBuyOrder();
+		FStateStatusTicket_BuyResources CalculateBuyOrder();
 
 	UFUNCTION()
 		void SampleBuildSite();

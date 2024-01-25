@@ -57,6 +57,12 @@ bool UBuilder::BuildProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _
 {
 	bool status = false;
 
+	if(!_buildingSite)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UBuilder, !_buildingSite"));
+		return false;
+	}
+
 	// Jeder buildingsdite hat erlaubte productiontype, hier teste ich gegen
 	for(EProductionSiteType type : _buildingSite->GetAllowedTypes())
 	{
