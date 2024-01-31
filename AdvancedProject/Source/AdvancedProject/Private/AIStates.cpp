@@ -52,6 +52,11 @@ bool UAIStates::State_BuyResources()
 
 	stateOwner->transportManager->CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToMarket, owningsite, ETransportatOrderDirecrtive::TOD_BuyResources, goalidx);
 
+	for (FResourceTransactionTicket ticket : tickets)
+	{
+		stateOwner->AddOrDeductCurrency(-ticket.exchangedCapital);
+	}
+
 	return status;
 }
 
@@ -285,9 +290,25 @@ FStateStatusTicket_BuyResources UAIStates::CalculateBuyOrder()
 	{
 		int rnd = FMath::RandRange(0, possiblesiteorderpairs.Num());
 
+		TMap<EResourceIdent, float> buypref = stateOwner->currentBehaviourBase.GetBuyPreferences();
+		TArray<EResourceIdent> prefidents;
+		buypref.GenerateKeyArray(prefidents);
+
+		float prefpropability = 0.f;
+
 		for (TTuple<AProductionsite*, FPossibleBuyOrders> orderpair : possiblesiteorderpairs)
 		{
-			if (rnd <= 0)
+			// Für die buy pref
+			for(FResourceTransactionTicket ordertickets : orderpair.Value.GetTickets())
+			{
+				if (prefidents.Contains(ordertickets.resourceIdent))
+					prefpropability += buypref.FindRef(ordertickets.resourceIdent);
+
+				if (prefpropability >= stateOwner->decisionThreshold)
+					break;
+			}
+
+			if (rnd <= 0 || prefpropability >= stateOwner->decisionThreshold)
 			{
 				returnticket =
 				{
@@ -362,6 +383,21 @@ TMap<EProductionSiteType, ABuildingSite*> UAIStates::ChooseSiteTypePair()
 	ABuildingSite* chosensite;
 	EProductionSiteType chosentype;
 
+	TArray<int32> shufflearray;
+
+
+	if (allprodsitetypes.Num() > 0)
+	{
+		int32 LastIndex = allprodsitetypes.Num() - 1;
+		for (int32 i = 0; i <= LastIndex; ++i)
+		{
+			int32 Index = FMath::RandRange(i, LastIndex);
+			if (i != Index)
+			{
+				allprodsitetypes.Swap(i, Index);
+			}
+		}
+	}
 
 	// Könnte unter umständen AIDS werden
 	while(threshold > 0)

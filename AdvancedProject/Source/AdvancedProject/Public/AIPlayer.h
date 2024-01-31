@@ -78,6 +78,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AIStates, meta = (AllowPrivateAccess))
 		TMap<EPossibleAIStates, float> validStatesToTick;
 
+
 	// The calculation will add up for each DecisionTick, should a value of one stateProbabilityPair exceed the decisionThreshold, the state will be executed, all other propabilities will reset and
 	// Once done, the state will be reset to the Wait_State
 	// If two or more states exceed the threshold, one will be choosen at random
@@ -99,6 +100,8 @@ private:
 	UPROPERTY()
 		UWorld* world;
 
+	UPROPERTY()
+		FTimerHandle tickHandle;
 
 	// Was ich noch machen könnte wäre mir ein weiteres layer anlegen damit ich die alle in einem struct habne kann
 	UPROPERTY()

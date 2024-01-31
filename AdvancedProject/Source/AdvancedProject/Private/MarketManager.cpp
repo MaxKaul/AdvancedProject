@@ -67,10 +67,7 @@ void FMM_OverloadFuncs::InitMarketManager()
 TArray<FMarketStallSaveData> AMarketManager::GenerateStallTypes()
 {
 	TArray<FMarketStallSaveData> stallsave;
-
 	TArray<EResourceIdent> allresources;
-	TArray<int32> shufflearray;
-
 	TArray<EResourceIdent> usedresources;
 
 	for (size_t j = 1; j < (int)EResourceIdent::ERI_ENTRY_AMOUNT; j++)

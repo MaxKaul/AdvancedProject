@@ -132,31 +132,63 @@ void AAIPlayer::TickDecision()
 	// Etwas harcode aber fuck it, drecks woche
 	// Alles AIDS hier
 	// Der wirft hier nen error, könnte sein das das wegen meiner runtime manipulation ist, aber lässt das programm jetzt auch nicht abschmieren
-	for (TTuple<EPossibleAIStates, float> updatestate : validStatesToTick)
+
+
+	for (int i = (int)validStatesToTick.begin().Key(); i != (int)validStatesToTick.end().Key(); i++)
 	{
+		EPossibleAIStates stateident = (EPossibleAIStates)i;
+		float statevalue = validStatesToTick.FindRef(stateident);
+		
+
 		TickSamples();
 
-		if(updatestate.Key != EPossibleAIStates::PAIS_BuyResources)
+		if (stateident != EPossibleAIStates::PAIS_BuyResources)
 			continue;
 
 
-		float newvalue = updatestate.Value;
-		newvalue += FMath::RandRange(decisionBaseValueMin , decisionBaseValueMax);
+		float newvalue = statevalue;
+		newvalue += FMath::RandRange(decisionBaseValueMin, decisionBaseValueMax);
 		float prefvalue = 1.f;
 
 
-		if (float value = currentBehaviourBase.GetStatePreferences().Contains(updatestate.Key))
+		if (float value = currentBehaviourBase.GetStatePreferences().Contains(stateident))
 			prefvalue *= value;
 
-		stateProbabilityPair.Add(updatestate.Key, newvalue);
+		stateProbabilityPair.Add(stateident, newvalue);
 
-		if(updatestate.Value >= decisionThreshold)
+		if (statevalue >= decisionThreshold)
 		{
-			SetNewState(updatestate.Key);
+			SetNewState(stateident);
 			bcanresetself = false;
 			break;
 		}
 	}
+
+	//for (TTuple<EPossibleAIStates, float> updatestate : validStatesToTick)
+	//{
+	//	TickSamples();
+	//
+	//	if(updatestate.Key != EPossibleAIStates::PAIS_BuyResources)
+	//		continue;
+	//
+	//
+	//	float newvalue = updatestate.Value;
+	//	newvalue += FMath::RandRange(decisionBaseValueMin , decisionBaseValueMax);
+	//	float prefvalue = 1.f;
+	//
+	//
+	//	if (float value = currentBehaviourBase.GetStatePreferences().Contains(updatestate.Key))
+	//		prefvalue *= value;
+	//
+	//	stateProbabilityPair.Add(updatestate.Key, newvalue);
+	//
+	//	if(updatestate.Value >= decisionThreshold)
+	//	{
+	//		SetNewState(updatestate.Key);
+	//		bcanresetself = false;
+	//		break;
+	//	}
+	//}
 
 	if(bcanresetself)
 		SetDecisionTimer();
@@ -166,6 +198,9 @@ void AAIPlayer::TickDecision()
 // Und einmal vom StateChange in der switch, da jeder state damit endet das die ki wieder in den WaitingState zurück geht
 void AAIPlayer::SetDecisionTimer()
 {
+	if (world->GetTimerManager().GetTimerRemaining(tickHandle) > 0)
+		return;
+
 	// Keine ahnung warum, aber SetTimer klappt hier irgendwie net, wenn ich versuche eine UFunc zu binden
 	auto ticklambda = [this]()
 	{
@@ -179,7 +214,8 @@ void AAIPlayer::SetDecisionTimer()
 
 	float time = FMath::RandRange(decicionTickRateMin, decicionTickRateMax);
 
-	world->GetTimerManager().SetTimer(handle, currdelegate, time, false);
+
+	world->GetTimerManager().SetTimer(tickHandle, currdelegate, time, false);
 }
 
 void AAIPlayer::SetNewState(EPossibleAIStates _newState)
