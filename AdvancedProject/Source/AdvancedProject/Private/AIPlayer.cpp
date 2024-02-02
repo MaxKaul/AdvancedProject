@@ -142,8 +142,8 @@ void AAIPlayer::TickDecision()
 
 		TickSamples();
 
-		if (stateident != EPossibleAIStates::PAIS_BuyResources)
-			continue;
+		//if (stateident != EPossibleAIStates::PAIS_BuyResources)
+		//	continue;
 
 
 		float newvalue = statevalue;
