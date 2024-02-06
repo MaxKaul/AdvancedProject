@@ -27,6 +27,72 @@ public:
 		void AddNewTicket(FResourceTransactionTicket _newTicket) { tickets.Add(_newTicket); }
 };
 
+// Kack name, ich weiß
+// Struct zum cachen der Info was und wie viel ich auf welche site transportieren kann
+//USTRUCT(BlueprintType)
+//struct FTransportSample_Deliver
+//{
+//	GENERATED_BODY()
+//
+//	FTransportSample_Deliver(){}
+//
+//
+//	FTransportSample_Deliver(AProductionsite* _site, EResourceIdent _resourceIdent, float _amount)
+//	{
+//		site = _site;
+//		resourceIdent = _resourceIdent;
+//		amount = _amount;
+//	}
+//
+//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
+//		FString structName = FString("NONE");
+//
+//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
+//		FString structID = FString("NONE");
+//
+//public:
+//	FORCEINLINE
+//		bool operator==(const  FTransportSample_Deliver& _other) const
+//	{
+//		return Equals(_other);
+//	}
+//
+//	FORCEINLINE
+//		bool operator!=(const  FTransportSample_Deliver& _other) const
+//	{
+//		return !Equals(_other);
+//	}
+//
+//	FORCEINLINE
+//		bool Equals(const  FTransportSample_Deliver& _other) const
+//	{
+//		return structName == _other.structName && structID == _other.structID;
+//	}
+//
+//private:
+//	UPROPERTY()
+//		AProductionsite* site;
+//	UPROPERTY()
+//		EResourceIdent resourceIdent;
+//	UPROPERTY()
+//		float amount;
+//
+//public:
+//	FORCEINLINE
+//		AProductionsite* GetSite() { return site; }
+//	FORCEINLINE
+//		EResourceIdent GetResourceIdent() { return resourceIdent; }
+//	FORCEINLINE
+//		float GetAmount() { return amount; }
+//};
+
+//FORCEINLINE uint32 GetTypeHash(const  FTransportSample_Deliver& _this)
+//{
+//	const uint32 Hash = FCrc::MemCrc32(&_this, sizeof(FTransportSample_Deliver));
+//	return Hash;
+//}
+
+
 // Ich will mal schaeun das ich was die ai player angeht das so mache das die hier, in AAIPlayer errechnen sollen werlchen state sie erreichen sollen und in EPossibleAIStates diese ausführen
 // bin mir grad nicht sicher obs andersherum nicht besser wäre, aber ich bin die letzten tage ein wenig ausgebrandt also mach ich das ertstmal und reevaluiere das später, muss das nur im hinterkopf behalten
 UCLASS()
@@ -78,6 +144,8 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AIStates, meta = (AllowPrivateAccess))
 		TMap<EPossibleAIStates, float> validStatesToTick;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AIStates, meta = (AllowPrivateAccess))
+		TMap<EPossibleAIStates, float> currentTickStates;
 
 	// The calculation will add up for each DecisionTick, should a value of one stateProbabilityPair exceed the decisionThreshold, the state will be executed, all other propabilities will reset and
 	// Once done, the state will be reset to the Wait_State
@@ -108,6 +176,8 @@ private:
 		FStateStatusTicket_BuyResources sampleResult_BuyResources;
 	UPROPERTY()
 		FStateStatusTicket_BuildProdSite sampleResult_BuildSite;
+	UPROPERTY()
+		FStateStatusTicket_TransportResources sampleResult_TransportResources;
 
 	UPROPERTY()
 		TArray<EProductionSiteType> allProdSiteTypes;

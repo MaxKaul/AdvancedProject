@@ -61,6 +61,13 @@ public:
 
 	UFUNCTION()
 		void SampleBuildSite();
+	// Ich sollte bei zeiten vill mal schauen warum ich dort nicht die sampleresults zurück geben wollte
 	UFUNCTION()
 		TMap<EProductionSiteType, class ABuildingSite*> ChooseSiteTypePair();
+
+	
+	UFUNCTION()
+		void SampleTransportResources();
+	UFUNCTION()
+		FStateStatusTicket_TransportResources ChooseTransportationTarget();
 };

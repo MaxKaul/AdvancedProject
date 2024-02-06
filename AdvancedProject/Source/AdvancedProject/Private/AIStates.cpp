@@ -368,7 +368,7 @@ void UAIStates::SampleBuildSite()
 }
 
 // Muss später vill nochmal überarbeitet werden
-// So wie ich das grasde mache sample ich nur die over all availability und nicht die spezifische, ich könnte wäre im vorhinein zwischen den inneren und äußeren build sites sample
+// So wie ich das grasde mache sample ich nur die over all availability und nicht die spezifische, ich könnte im vorhinein zwischen den inneren und äußeren build sites sample -> i.e allowed sites
 TMap<EProductionSiteType, ABuildingSite*> UAIStates::ChooseSiteTypePair()
 {
 	TMap<EProductionSiteType, ABuildingSite*> chosensitetypepair;
@@ -442,4 +442,94 @@ TMap<EProductionSiteType, ABuildingSite*> UAIStates::ChooseSiteTypePair()
 	chosensitetypepair.Add(chosentype, chosensite);
 
 	return chosensitetypepair;
+}
+
+void UAIStates::SampleTransportResources()
+{
+	if(stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() <= 1)
+	{
+		if(stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_TransportResources))
+			stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_TransportResources);
+	}
+	else if(stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() > 1)
+	{
+		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_TransportResources))
+			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_TransportResources);
+
+	//	stateOwner->sampleResult_TransportResources = 
+	}
+}
+
+FStateStatusTicket_TransportResources UAIStates::ChooseTransportationTarget()
+{
+	FStateStatusTicket_TransportResources returnticket;
+
+	TArray<AProductionsite*> allsites = stateOwner->GetProductionSiteManager()->GetAllProductionSites();
+
+	//TArray<FTransportSample_Deliver> validtodeliverto;
+
+	//TMap<AProductionsite*, FTransportSample_Deliver> validtotakefromgoalpair;
+
+	// Ich schaue welche site alle unter dem resource amount limit in ihren benötigten resourcen sind
+	for(AProductionsite* site : allsites)
+	{
+		TMap<EResourceIdent, int> poolinfo = site->GetProductionSitePoolInfo();
+		TArray<FProductionResources> prodresources = site->GetCurrentResources();
+
+		for(FProductionResources resource : prodresources)
+		{
+			float resourceamount = poolinfo.FindRef(resource.GetResourceIdent());
+
+			//if (resource.GetHasCost() && resourceamount < stateOwner->currentBehaviourBase.GetResourceAmountGoal() && !validtodeliverto.Contains(site))
+			//{
+			//	float amounttobuy = stateOwner->currentBehaviourBase.GetResourceAmountGoal() - resourceamount;
+			//	//FTransportSample_Deliver sample = { site, resource.GetResourceIdent(), amounttobuy };
+			//	//validtodeliverto.Add(sample);
+			//}
+		}
+	}
+
+	for(AProductionsite* site : allsites)
+	{
+		TMap<EResourceIdent, int> poolinfo = site->GetProductionSitePoolInfo();
+		TArray<FProductionResources> prodresources = site->GetCurrentResources();
+
+		bool bvalidtotake = true;
+
+		//for (FTransportSample_Deliver deliversite : validtodeliverto)
+		//{
+		//	float amount = deliversite.GetAmount();
+		//	EResourceIdent ident = deliversite.GetResourceIdent();
+		//
+		//	for (FProductionResources resource : prodresources)
+		//	{
+		//		if (resource.GetResourceIdent() == ident)
+		//			bvalidtotake = false;
+		//	}
+		//
+		//	if (!bvalidtotake)
+		//		continue;
+		//
+		//	//if (poolinfo.FindRef(ident) >= amount)
+		//	//	validtotakefromgoalpair.Add(site, deliversite);
+		//}
+	}
+
+
+	// Ich schaue hiervor erstmal ob ich eine site habe welche resourcen benötigt und ob ich eine habe welche diese reosurcen hat
+	// Falls dies nicht der fall ist will ich schauen welche meiner site am nächsten am markt ist und will dann resourcen welche zu verkaufen sind zu ihr schicken
+
+	//if(validtotakefromgoalpair.Num() <= 0)
+	{
+		
+	}
+//	else
+//	{
+//		int rnd = FMath::RandRange(0, validtotakefromgoalpair.Num() - 1);
+//		AProductionsite* site = valid
+//	}
+//		returnticket 
+
+
+	return returnticket;
 }

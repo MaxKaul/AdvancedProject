@@ -66,3 +66,35 @@ public:
 	FORCEINLINE
 		bool GetValidity() { return bIsSampleValid; }
 };
+
+USTRUCT()
+struct FStateStatusTicket_TransportResources
+{
+	GENERATED_BODY()
+
+	FStateStatusTicket_TransportResources(){}
+
+	FStateStatusTicket_TransportResources(bool _sampleValididty, AProductionsite* _chosenSite, TArray<FResourceTransactionTicket> _transactionTickets)
+	{
+		chosenProdSite = _chosenSite;
+		transactionTickets = _transactionTickets;
+		bIsSampleValid = _sampleValididty;
+	}
+
+private:
+	UPROPERTY()
+		AProductionsite* chosenProdSite;
+	UPROPERTY()
+		bool bIsSampleValid;
+
+	UPROPERTY()
+		TArray<FResourceTransactionTicket> transactionTickets;
+
+public:
+	FORCEINLINE
+		AProductionsite* GetChosenSite() { return chosenProdSite; }
+	FORCEINLINE
+		bool GetValidity() { return bIsSampleValid; }
+	FORCEINLINE
+		TArray<FResourceTransactionTicket> GetTransactionTickets() { return transactionTickets; }
+};

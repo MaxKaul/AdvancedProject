@@ -116,8 +116,14 @@ void AAIPlayer::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _mark
 		EProductionSiteType::PST_Furniture_Jewelry,
 		EProductionSiteType::PST_Ambrosia,
 	};						 	
-	
-	validStatesToTick = stateProbabilityPair;
+
+
+	// DEBUG, WEIL NOCH NICHT ALLE SATETS FERTIG SIND
+	validStatesToTick =
+	{
+		{EPossibleAIStates::PAIS_BuyResources,0 },
+	    {EPossibleAIStates::PAIS_BuildSite, 0},
+	};
 
 	TickSamples();
 
@@ -134,17 +140,16 @@ void AAIPlayer::TickDecision()
 	// Der wirft hier nen error, könnte sein das das wegen meiner runtime manipulation ist, aber lässt das programm jetzt auch nicht abschmieren
 
 
-	for (int i = (int)validStatesToTick.begin().Key(); i != (int)validStatesToTick.end().Key(); i++)
+	// Ich mach das jetzt mal so, ich will jetzt nicht zu viel an fertiger logik ändern
+	currentTickStates = validStatesToTick;
+
+
+	for (TTuple<EPossibleAIStates, float> state : currentTickStates)
 	{
-		EPossibleAIStates stateident = (EPossibleAIStates)i;
-		float statevalue = validStatesToTick.FindRef(stateident);
-		
+		EPossibleAIStates stateident = state.Key;
+		float statevalue = state.Value;
 
 		TickSamples();
-
-		//if (stateident != EPossibleAIStates::PAIS_BuyResources)
-		//	continue;
-
 
 		float newvalue = statevalue;
 		newvalue += FMath::RandRange(decisionBaseValueMin, decisionBaseValueMax);
@@ -158,12 +163,15 @@ void AAIPlayer::TickDecision()
 
 		if (statevalue >= decisionThreshold)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("State Change"));
 			SetNewState(stateident);
 			bcanresetself = false;
 			break;
 		}
 	}
 
+	/*
+	//for (int i = (int)validStatesToTick.begin().Key(); i != (int)validStatesToTick.end().Key(); i++)
 	//for (TTuple<EPossibleAIStates, float> updatestate : validStatesToTick)
 	//{
 	//	TickSamples();
@@ -189,7 +197,7 @@ void AAIPlayer::TickDecision()
 	//		break;
 	//	}
 	//}
-
+	*/
 	if(bcanresetself)
 		SetDecisionTimer();
 }
@@ -210,10 +218,8 @@ void AAIPlayer::SetDecisionTimer()
 	FTimerDelegate  currdelegate;
 	currdelegate.BindLambda(ticklambda);
 
-	FTimerHandle handle;
 
 	float time = FMath::RandRange(decicionTickRateMin, decicionTickRateMax);
-
 
 	world->GetTimerManager().SetTimer(tickHandle, currdelegate, time, false);
 }
@@ -267,4 +273,5 @@ void AAIPlayer::TickSamples()
 {
 	states->SampleBuyResources();
 	states->SampleBuildSite();
+	states->SampleTransportResources();
 }
