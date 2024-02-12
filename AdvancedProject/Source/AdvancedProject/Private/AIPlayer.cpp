@@ -146,45 +146,50 @@ void AAIPlayer::TickDecision()
 	// Ich mach das jetzt mal so, ich will jetzt nicht zu viel an fertiger logik ändern
 	currentTickStates = validStatesToTick;
 
-	for (TTuple<EPossibleAIStates, float> state : currentTickStates)
+	if(currentTickStates.Num() > 0)
 	{
-		EPossibleAIStates stateident = state.Key;
-		float statevalue = state.Value;
-
-		if (stateident != EPossibleAIStates::PAIS_BuildSite)
-			return;
-
-		float newvalue = statevalue;
-		newvalue += FMath::RandRange(decisionBaseValueMin, decisionBaseValueMax);
-		float prefvalue = 1.f;
-
-
-		if (float value = currentBehaviourBase.GetStatePreferences().Contains(stateident))
+		for (TTuple<EPossibleAIStates, float> state : currentTickStates)
 		{
-			prefvalue *= value;
-			newvalue += prefvalue;
-		}
+			EPossibleAIStates stateident = state.Key;
+			float statevalue = state.Value;
 
-		//UE_LOG(LogTemp, Warning, TEXT("%f"), newvalue);
+			float newvalue = statevalue;
+			newvalue += FMath::RandRange(decisionBaseValueMin, decisionBaseValueMax);
+			float prefvalue = 1.f;
 
-		stateProbabilityPair.Add(stateident, newvalue);
 
-		if (newvalue >= decisionThreshold || stateident == EPossibleAIStates::PAIS_BuildSite && productionSiteManager->GetAllProductionSites().Num() < 2 && newvalue >= 2.f)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("State Change"));
-			SetNewState(stateident);
-			bcanresetself = false;
-			break;
+			if (float value = currentBehaviourBase.GetStatePreferences().Contains(stateident))
+			{
+				prefvalue *= value;
+				newvalue += prefvalue;
+			}
+
+			stateProbabilityPair.Add(stateident, newvalue);
+
+			if (newvalue >= decisionThreshold)
+			{
+				SetNewState(stateident);
+				bcanresetself = false;
+				break;
+			}
 		}
 	}
+
+	TMap<EPossibleAIStates, float > newvalid;
 
 	// Update validStatesToTick
-	for(TTuple<EPossibleAIStates, float> state : validStatesToTick)
+	if(validStatesToTick.Num() > 0)
 	{
-		float newvalue = stateProbabilityPair.FindRef(state.Key);
+		for (TTuple<EPossibleAIStates, float> state : validStatesToTick)
+		{
+			float newvalue = stateProbabilityPair.FindRef(state.Key);
 
-		validStatesToTick.Add(state.Key, newvalue);
+			newvalid.Add(state.Key, newvalue);
+		}
+
+		validStatesToTick = newvalid;
 	}
+
 
 	if(bcanresetself)
 		SetDecisionTimer();
@@ -198,20 +203,17 @@ void AAIPlayer::SetDecisionTimer()
 		return;
 
 	// Keine ahnung warum, aber SetTimer klappt hier irgendwie net, wenn ich versuche eine UFunc zu binden
-	//auto ticklambda = [this]()
-	//{
-	//	TickDecision();
-	//};
+	auto ticklambda = [this]()
+	{
+		TickDecision();
+	};
 
-	//FTimerDelegate  currdelegate;
-	//currdelegate.BindLambda(ticklambda);
-
-
-	FTimerHandle testhandle;
+	FTimerDelegate  currdelegate;
+	currdelegate.BindLambda(ticklambda);
 
 	float time = FMath::RandRange(decicionTickRateMin, decicionTickRateMax);
 
-	world->GetTimerManager().SetTimer(testhandle, this, &AAIPlayer::TickDecision, time, false);
+	world->GetTimerManager().SetTimer(tickHandle, ticklambda, time, false);
 }
 
 void AAIPlayer::SetNewState(EPossibleAIStates _newState)

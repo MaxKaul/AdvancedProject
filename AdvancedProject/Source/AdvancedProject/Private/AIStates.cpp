@@ -346,29 +346,19 @@ void UAIStates::SampleBuildSite()
 	if (world->GetTimerManager().GetTimerRemaining(stateOwner->buildCooldownHandle) > 0 || buildingsites.Num() <= 0 || !bfreesitesavailable)
 	{
 		if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuildSite))
-		{
 			stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_BuildSite);
-			UE_LOG(LogTemp, Warning, TEXT("Remove"));
-		}
 	}
 	else
 	{
 		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuildSite))
-		{
-			float value = stateOwner->stateProbabilityPair.FindRef(EPossibleAIStates::PAIS_BuildSite);
-			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_BuildSite, value);
-			UE_LOG(LogTemp, Warning, TEXT("Add"));
-		}
+			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_BuildSite, stateOwner->stateProbabilityPair.FindRef(EPossibleAIStates::PAIS_BuildSite));
 
 		TMap<EProductionSiteType, ABuildingSite*> chosentypesitepair = ChooseSiteTypePair();
 
 		if(chosentypesitepair.Num() <= 0)
 		{
 			if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuildSite))
-			{
 				stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_BuildSite);
-				UE_LOG(LogTemp, Warning, TEXT("Remove_2"));
-			}
 
 			stateOwner->sampleResult_BuildSite = FStateStatusTicket_BuildProdSite(false, ChooseSiteTypePair());
 		}
@@ -466,7 +456,13 @@ void UAIStates::SampleTransportResources()
 		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_TransportResources))
 			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_TransportResources);
 
-	//	stateOwner->sampleResult_TransportResources = 
+		stateOwner->sampleResult_TransportResources = ChooseTransportationStartEndPair();
+
+		if(!stateOwner->sampleResult_TransportResources.GetValidity())
+		{
+			if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_TransportResources))
+				stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_TransportResources);
+		}
 	}
 }
 

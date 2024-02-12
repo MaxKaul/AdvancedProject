@@ -168,7 +168,6 @@ private:
 	UPROPERTY()
 		UWorld* world;
 
-	UPROPERTY()
 		FTimerHandle tickHandle;
 
 	// Was ich noch machen könnte wäre mir ein weiteres layer anlegen damit ich die alle in einem struct habne kann
@@ -182,8 +181,7 @@ private:
 	UPROPERTY()
 		TArray<EProductionSiteType> allProdSiteTypes;
 
-	UPROPERTY()
-		FTimerHandle buildCooldownHandle;
+	FTimerHandle buildCooldownHandle;
 
 	// Ich sollte mal schauen das ich das alles etwas in seperate klassen aufteile
 
