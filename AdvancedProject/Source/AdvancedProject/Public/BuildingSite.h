@@ -29,7 +29,7 @@ public:
 		void SetBuildStatus(bool _status);
 
 	FORCEINLINE
-		bool GetBuildStatus() { return bHasBeenBuildOn; }
+		bool GetHasBeenBuildOn() { return bHasBeenBuildOn; }
 
 	FORCEINLINE
 		FVector GetInteractionPos() { return interactionPoint->GetComponentLocation(); }

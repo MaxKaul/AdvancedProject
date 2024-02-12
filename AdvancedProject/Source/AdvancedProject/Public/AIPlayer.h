@@ -29,68 +29,68 @@ public:
 
 // Kack name, ich weiß
 // Struct zum cachen der Info was und wie viel ich auf welche site transportieren kann
-//USTRUCT(BlueprintType)
-//struct FTransportSample_Deliver
-//{
-//	GENERATED_BODY()
-//
-//	FTransportSample_Deliver(){}
-//
-//
-//	FTransportSample_Deliver(AProductionsite* _site, EResourceIdent _resourceIdent, float _amount)
-//	{
-//		site = _site;
-//		resourceIdent = _resourceIdent;
-//		amount = _amount;
-//	}
-//
-//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
-//		FString structName = FString("NONE");
-//
-//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
-//		FString structID = FString("NONE");
-//
-//public:
-//	FORCEINLINE
-//		bool operator==(const  FTransportSample_Deliver& _other) const
-//	{
-//		return Equals(_other);
-//	}
-//
-//	FORCEINLINE
-//		bool operator!=(const  FTransportSample_Deliver& _other) const
-//	{
-//		return !Equals(_other);
-//	}
-//
-//	FORCEINLINE
-//		bool Equals(const  FTransportSample_Deliver& _other) const
-//	{
-//		return structName == _other.structName && structID == _other.structID;
-//	}
-//
-//private:
-//	UPROPERTY()
-//		AProductionsite* site;
-//	UPROPERTY()
-//		EResourceIdent resourceIdent;
-//	UPROPERTY()
-//		float amount;
-//
-//public:
-//	FORCEINLINE
-//		AProductionsite* GetSite() { return site; }
-//	FORCEINLINE
-//		EResourceIdent GetResourceIdent() { return resourceIdent; }
-//	FORCEINLINE
-//		float GetAmount() { return amount; }
-//};
+USTRUCT(BlueprintType)
+struct FTransportSample_Deliver
+{
+	GENERATED_BODY()
 
-//FORCEINLINE uint32 GetTypeHash(const  FTransportSample_Deliver& _this)
-//{
-//	const uint32 Hash = FCrc::MemCrc32(&_this, sizeof(FTransportSample_Deliver));
-//	return Hash;
-//}
+	FTransportSample_Deliver(){}
+
+
+	FTransportSample_Deliver(AProductionsite* _site, EResourceIdent _resourceIdent, float _amount)
+	{
+		site = _site;
+		resourceIdent = _resourceIdent;
+		amount = _amount;
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
+		FString structName = FString("NONE");
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
+		FString structID = FString("NONE");
+
+public:
+	FORCEINLINE
+		bool operator==(const  FTransportSample_Deliver& _other) const
+	{
+		return Equals(_other);
+	}
+
+	FORCEINLINE
+		bool operator!=(const  FTransportSample_Deliver& _other) const
+	{
+		return !Equals(_other);
+	}
+
+	FORCEINLINE
+		bool Equals(const  FTransportSample_Deliver& _other) const
+	{
+		return structName == _other.structName && structID == _other.structID;
+	}
+
+private:
+	UPROPERTY()
+		AProductionsite* site;
+	UPROPERTY()
+		EResourceIdent resourceIdent;
+	UPROPERTY()
+		int amount;
+
+public:
+	FORCEINLINE
+		AProductionsite* GetSite() { return site; }
+	FORCEINLINE
+		EResourceIdent GetResourceIdent() { return resourceIdent; }
+	FORCEINLINE
+		int GetAmount() { return amount; }
+};
+
+FORCEINLINE uint32 GetTypeHash(const  FTransportSample_Deliver& _this)
+{
+	const uint32 Hash = FCrc::MemCrc32(&_this, sizeof(FTransportSample_Deliver));
+	return Hash;
+}
 
 
 // Ich will mal schaeun das ich was die ai player angeht das so mache das die hier, in AAIPlayer errechnen sollen werlchen state sie erreichen sollen und in EPossibleAIStates diese ausführen

@@ -69,5 +69,5 @@ public:
 	UFUNCTION()
 		void SampleTransportResources();
 	UFUNCTION()
-		FStateStatusTicket_TransportResources ChooseTransportationTarget();
+		FStateStatusTicket_TransportResources ChooseTransportationStartEndPair();
 };

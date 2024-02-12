@@ -68,7 +68,7 @@ bool UBuilder::BuildProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _
 	{
 		if (_type == type)
 		{
-			if (_buildingSite->GetBuildStatus())
+			if (_buildingSite->GetHasBeenBuildOn())
 				break;
 
 			FVector spawnpos = _buildingSite->GetActorLocation();
@@ -93,7 +93,7 @@ bool UBuilder::BuildProductionSite(UStaticMesh* _siteMesh, EProductionSiteType _
 		}
 	}
 
-	if(!status && !_buildingSite->GetBuildStatus())
+	if(!status && !_buildingSite->GetHasBeenBuildOn())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UBuilder, Wrong building type"));
 	}
