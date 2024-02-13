@@ -50,6 +50,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess))
 		class USphereComponent* interactionPoint;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, Category = Status, meta =(AllowPrivateAccess))
 		bool bHasBeenBuildOn;
 };

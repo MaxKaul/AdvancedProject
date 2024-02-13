@@ -103,10 +103,11 @@ bool UAIStates::State_BuildSite()
 		return false;
 	}
 
-
 	UStaticMesh* mesh = stateOwner->allBuildingMeshes[0];
 
 	// Jetzt nicht perfekt gibt mir aber die möglichkeit einige errors an der stelle abzufangen
+
+	SampleBuildSite();
 
 	TMap<EProductionSiteType, ABuildingSite*> typesitepair = stateOwner->sampleResult_BuildSite.GetTypeSitePair();
 
@@ -118,10 +119,6 @@ bool UAIStates::State_BuildSite()
 
 	EProductionSiteType type = typesitepair.begin().Key();
 	ABuildingSite* site = typesitepair.begin().Value();
-
-	// DEBUG
-	type = EProductionSiteType::PST_Ambrosia;
-
 
 	stateOwner->builder->BuildProductionSite(mesh, type, site, stateOwner->marketManager, stateOwner->productionSiteManager->GetAllProductionSites().Num() + 1);
 
@@ -359,6 +356,8 @@ void UAIStates::SampleBuildSite()
 	{
 		if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuildSite))
 			stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_BuildSite);
+
+		stateOwner->sampleResult_BuildSite = FStateStatusTicket_BuildProdSite(false, ChooseSiteTypePair());
 	}
 	else
 	{
@@ -388,7 +387,6 @@ TMap<EProductionSiteType, ABuildingSite*> UAIStates::ChooseSiteTypePair()
 	TArray<ABuildingSite*> allbuildingsites = stateOwner->allBuildingSites;
 	TArray<EProductionSiteType> allprodsitetypes = stateOwner->allProdSiteTypes;
 	TMap<EProductionSiteType, float> prefvalues = stateOwner->currentBehaviourBase.GetSitePreferenceValuePair();
-
 
 	float threshold = stateOwner->decisionThreshold;
 
@@ -438,9 +436,9 @@ TMap<EProductionSiteType, ABuildingSite*> UAIStates::ChooseSiteTypePair()
 			possiblesites.Add(site);
 	}
 
-	int rnd = FMath::RandRange(0, allbuildingsites.Num() - 1);
+	int rnd = FMath::RandRange(0, possiblesites.Num() - 1);
 
-	for(ABuildingSite* site : allbuildingsites)
+	for(ABuildingSite* site : possiblesites)
 	{
 		if (rnd <= 0)
 		{
