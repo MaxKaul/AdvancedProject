@@ -74,9 +74,10 @@ struct FStateStatusTicket_TransportResources
 
 	FStateStatusTicket_TransportResources(){}
 
-	FStateStatusTicket_TransportResources(bool _sampleValididty, AProductionsite* _chosenSite, TArray<FResourceTransactionTicket> _transactionTickets)
+	FStateStatusTicket_TransportResources(bool _sampleValididty, AProductionsite* _chosenSite, TArray<FResourceTransactionTicket> _transactionTickets, AProductionsite* _owningSite)
 	{
 		chosenProdSite = _chosenSite;
+		owningSite = _owningSite;
 		transactionTickets = _transactionTickets;
 		bIsSampleValid = _sampleValididty;
 	}
@@ -84,6 +85,8 @@ struct FStateStatusTicket_TransportResources
 private:
 	UPROPERTY()
 		AProductionsite* chosenProdSite;
+	UPROPERTY()
+		AProductionsite* owningSite;
 	UPROPERTY()
 		bool bIsSampleValid;
 
@@ -93,6 +96,8 @@ private:
 public:
 	FORCEINLINE
 		AProductionsite* GetChosenSite() { return chosenProdSite; }
+	FORCEINLINE
+		AProductionsite* GetOwningSite() { return owningSite; }
 	FORCEINLINE
 		bool GetValidity() { return bIsSampleValid; }
 	FORCEINLINE

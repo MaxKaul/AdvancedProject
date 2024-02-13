@@ -656,11 +656,7 @@ void AWorker::SetDebugTimer(FVector _endPos)
 
 	time += debugAddTime;
 
-	DrawDebugSphere(world, _endPos, 16, 16, FColor::Red, true, -1);
-
 	world->GetTimerManager().SetTimer(debugTimerHandle,this , &AWorker::ActivateDebugAction, time, false);
-
-
 }
 
 void AWorker::ActivateDebugAction()

@@ -188,7 +188,7 @@ bool AProductionsite::NullcheckDependencies()
 	return status;
 }
 
-TArray<FProductionResources> AProductionsite::GetCurrentResources()
+TArray<FProductionResources> AProductionsite::GetProductionResources()
 {
 	TArray<FProductionResources> productionresources;
 

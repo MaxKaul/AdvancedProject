@@ -73,7 +73,16 @@ bool UAIStates::State_TransportResources()
 {
 	bool status = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("State_TransportResources"));
+	if (!stateOwner->sampleResult_TransportResources.GetValidity())
+		return false;
+
+	TArray<FResourceTransactionTicket> tickets = stateOwner->sampleResult_TransportResources.GetTransactionTickets();
+	AProductionsite* owningsite = stateOwner->sampleResult_TransportResources.GetOwningSite();
+
+	TMap<EBuildingType, int> goalidx;
+	goalidx.Add(EBuildingType::BT_ProductionSite , stateOwner->sampleResult_TransportResources.GetChosenSite()->GetLocalProdSiteID());
+
+	stateOwner->transportManager->CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToProdSite, owningsite, ETransportatOrderDirecrtive::TOD_DeliverToSite, goalidx);
 
 	return status;
 }
@@ -109,6 +118,9 @@ bool UAIStates::State_BuildSite()
 
 	EProductionSiteType type = typesitepair.begin().Key();
 	ABuildingSite* site = typesitepair.begin().Value();
+
+	// DEBUG
+	type = EProductionSiteType::PST_Ambrosia;
 
 
 	stateOwner->builder->BuildProductionSite(mesh, type, site, stateOwner->marketManager, stateOwner->productionSiteManager->GetAllProductionSites().Num() + 1);
@@ -209,7 +221,7 @@ FStateStatusTicket_BuyResources UAIStates::CalculateBuyOrder()
 		// The resource ident cost pair of the resources that actually have to be bought after calculations
 		TMap<EResourceIdent, int> resourcestobuy;
 
-		TArray<FProductionResources> prodresources = site->GetCurrentResources();
+		TArray<FProductionResources> prodresources = site->GetProductionResources();
 		TMap<EResourceIdent, int> prodsitepoolinfo = site->GetProductionSitePoolInfo();
 
 		// Ich schaue, ja, das mach ich
@@ -475,25 +487,39 @@ FStateStatusTicket_TransportResources UAIStates::ChooseTransportationStartEndPai
 
 	TArray<FTransportSample_Deliver> validtodeliverto;
 
-	TMap<AProductionsite*, FTransportSample_Deliver> validtotakefromgoalpair;
-
 	// Ich schaue welche site alle unter dem resource amount limit in ihren benötigten resourcen sind
 	for(AProductionsite* site : allsites)
 	{
 		TMap<EResourceIdent, int> poolinfo = site->GetProductionSitePoolInfo();
-		TArray<FProductionResources> prodresources = site->GetCurrentResources();
+		TArray<FProductionResources> prodresources = site->GetProductionResources();
 
 		for(FProductionResources resource : prodresources)
 		{
-			float resourceamount = poolinfo.FindRef(resource.GetResourceIdent());
+			if(!resource.GetHasCost())
+				continue;
 
-			// Ich hab contains erstmal weggelassen weil ich grad kp hab rasuzusuchen wie contains overlkoaded werden kann
-			if (resource.GetHasCost() && resourceamount < stateOwner->currentBehaviourBase.GetResourceAmountGoal() /*&& !validtodeliverto.Contains(site)*/)
+			TArray<EResourceIdent> neededresourcesidents;
+			resource.GetResourceCost().GenerateKeyArray(neededresourcesidents);
+
+			TMap<EResourceIdent, int> needetidentamountpair;
+
+			for(EResourceIdent costingresource : neededresourcesidents)
 			{
-				float amounttobuy = stateOwner->currentBehaviourBase.GetResourceAmountGoal() - resourceamount;
-				FTransportSample_Deliver sample = { site, resource.GetResourceIdent(), amounttobuy };
-				validtodeliverto.Add(sample);
+				float resourceamount = poolinfo.FindRef(costingresource);
+
+				if(resourceamount < stateOwner->currentBehaviourBase.GetResourceAmountGoal())
+				{
+					float amounttosend = stateOwner->currentBehaviourBase.GetResourceAmountGoal() - resourceamount;
+					needetidentamountpair.Add(costingresource, amounttosend);
+				}
+
 			}
+
+			if(needetidentamountpair.Num() <= 0)
+				continue;
+
+			FTransportSample_Deliver newsampel = { site, needetidentamountpair };
+			validtodeliverto.Add(newsampel);
 		}
 	}
 
@@ -501,78 +527,107 @@ FStateStatusTicket_TransportResources UAIStates::ChooseTransportationStartEndPai
 	if (validtodeliverto.Num() <= 0)
 	{
 		TArray<FResourceTransactionTicket> emptytickets;
-		return returnticket = FStateStatusTicket_TransportResources{ false, nullptr,  emptytickets};
+		return returnticket = FStateStatusTicket_TransportResources{ false, nullptr,  emptytickets, nullptr};
 	}
+
+	// In theorie brauch ich heir eign nur ne ref auf meine goaldf prod site, aber ich mach das erstmal so das ich ne ref auf beide samples hab falls ich da nochwas machen musss 
+	TMap<FTransportSample_Deliver, FTransportSample_Deliver> validstartgoalpair;
 
 	// Ich schaue welche ob eine meiner site die reosurcen besitzt welche durch die validtodeliverto benötigt werden, danach schaue ich ob diese die benötigen und über dem soll wert liegen
 	for(AProductionsite* site : allsites)
 	{
 		TMap<EResourceIdent, int> poolinfo = site->GetProductionSitePoolInfo();
-		TArray<FProductionResources> prodresources = site->GetCurrentResources();
 		float amountgoal = stateOwner->currentBehaviourBase.GetResourceAmountGoal();
 
-		bool bvalidtotake = true;
+		FTransportSample_Deliver takefromsample;
 
-		for (FTransportSample_Deliver deliversite : validtodeliverto)
+		for (FTransportSample_Deliver deliversample : validtodeliverto)
 		{
-			float amount = deliversite.GetAmount();
-			EResourceIdent ident = deliversite.GetResourceIdent();
-		
-			for (FProductionResources resource : prodresources)
-			{
-				if (resource.GetResourceIdent() == ident && poolinfo.FindRef(resource.GetResourceIdent()) <= amountgoal)
-					bvalidtotake = false;
-			}
-		
-			if (!bvalidtotake)
+			if(site == deliversample.GetSite())
 				continue;
-		
-			if (poolinfo.FindRef(ident) >= amount)
-				validtotakefromgoalpair.Add(site, deliversite);
+
+			TMap<EResourceIdent, int > identamountpair_needed = deliversample.GetResourceIdentAmountPair();
+			TMap<EResourceIdent, int> identamountpair_possible;
+
+
+			for(TTuple<EResourceIdent, int> ident : identamountpair_needed)
+			{
+				if(poolinfo.FindRef(ident.Key) <= amountgoal)
+					continue;
+
+				// ICh nehm erstmal immer das max
+				int possibleamount = poolinfo.FindRef(ident.Key) - amountgoal;
+
+				identamountpair_possible.Add(ident.Key, possibleamount);
+			}
+
+			FTransportSample_Deliver possiblesample = { site, identamountpair_possible };
+
+			possiblesample.structID = FString::FromInt(site->GetLocalProdSiteID());
+
+			validstartgoalpair.Add(possiblesample, deliversample);
 		}
 	}
 
 
-	if (validtodeliverto.Num() <= 0)
+	if (validstartgoalpair.Num() <= 0)
 	{
 		TArray<FResourceTransactionTicket> emptytickets;
-		return returnticket = FStateStatusTicket_TransportResources{ false, nullptr,  emptytickets };
+		return returnticket = FStateStatusTicket_TransportResources{ false, nullptr,  emptytickets , nullptr};
 	}
 
 	// Ich will die site nehmenb von welcher die KI die meisten benötigten resourcen nehmen kann
 	// Ich könnte da unter umständen aucvh nen sort rein machen, brauch aber grad kein zweites sample value
 	// Ich weiß, ist kacke, aber ich hab grad kein lentzt ein struct anzulegen (mach ich später vill)
-	TMap<AProductionsite*, FTransportSample_Deliver> highestsamplesitepair;
-	highestsamplesitepair.Add(highestsamplesitepair.begin().Key(), highestsamplesitepair.begin().Value());
 
-	for(TTuple<AProductionsite*, FTransportSample_Deliver> sitesamplepair : validtotakefromgoalpair)
+
+	// Ich will mich immer an der höchsten summe der möglichen werte richten
+	// Ich nehme dafür den key welcher immer die possible order sein soll
+	// Key == PossibleValue
+	FTransportSample_Deliver highestpossiblesample = validstartgoalpair.begin().Key();
+
+	int highestcachesampel = 0;
+
+	for (TTuple<EResourceIdent, int> cachesampel : highestpossiblesample.GetResourceIdentAmountPair())
 	{
-		EResourceIdent currident = sitesamplepair.Value.GetResourceIdent();
-		float sitepoolamount = sitesamplepair.Key->GetProductionSitePoolInfo().FindRef(currident);
+		highestcachesampel += cachesampel.Value;
+	}
 
-		if (sitepoolamount > highestsamplesitepair.begin().Key()->GetProductionSitePoolInfo().FindRef(currident))
+	// Ich weiß ein wenig kacke, aber was solls, muss fertig werden
+	if(validstartgoalpair.Num() > 1)
+	{
+		for (TTuple<FTransportSample_Deliver, FTransportSample_Deliver> sample : validstartgoalpair)
 		{
-			highestsamplesitepair.Empty();
-			highestsamplesitepair.Add(sitesamplepair.Key, sitesamplepair.Value);
+			int amountsum = 0;
+
+			for(TTuple<EResourceIdent, int> sampleitem : sample.Key.GetResourceIdentAmountPair())
+			{
+				amountsum += sampleitem.Value;
+			}
+
+			if(amountsum > highestcachesampel)
+			{
+				highestcachesampel = amountsum;
+				highestpossiblesample = sample.Key;
+			}
 		}
 	}
 
-	if(highestsamplesitepair.Num() <= 0)
-	{
-		UE_LOG(LogTemp,Error,TEXT("ChooseTransportationStartEndPair, highestsamplesitepair.Num() <= 0"))
+	// Könnt alles scheiße sein und impliodieren weil die hash comparison net klappt
 
-		TArray<FResourceTransactionTicket> emptytickets;
-		return returnticket = FStateStatusTicket_TransportResources{ false, nullptr,  emptytickets };
+	TArray<FResourceTransactionTicket> transationtickets;
+
+	for (TTuple<EResourceIdent, int> item : highestpossiblesample.GetResourceIdentAmountPair())
+	{
+		FResourceTransactionTicket newticket = { item.Value, 0, item.Key, 0,0 };
+
+		transationtickets.Add(newticket);
 	}
 
+	AProductionsite* transportowner = highestpossiblesample.GetSite();
+	AProductionsite* transportgoal = validstartgoalpair.FindRef(highestpossiblesample).GetSite();
 
-	TArray<FResourceTransactionTicket> resourcetickets;
-	int amount = highestsamplesitepair.begin().Value().GetAmount();
-	EResourceIdent ident = highestsamplesitepair.begin().Value().GetResourceIdent();
-
-	resourcetickets.Add(FResourceTransactionTicket(amount, 0, ident, 0,0));
-
-	returnticket = { true, highestsamplesitepair.begin().Key(), resourcetickets };
+	returnticket = { true, transportgoal, transationtickets ,transportowner };
 
 	return returnticket;
 }

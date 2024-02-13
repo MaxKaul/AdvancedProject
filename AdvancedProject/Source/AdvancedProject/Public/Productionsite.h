@@ -230,8 +230,9 @@ public:
 	UFUNCTION()
 		FProductionSiteSaveData GetProductionSiteSaveData();
 
+	// returns all produced resources of this site
 	UFUNCTION()
-		TArray<FProductionResources> GetCurrentResources();
+		TArray<FProductionResources> GetProductionResources();
 
 	UFUNCTION(BlueprintCallable)
 		void GetDisplayInfo(FProductionSiteDisplayInfos& _displayInfo);

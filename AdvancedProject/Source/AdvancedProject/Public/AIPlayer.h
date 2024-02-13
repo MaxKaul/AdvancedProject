@@ -37,11 +37,10 @@ struct FTransportSample_Deliver
 	FTransportSample_Deliver(){}
 
 
-	FTransportSample_Deliver(AProductionsite* _site, EResourceIdent _resourceIdent, float _amount)
+	FTransportSample_Deliver(AProductionsite* _site, TMap<EResourceIdent, int> _resourceAmountPair)
 	{
 		site = _site;
-		resourceIdent = _resourceIdent;
-		amount = _amount;
+		resourceAmountPair = _resourceAmountPair;
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hash)
@@ -73,17 +72,13 @@ private:
 	UPROPERTY()
 		AProductionsite* site;
 	UPROPERTY()
-		EResourceIdent resourceIdent;
-	UPROPERTY()
-		int amount;
+		TMap<EResourceIdent, int> resourceAmountPair;
 
 public:
 	FORCEINLINE
 		AProductionsite* GetSite() { return site; }
 	FORCEINLINE
-		EResourceIdent GetResourceIdent() { return resourceIdent; }
-	FORCEINLINE
-		int GetAmount() { return amount; }
+		TMap<EResourceIdent, int> GetResourceIdentAmountPair() { return resourceAmountPair; }
 };
 
 FORCEINLINE uint32 GetTypeHash(const  FTransportSample_Deliver& _this)

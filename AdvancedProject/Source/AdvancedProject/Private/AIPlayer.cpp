@@ -168,6 +168,16 @@ void AAIPlayer::TickDecision()
 
 			if (newvalue >= decisionThreshold)
 			{
+				// Debug zum testen des TransportStates
+				if (productionSiteManager->GetAllProductionSites().Num() < 2)
+					stateident = EPossibleAIStates::PAIS_BuildSite;
+				else if (productionSiteManager->GetAllProductionSites().Num() >= 2)
+				{
+					stateident = EPossibleAIStates::PAIS_TransportResources;
+					continue;
+				}
+
+
 				SetNewState(stateident);
 				bcanresetself = false;
 				break;
