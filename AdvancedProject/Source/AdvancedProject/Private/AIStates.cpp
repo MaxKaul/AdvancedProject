@@ -107,8 +107,6 @@ bool UAIStates::State_BuildSite()
 
 	// Jetzt nicht perfekt gibt mir aber die möglichkeit einige errors an der stelle abzufangen
 
-	SampleBuildSite();
-
 	TMap<EProductionSiteType, ABuildingSite*> typesitepair = stateOwner->sampleResult_BuildSite.GetTypeSitePair();
 
 	if(typesitepair.Num() > 1)
@@ -175,6 +173,9 @@ void UAIStates::SampleBuyResources()
 	{
 		if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_BuyResources))
 			stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_BuyResources);
+
+		TArray<FResourceTransactionTicket> emptytickets;
+		stateOwner->sampleResult_BuyResources = FStateStatusTicket_BuyResources(false, emptytickets, nullptr);
 	}
 	else
 	{
@@ -626,6 +627,54 @@ FStateStatusTicket_TransportResources UAIStates::ChooseTransportationStartEndPai
 	AProductionsite* transportgoal = validstartgoalpair.FindRef(highestpossiblesample).GetSite();
 
 	returnticket = { true, transportgoal, transationtickets ,transportowner };
+
+	return returnticket;
+}
+
+void UAIStates::SampleSellResources()
+{
+	if(stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() <= 0)
+	{
+		if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_SellResources))
+			stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_SellResources);
+
+		TArray<FResourceTransactionTicket> emptytickets;
+		stateOwner->sampleResult_SellResources = FStateStatusTicket_SellResources(false, emptytickets, nullptr, false);
+	}
+	else
+	{
+		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_SellResources))
+			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_SellResources);
+
+		stateOwner->sampleResult_SellResources = CalculateSellOrder();
+	}
+}
+
+FStateStatusTicket_SellResources UAIStates::CalculateSellOrder()
+{
+	FStateStatusTicket_SellResources returnticket;
+
+	TArray<AProductionsite*> allsites = stateOwner->GetProductionSiteManager()->GetAllProductionSites();
+
+	TMap<EResourceIdent, AProductionsite*> validtotakefromidentpair;
+
+	for (AProductionsite* site : allsites)
+	{
+		TMap<EResourceIdent, int> identamountpair;
+		TMap<EResourceIdent, int> poolinfo = site->GetProductionSitePoolInfo();
+
+		for(FProductionResources resource : site->GetProductionResources())
+		{
+			// TODO; MAGIC NUMBER RAUSNHEMEN -> Das soll über den data table geregelt werden
+			if (poolinfo.FindRef(resource.GetResourceIdent()) > 150.f)
+				validtotakefromidentpair.Add(resource.GetResourceIdent(), site);
+		}
+	}
+
+	if (validtotakefromidentpair.Num() <= 0)
+		return returnticket = FStateStatusTicket_SellResources(false, TArray<FResourceTransactionTicket>(), nullptr, false);
+
+
 
 	return returnticket;
 }

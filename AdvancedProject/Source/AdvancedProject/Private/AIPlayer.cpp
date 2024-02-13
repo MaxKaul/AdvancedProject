@@ -124,6 +124,7 @@ void AAIPlayer::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _mark
 		{EPossibleAIStates::PAIS_BuyResources,0 },
 	    {EPossibleAIStates::PAIS_BuildSite, 0},
 	    {EPossibleAIStates::PAIS_TransportResources, 0},
+	    {EPossibleAIStates::PAIS_SellResources, 0},
 	};
 
 	TickSamples();
@@ -168,8 +169,6 @@ void AAIPlayer::TickDecision()
 
 			if (newvalue >= decisionThreshold)
 			{
-				stateident = EPossibleAIStates::PAIS_BuildSite;
-
 				SetNewState(stateident);
 				bcanresetself = false;
 				break;
@@ -268,4 +267,5 @@ void AAIPlayer::TickSamples()
 	states->SampleBuyResources();
 	states->SampleBuildSite();
 	states->SampleTransportResources();
+	states->SampleSellResources();
 }

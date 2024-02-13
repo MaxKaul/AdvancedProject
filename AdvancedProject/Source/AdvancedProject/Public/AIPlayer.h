@@ -87,6 +87,40 @@ FORCEINLINE uint32 GetTypeHash(const  FTransportSample_Deliver& _this)
 	return Hash;
 }
 
+USTRUCT()
+struct FSellSample_Transport
+
+{
+	GENERATED_BODY()
+
+		FSellSample_Transport(){}
+
+	// Map für die ident mit menge weil die sell_transport ja auch mehr als nur eine resource sein kann 
+	FSellSample_Transport(AProductionsite* _owningSite, AProductionsite* _goalSite, TMap<EResourceIdent, int> _identamountpair)
+	{
+		owningSite = _owningSite;
+		goalSite = _goalSite;
+		identAmountPair = _identamountpair;
+	}
+
+private:
+	UPROPERTY()
+		AProductionsite* owningSite;
+	UPROPERTY()
+		AProductionsite* goalSite;
+	UPROPERTY()
+		TMap<EResourceIdent, int> identAmountPair;
+
+public:
+	FORCEINLINE
+		TMap<EResourceIdent, int> GetIdentAmountPair() { return identAmountPair; }
+
+	FORCEINLINE
+		AProductionsite* GetGoalSite() { return goalSite; }
+	FORCEINLINE
+		AProductionsite* GetOwningSite() { return owningSite; }
+};
+
 
 // Ich will mal schaeun das ich was die ai player angeht das so mache das die hier, in AAIPlayer errechnen sollen werlchen state sie erreichen sollen und in EPossibleAIStates diese ausführen
 // bin mir grad nicht sicher obs andersherum nicht besser wäre, aber ich bin die letzten tage ein wenig ausgebrandt also mach ich das ertstmal und reevaluiere das später, muss das nur im hinterkopf behalten
@@ -172,6 +206,8 @@ private:
 		FStateStatusTicket_BuildProdSite sampleResult_BuildSite;
 	UPROPERTY()
 		FStateStatusTicket_TransportResources sampleResult_TransportResources;
+	UPROPERTY()
+		FStateStatusTicket_SellResources sampleResult_SellResources;
 
 	UPROPERTY()
 		TArray<EProductionSiteType> allProdSiteTypes;

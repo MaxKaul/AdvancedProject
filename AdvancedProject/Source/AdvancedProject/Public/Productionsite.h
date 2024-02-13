@@ -74,6 +74,7 @@ public:
 		structID = _inID;
 	}
 
+	// Ident of the produciton resource
 	FORCEINLINE
 		EResourceIdent GetResourceIdent() { return resourceIdent; }
 

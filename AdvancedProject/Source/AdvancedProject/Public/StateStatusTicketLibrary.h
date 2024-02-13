@@ -40,6 +40,47 @@ public:
 
 
 USTRUCT()
+struct FStateStatusTicket_SellResources
+{
+	GENERATED_BODY()
+
+		FStateStatusTicket_SellResources(){}
+
+	FStateStatusTicket_SellResources(bool _isSampleValid, TArray<FResourceTransactionTicket> _transactionTicket, class AProductionsite* _owningSite, bool _isTransportOrder)
+	{
+		transactionTickets = _transactionTicket;
+		bIsSampleValid = _isSampleValid;
+		bIsTransportOrder = _isTransportOrder;
+		owningSite = _owningSite;
+	}
+
+private:
+	UPROPERTY()
+		TArray<FResourceTransactionTicket> transactionTickets;
+
+	UPROPERTY()
+		AProductionsite* owningSite;
+
+	UPROPERTY()
+		bool bIsSampleValid;
+
+	UPROPERTY()
+		bool bIsTransportOrder;
+
+public:
+	FORCEINLINE
+		TArray<FResourceTransactionTicket> GetTransactionTickets() { return transactionTickets; }
+	FORCEINLINE
+		AProductionsite* GetOwningSite() { return owningSite; }
+
+	FORCEINLINE
+		bool GetValidity() { return bIsSampleValid; }
+	FORCEINLINE
+		bool GetIsTransportOrder() { return bIsTransportOrder; }
+};
+
+
+USTRUCT()
 struct FStateStatusTicket_BuildProdSite
 {
 	GENERATED_BODY()

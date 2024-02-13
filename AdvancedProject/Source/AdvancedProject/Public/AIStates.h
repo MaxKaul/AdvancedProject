@@ -70,4 +70,10 @@ public:
 		void SampleTransportResources();
 	UFUNCTION()
 		FStateStatusTicket_TransportResources ChooseTransportationStartEndPair();
+
+
+	UFUNCTION()
+		void SampleSellResources();
+	UFUNCTION()
+		FStateStatusTicket_SellResources CalculateSellOrder();
 };
