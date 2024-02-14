@@ -46,12 +46,16 @@ struct FStateStatusTicket_SellResources
 
 		FStateStatusTicket_SellResources(){}
 
-	FStateStatusTicket_SellResources(bool _isSampleValid, TArray<FResourceTransactionTicket> _transactionTicket, class AProductionsite* _owningSite, bool _isTransportOrder)
+	FStateStatusTicket_SellResources(bool _isSampleValid, TArray<FResourceTransactionTicket> _transactionTicket, class AProductionsite* _owningSite, bool _isTransportOrder, 
+										AProductionsite* _transportSite = nullptr)
 	{
 		transactionTickets = _transactionTicket;
 		bIsSampleValid = _isSampleValid;
 		bIsTransportOrder = _isTransportOrder;
 		owningSite = _owningSite;
+
+		if (_transportSite != nullptr)
+			transportSite = _transportSite;
 	}
 
 private:
@@ -60,6 +64,9 @@ private:
 
 	UPROPERTY()
 		AProductionsite* owningSite;
+
+	UPROPERTY()
+		AProductionsite* transportSite;
 
 	UPROPERTY()
 		bool bIsSampleValid;
@@ -72,6 +79,8 @@ public:
 		TArray<FResourceTransactionTicket> GetTransactionTickets() { return transactionTickets; }
 	FORCEINLINE
 		AProductionsite* GetOwningSite() { return owningSite; }
+	FORCEINLINE
+		AProductionsite* GetTransportSite() { if (transportSite) return owningSite; else return nullptr; }
 
 	FORCEINLINE
 		bool GetValidity() { return bIsSampleValid; }

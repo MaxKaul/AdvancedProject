@@ -87,38 +87,48 @@ FORCEINLINE uint32 GetTypeHash(const  FTransportSample_Deliver& _this)
 	return Hash;
 }
 
-USTRUCT()
-struct FSellSample_Transport
+// Jede take site ist mit einer struct insatnce associated, diese soll die site besitzen aus welcher genommen werden kann, die resource idents welche aus ihr genommen werden können
+// die mit den ident associated menge
+USTRUCT(BlueprintType)
+struct FSellSample_Check
 
 {
 	GENERATED_BODY()
 
-		FSellSample_Transport(){}
+	FSellSample_Check(){}
 
-	// Map für die ident mit menge weil die sell_transport ja auch mehr als nur eine resource sein kann 
-	FSellSample_Transport(AProductionsite* _owningSite, AProductionsite* _goalSite, TMap<EResourceIdent, int> _identamountpair)
+	// goalsite muss nur != nullptr sein wenn die sell order zu einer prod site transporten soll
+	FSellSample_Check(AProductionsite* _takeSite, TMap<EResourceIdent, int> _takeIdentAmountPair, TArray<AProductionsite*> _transportSites = TArray<AProductionsite*>())
 	{
-		owningSite = _owningSite;
-		goalSite = _goalSite;
-		identAmountPair = _identamountpair;
+		takeSite = _takeSite;
+		takeReosurceAmountPair = _takeIdentAmountPair;
+		validTransportSites = _transportSites;
 	}
 
 private:
 	UPROPERTY()
-		AProductionsite* owningSite;
+		AProductionsite* takeSite;
 	UPROPERTY()
-		AProductionsite* goalSite;
+		TMap<EResourceIdent, int> takeReosurceAmountPair;
+
 	UPROPERTY()
-		TMap<EResourceIdent, int> identAmountPair;
+		TArray<AProductionsite*> validTransportSites;
+
+	UPROPERTY()
+		AProductionsite* transportSite;
 
 public:
 	FORCEINLINE
-		TMap<EResourceIdent, int> GetIdentAmountPair() { return identAmountPair; }
+		AProductionsite* GetTakeSite() { return takeSite; }
+	FORCEINLINE
+		AProductionsite* GetTransportSite() { return transportSite; }
+	FORCEINLINE
+		TMap<EResourceIdent, int> GetResourceAmountPair() { return takeReosurceAmountPair; }
+	FORCEINLINE
+		TArray<AProductionsite*> GetValidTransportSites() { return validTransportSites; }
 
 	FORCEINLINE
-		AProductionsite* GetGoalSite() { return goalSite; }
-	FORCEINLINE
-		AProductionsite* GetOwningSite() { return owningSite; }
+		void SetTransportSite(AProductionsite* _transportSite) { transportSite = _transportSite; }
 };
 
 

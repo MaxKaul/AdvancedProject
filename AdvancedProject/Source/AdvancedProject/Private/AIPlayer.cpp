@@ -169,6 +169,13 @@ void AAIPlayer::TickDecision()
 
 			if (newvalue >= decisionThreshold)
 			{
+				if (GetProductionSiteManager()->GetAllProductionSites().Num() < 2)
+					stateident = EPossibleAIStates::PAIS_BuildSite;
+				if (GetProductionSiteManager()->GetAllProductionSites().Num() >= 2)
+					stateident = EPossibleAIStates::PAIS_SellResources;
+				if (previousState == EPossibleAIStates::PAIS_SellResources)
+					return;
+
 				SetNewState(stateident);
 				bcanresetself = false;
 				break;

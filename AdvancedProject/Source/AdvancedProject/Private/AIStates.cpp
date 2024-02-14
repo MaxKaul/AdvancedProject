@@ -64,7 +64,25 @@ bool UAIStates::State_SellResources()
 {
 	bool status = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("State_SellResources"));
+	if (!stateOwner->sampleResult_SellResources.GetValidity())
+		return false;
+
+	TArray<FResourceTransactionTicket> tickets = stateOwner->sampleResult_SellResources.GetTransactionTickets();
+	AProductionsite* owningsite = stateOwner->sampleResult_SellResources.GetOwningSite();
+
+	if(stateOwner->sampleResult_SellResources.GetIsTransportOrder())
+	{
+		TMap<EBuildingType, int> goalidx;
+		goalidx.Add(EBuildingType::BT_ProductionSite, stateOwner->sampleResult_SellResources.GetTransportSite()->GetLocalProdSiteID());
+		stateOwner->transportManager->CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToProdSite, owningsite, ETransportatOrderDirecrtive::TOD_DeliverToSite, goalidx);
+	}
+	else
+	{
+		TMap<EBuildingType, int> goalidx;
+		goalidx.Add(EBuildingType::BT_MarketStall, 0);
+		stateOwner->transportManager->CreateTransportOrder(tickets, ETransportOrderStatus::TOS_MoveToMarket, owningsite, ETransportatOrderDirecrtive::TOD_SellResources, goalidx);
+	}
+
 
 	return status;
 }
@@ -450,6 +468,11 @@ TMap<EProductionSiteType, ABuildingSite*> UAIStates::ChooseSiteTypePair()
 		rnd--;
 	}
 
+	if (stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() <= 0)
+		chosentype = EProductionSiteType::PST_Gold_Iron;
+	else if (stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() == 1)
+		chosentype = EProductionSiteType::PST_Furniture_Jewelry;
+
 	chosensitetypepair.Add(chosentype, chosensite);
 
 	return chosensitetypepair;
@@ -640,6 +663,7 @@ void UAIStates::SampleSellResources()
 
 		TArray<FResourceTransactionTicket> emptytickets;
 		stateOwner->sampleResult_SellResources = FStateStatusTicket_SellResources(false, emptytickets, nullptr, false);
+
 	}
 	else
 	{
@@ -656,25 +680,143 @@ FStateStatusTicket_SellResources UAIStates::CalculateSellOrder()
 
 	TArray<AProductionsite*> allsites = stateOwner->GetProductionSiteManager()->GetAllProductionSites();
 
-	TMap<EResourceIdent, AProductionsite*> validtotakefromidentpair;
+	TArray<FSellSample_Check> validsiteresourcestotake;
 
-	for (AProductionsite* site : allsites)
+	for(AProductionsite* site : allsites)
 	{
-		TMap<EResourceIdent, int> identamountpair;
-		TMap<EResourceIdent, int> poolinfo = site->GetProductionSitePoolInfo();
+		TArray<FProductionResources> productionresource = site->GetProductionResources();
+		TMap<EResourceIdent, int> sitepoolinfo = site->GetProductionSitePoolInfo();
 
-		for(FProductionResources resource : site->GetProductionResources())
+		TMap<EResourceIdent, int> valididentamountpairs;
+
+		for(FProductionResources prodresource : productionresource)
 		{
-			// TODO; MAGIC NUMBER RAUSNHEMEN -> Das soll über den data table geregelt werden
-			if (poolinfo.FindRef(resource.GetResourceIdent()) > 150.f)
-				validtotakefromidentpair.Add(resource.GetResourceIdent(), site);
+			float amount = sitepoolinfo.FindRef(prodresource.GetResourceIdent());
+
+			if (amount >= 150)
+				valididentamountpairs.Add(prodresource.GetResourceIdent(), amount);
+		}
+
+		if(valididentamountpairs.Num() <= 0)
+			continue;
+
+		FSellSample_Check newsample = FSellSample_Check(site, valididentamountpairs);
+		validsiteresourcestotake.Add(newsample);
+	}
+
+	if (validsiteresourcestotake.Num() <= 0)
+		return returnticket = FStateStatusTicket_SellResources(false, TArray<FResourceTransactionTicket>(), nullptr, false);
+
+	TArray<AProductionsite*> siteswithcost;
+
+	for (AProductionsite* checksite : allsites)
+	{
+		TArray<FProductionResources> prodresources = checksite->GetProductionResources();
+
+		for (FProductionResources resource : prodresources)
+		{
+			if (!resource.GetHasCost())
+				continue;
+
+			if(!siteswithcost.Contains(checksite))
+				siteswithcost.Add(checksite);
 		}
 	}
 
-	if (validtotakefromidentpair.Num() <= 0)
-		return returnticket = FStateStatusTicket_SellResources(false, TArray<FResourceTransactionTicket>(), nullptr, false);
+	TArray<FSellSample_Check> curatedtotake;
 
+	for(FSellSample_Check sample : validsiteresourcestotake)
+	{
+		TArray<AProductionsite*> transportsites;
+		for(AProductionsite* costsites : siteswithcost)
+		{
+			TArray<FProductionResources> productionresource = costsites->GetProductionResources();
+			TMap<EResourceIdent, int> sitepoolinfo = costsites->GetProductionSitePoolInfo();
 
+			TArray<EResourceIdent> valididentcostsonsite;
+
+			for(FProductionResources resource : productionresource )
+			{
+				for(TTuple<EResourceIdent, int> productioncost : resource.GetResourceCost())
+				{
+					if (!sample.GetResourceAmountPair().Contains(productioncost.Key))
+						continue;
+
+					if(sitepoolinfo.FindRef(productioncost.Key) >= stateOwner->currentBehaviourBase.GetResourceAmountGoal())
+						continue;
+
+					valididentcostsonsite.Add(productioncost.Key);
+				}
+			}
+
+			if(valididentcostsonsite.Num() <= 0)
+				continue;
+
+			// Sollte eign nicht vorkommen, weil der output einer site kein inoput sein kann
+			if(costsites == sample.GetTakeSite())
+				continue;
+
+			transportsites.Add(costsites);
+		}
+
+		curatedtotake.Add(FSellSample_Check(sample.GetTakeSite(), sample.GetResourceAmountPair(), transportsites));
+	}
+
+	if(curatedtotake.Num() > 0)
+		validsiteresourcestotake = curatedtotake;
+
+	// An dieser stelle habe ich mindestens eine site von welcher ich resourcen aus senden kann und geprüft ob ich eine oder mehrere site habe welche die resourcen aus dem output benötigen
+	// Ich glaube nicht das ich mehr als einen ident pro site an dieser stelle haben werde, werd ich dann wohl sehen
+
+	// Ich will jetzt schaeun ob eines der Sampel mindestens eine prod site besitzt und dieses dann als valide nehmen
+	// Ich schicke an eine random site, nicht die welche es am meisten benötigt -> Falls ich nochmal zu dem projekt zurück komm ist heir mal nen guter ansatzt das die Sites auch gerne etwas mehr tellen können
+	// (sparrt mir diesen converluded shit)
+	FSellSample_Check validsample = validsiteresourcestotake[0];
+
+	TArray<FSellSample_Check> transportsamples;
+
+	for(FSellSample_Check sample : validsiteresourcestotake)
+	{
+		if (sample.GetValidTransportSites().Num() <= 0)
+			continue;
+		
+		int rnd = FMath::RandRange(0, sample.GetValidTransportSites().Num() - 1);
+		
+		sample.SetTransportSite(sample.GetValidTransportSites()[rnd]);
+
+		transportsamples.Add(sample);
+	}
+
+	bool bistransportorder = false;;
+
+	if(transportsamples.Num() > 0)
+	{
+		int rnd = FMath::RandRange(0, transportsamples.Num() - 1);
+		validsample = transportsamples[rnd];
+
+		bistransportorder = true;
+	}
+	
+	TArray<FResourceTransactionTicket> tickets;
+
+	for(TTuple<EResourceIdent, int> identamountpair : validsample.GetResourceAmountPair())
+	{
+		FResourceTransactionTicket currticket = 
+		{
+			identamountpair.Value,
+			0,
+			identamountpair.Key,
+			0,
+			0
+		};
+
+		tickets.Add(currticket);
+	}
+
+	if (bistransportorder)
+		returnticket = FStateStatusTicket_SellResources(true, tickets, validsample.GetTakeSite(), true, validsample.GetTransportSite());
+	else
+		returnticket = FStateStatusTicket_SellResources(true, tickets, validsample.GetTakeSite(), false);
 
 	return returnticket;
 }
