@@ -469,9 +469,11 @@ TMap<EProductionSiteType, ABuildingSite*> UAIStates::ChooseSiteTypePair()
 	}
 
 	if (stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() <= 0)
-		chosentype = EProductionSiteType::PST_Gold_Iron;
+		chosentype = EProductionSiteType::PST_Furniture_Jewelry;
 	else if (stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() == 1)
 		chosentype = EProductionSiteType::PST_Furniture_Jewelry;
+	else if (stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() == 2)
+		chosentype = EProductionSiteType::PST_Gold_Iron;
 
 	chosensitetypepair.Add(chosentype, chosensite);
 

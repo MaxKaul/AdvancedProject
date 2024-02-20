@@ -80,7 +80,7 @@ public:
 	FORCEINLINE
 		AProductionsite* GetOwningSite() { return owningSite; }
 	FORCEINLINE
-		AProductionsite* GetTransportSite() { if (transportSite) return owningSite; else return nullptr; }
+		AProductionsite* GetTransportSite() { if (transportSite) return transportSite; else return nullptr; }
 
 	FORCEINLINE
 		bool GetValidity() { return bIsSampleValid; }
