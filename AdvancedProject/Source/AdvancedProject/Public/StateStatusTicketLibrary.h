@@ -213,3 +213,30 @@ public:
 	FORCEINLINE
 		AWorker* GetWorkerToAssign() { return workerToAssign; }
 };
+
+
+USTRUCT()
+struct FStateStatusTicket_UnassignWorker
+{
+	GENERATED_BODY()
+
+		FStateStatusTicket_UnassignWorker(){}
+
+	FStateStatusTicket_UnassignWorker(bool _sampleValididty, AProductionsite* _siteToUnassignFrom)
+	{
+		bIsSampleValid = _sampleValididty;
+		siteToUnassignFrom = _siteToUnassignFrom;
+	}
+
+private:
+	UPROPERTY()
+		bool bIsSampleValid;
+	UPROPERTY()
+		AProductionsite* siteToUnassignFrom;
+
+public:
+	FORCEINLINE
+		bool GetValidity() { return bIsSampleValid; }
+	FORCEINLINE
+		AProductionsite* GetUnassignSite() { return siteToUnassignFrom; }
+};

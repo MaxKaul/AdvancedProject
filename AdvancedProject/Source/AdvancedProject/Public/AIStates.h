@@ -89,4 +89,10 @@ public:
 		void SampleAssignWorker();
 	UFUNCTION()
 		FStateStatusTicket_AssignWorker SelectWorkerToAssign();
+
+
+	UFUNCTION()
+		void SampleUnassignWorker();
+	UFUNCTION()
+		FStateStatusTicket_UnassignWorker SelectWorkerToUnassign();
 };

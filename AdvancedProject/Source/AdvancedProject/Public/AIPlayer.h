@@ -222,6 +222,8 @@ private:
 		FStateStatusTicket_HireWorker sampleResult_HireWorker;
 	UPROPERTY()
 		FStateStatusTicket_AssignWorker sampleResult_AssignWorker;
+	UPROPERTY()
+		FStateStatusTicket_UnassignWorker sampleResult_UnassignWorker;
 
 
 	UPROPERTY()

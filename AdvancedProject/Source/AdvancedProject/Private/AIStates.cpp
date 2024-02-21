@@ -193,7 +193,19 @@ bool UAIStates::State_UnassignWorker()
 {
 	bool status = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("State_UnassignWorker"));
+	if(stateOwner->sampleResult_UnassignWorker.GetValidity())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UAIStates, !stateOwner->sampleResult_UnassignWorker.GetValidity()"));
+		return false;
+	}
+
+	AProductionsite* unassignSite = stateOwner->sampleResult_UnassignWorker.GetUnassignSite();
+
+	int rnd = FMath::RandRange(0, unassignSite->GetAllWorkerAtSite().Num() - 1);
+
+	AWorker* rndworker = unassignSite->GetAllWorkerAtSite()[rnd];
+
+	stateOwner->GetProductionSiteManager()->SubscribeWorkerToLocalPool(rndworker, unassignSite, false);
 
 	return status;
 }
@@ -931,6 +943,49 @@ FStateStatusTicket_AssignWorker UAIStates::SelectWorkerToAssign()
 	AWorker* workertoassign = stateOwner->GetProductionSiteManager()->GetAllUnasignedWorker()[rnd];
 
 	returnticket = FStateStatusTicket_AssignWorker(true, lowestprodsite, workertoassign);
+
+	return returnticket;
+}
+
+void UAIStates::SampleUnassignWorker()
+{
+	if(stateOwner->productionSiteManager->GetAllProductionSites().Num() <= 0 || stateOwner->GetProductionSiteManager()->GetAllHiredWorker().Num() <= 0)
+	{
+		if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_UnassignWorker))
+			stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_UnassignWorker);
+	}
+	else
+	{
+		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_UnassignWorker))
+			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_UnassignWorker);
+
+		stateOwner->sampleResult_UnassignWorker = SelectWorkerToUnassign();
+	}
+}
+
+FStateStatusTicket_UnassignWorker UAIStates::SelectWorkerToUnassign()
+{
+	// Ich nehm einfacvh ne rnd site mit >= Productivity goal und nehm da nen worker raus
+
+	FStateStatusTicket_UnassignWorker returnticket;
+
+	TArray<AProductionsite*> allsites = stateOwner->productionSiteManager->GetAllProductionSites();
+	TArray<AProductionsite*> validsites;
+
+	for(AProductionsite* site : allsites)
+	{
+		if (site->GetSiteProductivity() >= stateOwner->currentBehaviourBase.GetProductivityGoal())
+			validsites.Add(site);
+	}
+
+	if (validsites.Num() <= 0)
+		return returnticket = FStateStatusTicket_UnassignWorker(false, nullptr);
+
+	int rnd = FMath::RandRange(0, validsites.Num() - 1);
+
+	AProductionsite* rndsite = validsites[rnd];
+
+	returnticket = FStateStatusTicket_UnassignWorker(true, rndsite);
 
 	return returnticket;
 }

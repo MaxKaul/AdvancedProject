@@ -128,6 +128,7 @@ void AAIPlayer::InitPlayerStart(FPlayerSaveData _saveData, AMarketManager* _mark
 	    {EPossibleAIStates::PAIS_SellResources, 0},
 	    {EPossibleAIStates::PAIS_HireWorker, 0},
 	    {EPossibleAIStates::PAIS_AssignWorker, 0},
+	    {EPossibleAIStates::PAIS_UnassignWorker, 0},
 	};
 
 	TickSamples();
@@ -172,13 +173,6 @@ void AAIPlayer::TickDecision()
 
 			if (newvalue >= decisionThreshold)
 			{
-				if (productionSiteManager->GetAllProductionSites().Num() < 2)
-					stateident = EPossibleAIStates::PAIS_BuildSite;
-				else if (productionSiteManager->GetAllHiredWorker().Num() <= 2)
-					stateident = EPossibleAIStates::PAIS_HireWorker;
-				else 
-					stateident = EPossibleAIStates::PAIS_AssignWorker;
-
 				SetNewState(stateident);
 				bcanresetself = false;
 				break;
@@ -279,4 +273,5 @@ void AAIPlayer::TickSamples()
 	states->SampleSellResources();
 	states->SampleHireWorker();
 	states->SampleAssignWorker();
+	states->SampleUnassignWorker();
 }
