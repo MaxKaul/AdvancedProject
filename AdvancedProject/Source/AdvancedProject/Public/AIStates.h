@@ -83,4 +83,10 @@ public:
 		void SampleHireWorker();
 	UFUNCTION()
 		FStateStatusTicket_HireWorker SelectWorkerToHire();
+
+
+	UFUNCTION()
+		void SampleAssignWorker();
+	UFUNCTION()
+		FStateStatusTicket_AssignWorker SelectWorkerToAssign();
 };

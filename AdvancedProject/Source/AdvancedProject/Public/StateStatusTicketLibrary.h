@@ -161,7 +161,7 @@ struct FStateStatusTicket_HireWorker
 
 		FStateStatusTicket_HireWorker() {}
 
-	FStateStatusTicket_HireWorker(bool _sampleValididty, AWorker* _workerToHire)
+	FStateStatusTicket_HireWorker(bool _sampleValididty, class AWorker* _workerToHire)
 	{
 		bIsSampleValid = _sampleValididty;
 		workerToHire = _workerToHire;
@@ -179,4 +179,37 @@ public:
 		bool GetValidity() { return bIsSampleValid; }
 	FORCEINLINE
 		AWorker* GetWorkerToHire() { return workerToHire; }
+};
+
+
+USTRUCT()
+struct FStateStatusTicket_AssignWorker
+{
+	GENERATED_BODY()
+	FStateStatusTicket_AssignWorker(){}
+
+	FStateStatusTicket_AssignWorker(bool _sampleValididty, AProductionsite* _siteToAssignTo, AWorker* _workerToAssign)
+	{
+		bIsSampleValid = _sampleValididty;
+		siteToAssignTo = _siteToAssignTo;
+		workerToAssign = _workerToAssign;
+	}
+
+
+private:
+
+	UPROPERTY()
+		bool bIsSampleValid;
+	UPROPERTY()
+		AProductionsite* siteToAssignTo;
+	UPROPERTY()
+		AWorker* workerToAssign;
+
+public:
+	FORCEINLINE
+		bool GetValidity() { return bIsSampleValid; }
+	FORCEINLINE
+		AProductionsite* GetSiteToAssignTo() { return siteToAssignTo; }
+	FORCEINLINE
+		AWorker* GetWorkerToAssign() { return workerToAssign; }
 };

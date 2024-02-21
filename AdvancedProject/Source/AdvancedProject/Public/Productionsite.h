@@ -310,7 +310,7 @@ private:
 
 	// Dieser wert ist in abhängigkeit zu der von den subscribedWorker mitgeteilten productivity, welche gelesen wird wenn diese auf die productionsite subscriben
 	// Unter umständen kann ich noch eine seperate function zum updaten der productivity machen sollte sich ddiese bei einem der subscribedWorker ändern
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))
 		float productionSiteProductivity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SiteInfo, meta = (AllowPrivateAccess))

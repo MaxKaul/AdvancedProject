@@ -220,6 +220,8 @@ private:
 		FStateStatusTicket_SellResources sampleResult_SellResources;
 	UPROPERTY()
 		FStateStatusTicket_HireWorker sampleResult_HireWorker;
+	UPROPERTY()
+		FStateStatusTicket_AssignWorker sampleResult_AssignWorker;
 
 
 	UPROPERTY()

@@ -123,6 +123,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = PoolInfo, meta = (AllowPrivateAccess))
 		TArray<AWorker*> subscribedWorker_UnasignedPool;
+	// Ich glaube das hat siche mit dem subscribedWorker_HiredPool sow verhalten das dieser sowohl assigned als aucvh unassighned hällt
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = PoolInfo, meta = (AllowPrivateAccess))
 		TArray<AWorker*> subscribedWorker_HiredPool;
 

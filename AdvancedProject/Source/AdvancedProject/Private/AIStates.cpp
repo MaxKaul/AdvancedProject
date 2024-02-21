@@ -175,7 +175,16 @@ bool UAIStates::State_AssignWorker()
 {
 	bool status = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("State_AssignWorker"));
+	if(!stateOwner->sampleResult_AssignWorker.GetValidity())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UAIStates, !stateOwner->sampleResult_AssignWorker.GetValidity()"));
+		return false;
+	}
+
+	AProductionsite* toassignto = stateOwner->sampleResult_AssignWorker.GetSiteToAssignTo();
+	AWorker* workertoassign = stateOwner->sampleResult_AssignWorker.GetWorkerToAssign();
+
+	toassignto->SubscribeWorker(workertoassign);
 
 	return status;
 }
@@ -873,6 +882,55 @@ FStateStatusTicket_HireWorker UAIStates::SelectWorkerToHire()
 	AWorker* chosenworker = unemployedworker[rnd];
 
 	returnticket = FStateStatusTicket_HireWorker(true, chosenworker);
+
+	return returnticket;
+}
+
+void UAIStates::SampleAssignWorker()
+{
+	if(stateOwner->productionSiteManager->GetAllUnasignedWorker().Num() <= 0 ||stateOwner->productionSiteManager->GetAllProductionSites().Num() <= 0)
+	{
+		if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_AssignWorker))
+			stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_AssignWorker);
+	}
+	else
+	{
+		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_AssignWorker))
+			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_AssignWorker);
+
+		stateOwner->sampleResult_AssignWorker = SelectWorkerToAssign();
+	}
+}
+
+FStateStatusTicket_AssignWorker UAIStates::SelectWorkerToAssign()
+{
+	FStateStatusTicket_AssignWorker returnticket;
+
+	TArray<AProductionsite*> allsites = stateOwner->productionSiteManager->GetAllProductionSites();
+
+	TArray<AProductionsite*> possiblesites;
+
+	for(AProductionsite* site : allsites)
+	{
+		if (site->GetSiteProductivity() <= stateOwner->currentBehaviourBase.GetProductivityGoal())
+			possiblesites.Add(site);
+	}
+
+	if (possiblesites.Num() <= 0)
+		return returnticket = FStateStatusTicket_AssignWorker(false, nullptr, nullptr);
+
+	AProductionsite* lowestprodsite = possiblesites[0];
+
+	for(AProductionsite* site : possiblesites)
+	{
+		if (site->GetSiteProductivity() < lowestprodsite->GetSiteProductivity())
+			lowestprodsite = site;
+	}
+
+	int rnd = FMath::RandRange(0, stateOwner->GetProductionSiteManager()->GetAllUnasignedWorker().Num() - 1);
+	AWorker* workertoassign = stateOwner->GetProductionSiteManager()->GetAllUnasignedWorker()[rnd];
+
+	returnticket = FStateStatusTicket_AssignWorker(true, lowestprodsite, workertoassign);
 
 	return returnticket;
 }
