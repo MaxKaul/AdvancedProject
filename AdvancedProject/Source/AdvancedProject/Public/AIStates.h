@@ -59,6 +59,7 @@ public:
 	UFUNCTION()
 		FStateStatusTicket_BuyResources CalculateBuyOrder();
 
+
 	UFUNCTION()
 		void SampleBuildSite();
 	// Ich sollte bei zeiten vill mal schauen warum ich dort nicht die sampleresults zurück geben wollte
@@ -76,4 +77,10 @@ public:
 		void SampleSellResources();
 	UFUNCTION()
 		FStateStatusTicket_SellResources CalculateSellOrder();
+
+
+	UFUNCTION()
+		void SampleHireWorker();
+	UFUNCTION()
+		FStateStatusTicket_HireWorker SelectWorkerToHire();
 };

@@ -88,8 +88,9 @@ public:
 		TArray<AProductionsite*> GetAllProductionSites() { return allProductionSites; }
 
 	// Sub und Unsub für worker in den lokalen pool
-	// Nicht vergessen -> Die save data wird imemrnoch über den WorkerWorldManager geregelt
+	// Nicht vergessen -> Die save data wird  über den WorkerWorldManager geregelt
 	// Function to Subscribe a worker to the local pool i.e employed by a player and Unsubscribes him from the global unemployement pool
+	// Site ref muss kein value haben wenn zu unassigned pool
 	UFUNCTION(BlueprintCallable)
 		void SubscribeWorkerToLocalPool(class AWorker* _toSub, AProductionsite* _siteRef, bool _fromWorld);
 	// Unsubscribe worker from local pool and subscribes him to a productionsite, wird von der Productionsite aus gecalled

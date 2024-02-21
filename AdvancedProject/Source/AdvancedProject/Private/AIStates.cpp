@@ -5,6 +5,8 @@
 
 #include "AIPlayer.h"
 #include "Builder.h"
+#include "WorkerController.h"
+#include "WorkerWorldManager.h"
 
 UAIStates::UAIStates()
 {
@@ -156,7 +158,15 @@ bool UAIStates::State_HireWorker()
 {
 	bool status = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("State_HireWorker"));
+	if(!stateOwner->sampleResult_HireWorker.GetValidity())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UAIStates, !stateOwner->sampleResult_HireWorker.GetValidity()"));
+		return false;
+	}
+
+	AWorker* workertohire = stateOwner->sampleResult_HireWorker.GetWorkerToHire();
+
+	stateOwner->productionSiteManager->SubscribeWorkerToLocalPool(workertohire, nullptr, true);
 
 	return status;
 }
@@ -467,13 +477,6 @@ TMap<EProductionSiteType, ABuildingSite*> UAIStates::ChooseSiteTypePair()
 
 		rnd--;
 	}
-
-	if (stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() <= 0)
-		chosentype = EProductionSiteType::PST_Furniture_Jewelry;
-	else if (stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() == 1)
-		chosentype = EProductionSiteType::PST_Furniture_Jewelry;
-	else if (stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() == 2)
-		chosentype = EProductionSiteType::PST_Gold_Iron;
 
 	chosensitetypepair.Add(chosentype, chosensite);
 
@@ -819,6 +822,57 @@ FStateStatusTicket_SellResources UAIStates::CalculateSellOrder()
 		returnticket = FStateStatusTicket_SellResources(true, tickets, validsample.GetTakeSite(), true, validsample.GetTransportSite());
 	else
 		returnticket = FStateStatusTicket_SellResources(true, tickets, validsample.GetTakeSite(), false);
+
+	return returnticket;
+}
+
+void UAIStates::SampleHireWorker()
+{
+	if (stateOwner->GetWorkerWorldManager()->GetWorker_AllRef().Num() <= 0 || stateOwner->GetProductionSiteManager()->GetAllProductionSites().Num() <= 0)
+	{
+		if (stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_HireWorker))
+			stateOwner->validStatesToTick.Remove(EPossibleAIStates::PAIS_HireWorker);
+	}
+	else
+	{
+		if (!stateOwner->validStatesToTick.Contains(EPossibleAIStates::PAIS_HireWorker))
+			stateOwner->validStatesToTick.Add(EPossibleAIStates::PAIS_HireWorker);
+
+		stateOwner->sampleResult_HireWorker = SelectWorkerToHire();
+	}
+}
+
+FStateStatusTicket_HireWorker UAIStates::SelectWorkerToHire()
+{
+	FStateStatusTicket_HireWorker returnticket;
+
+	TArray<AWorker*> unemployedworker;
+
+	for(AWorker* worker : stateOwner->GetWorkerWorldManager()->GetWorker_AllRef())
+	{
+		if (worker->GetEmployementStatus() == EWorkerStatus::WS_Unemployed)
+			unemployedworker.Add(worker);
+	}
+
+	if (unemployedworker.Num() <= 0)
+		return returnticket = FStateStatusTicket_HireWorker(false, nullptr);
+
+	// Ich will dann erstmal durch alle prod site iteraten um zu schauen ob ich welche habe welche ihr prod goal noch nicht erreicht haben
+
+	for(AProductionsite* site : stateOwner->GetProductionSiteManager()->GetAllProductionSites())
+	{
+		float prod = site->GetSiteProductivity();
+		float prodgoal = stateOwner->currentBehaviourBase.GetProductivityGoal();
+
+		if (site->GetSiteProductivity() >= stateOwner->currentBehaviourBase.GetProductivityGoal())
+			return returnticket = FStateStatusTicket_HireWorker(false, nullptr);
+	}
+
+	int rnd = FMath::RandRange(0, unemployedworker.Num() - 1);
+
+	AWorker* chosenworker = unemployedworker[rnd];
+
+	returnticket = FStateStatusTicket_HireWorker(true, chosenworker);
 
 	return returnticket;
 }

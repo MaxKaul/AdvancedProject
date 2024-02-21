@@ -153,3 +153,30 @@ public:
 	FORCEINLINE
 		TArray<FResourceTransactionTicket> GetTransactionTickets() { return transactionTickets; }
 };
+
+USTRUCT()
+struct FStateStatusTicket_HireWorker
+{
+	GENERATED_BODY()
+
+		FStateStatusTicket_HireWorker() {}
+
+	FStateStatusTicket_HireWorker(bool _sampleValididty, AWorker* _workerToHire)
+	{
+		bIsSampleValid = _sampleValididty;
+		workerToHire = _workerToHire;
+	}
+
+private:
+	UPROPERTY()
+		AWorker* workerToHire;
+
+	UPROPERTY()
+		bool bIsSampleValid;
+
+public:
+	FORCEINLINE
+		bool GetValidity() { return bIsSampleValid; }
+	FORCEINLINE
+		AWorker* GetWorkerToHire() { return workerToHire; }
+};

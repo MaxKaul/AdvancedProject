@@ -218,6 +218,9 @@ private:
 		FStateStatusTicket_TransportResources sampleResult_TransportResources;
 	UPROPERTY()
 		FStateStatusTicket_SellResources sampleResult_SellResources;
+	UPROPERTY()
+		FStateStatusTicket_HireWorker sampleResult_HireWorker;
+
 
 	UPROPERTY()
 		TArray<EProductionSiteType> allProdSiteTypes;
